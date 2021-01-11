@@ -1,7 +1,7 @@
 import random
 
 
-class Dice:
+class Die:
     def __init__(self):
         self.number = random.randrange(1, 6)
 
@@ -12,10 +12,10 @@ class Dice:
         self.number = random.randrange(1, 6)
 
 
-class Dices:
+class Dice:
     def __init__(self):
-        self.dice1 = Dice()
-        self.dice2 = Dice()
+        self.dice1 = Die()
+        self.dice2 = Die()
         self.sum = self.dice1.number + self.dice2.number
 
     def __str__(self):
@@ -29,14 +29,14 @@ class Dices:
 
 def test_dice():
     print("Testing dice:")
-    dice = Dice()
+    dice = Die()
     print("   Initial state: " + str(dice))
     dice.throw()
     print("   After throw: " + str(dice))
 
 def test_Dices():
     print("Testing Dices:")
-    dices = Dices()
+    dices = Dice()
     print("   Initial state: first dice is "+str(dices.dice1)+", second dice is "+str(dices.dice2)+" and the sum is "+str(dices))
     dices.throw()
     print("   Initial state: first dice is "+str(dices.dice1)+", second dice is "+str(dices.dice2)+" and the sum is "+str(dices))
