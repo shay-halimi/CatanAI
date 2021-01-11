@@ -1,3 +1,6 @@
+import random
+
+
 class Dice:
     def __init__(self):
         self.number = random.randrange(1, 6)
@@ -7,8 +10,6 @@ class Dice:
 
     def throw(self):
         self.number = random.randrange(1, 6)
-
-import random
 
 
 class Dices:
