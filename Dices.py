@@ -1,7 +1,7 @@
 import random
 
 
-class Dice:
+class Die:
     def __init__(self):
         self.number = random.randrange(1, 6)
 
@@ -12,34 +12,36 @@ class Dice:
         self.number = random.randrange(1, 6)
 
 
-class Dices:
+class Dice:
     def __init__(self):
-        self.dice1 = Dice()
-        self.dice2 = Dice()
-        self.sum = self.dice1.number + self.dice2.number
+        self.die1 = Die()
+        self.die2 = Die()
+        self.sum = self.die1.number + self.die2.number
 
     def __str__(self):
         return str(self.sum)
 
     def throw(self):
-        self.dice1.throw()
-        self.dice2.throw()
-        self.sum = self.dice1.number + self.dice2.number
+        self.die1.throw()
+        self.die2.throw()
+        self.sum = self.die1.number + self.die2.number
+
+
+def test_die():
+    print("Testing die:")
+    die = Die()
+    print("   Initial state: " + str(die))
+    die.throw()
+    print("   After throw: " + str(die))
 
 
 def test_dice():
-    print("Testing dice:")
+    print("Testing Dice:")
     dice = Dice()
-    print("   Initial state: " + str(dice))
+    print("   Initial state: first die is " + str(dice.die1) + ", second dice is " + str(dice.die2) + " and the sum is " + str(dice))
     dice.throw()
-    print("   After throw: " + str(dice))
+    print("   Initial state: first dice is " + str(dice.die1) + ", second dice is " + str(dice.die2) + " and the sum is " + str(dice))
 
-def test_Dices():
-    print("Testing Dices:")
-    dices = Dices()
-    print("   Initial state: first dice is "+str(dices.dice1)+", second dice is "+str(dices.dice2)+" and the sum is "+str(dices))
-    dices.throw()
-    print("   Initial state: first dice is "+str(dices.dice1)+", second dice is "+str(dices.dice2)+" and the sum is "+str(dices))
 
+test_die()
 test_dice()
-test_Dices()
