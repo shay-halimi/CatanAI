@@ -1,12 +1,11 @@
 from Resources import Resource
 import random
 
-INVALID = 0
 DESSERT = 7
 
 
 class Terrain:
-    def __init__(self, num=INVALID):
+    def __init__(self, num):
         self.resource = None
         self.num = num
         self.crossroads = []
@@ -14,24 +13,11 @@ class Terrain:
     def __str__(self):
         return "(" + str(self.num) + "," + str(self.resource) + ")"
 
-    def print_top_crossroads(self):
-        print("terrain : " + str(self) + " has " + str(len(self.crossroads)) + "crossroads")
-        nums = ""
-        for i in range(0,3):
-            nums += f"{str(self.crossroads[i].ownership):^10}"
-        return nums
-
-    def print_bot_crossroads(self):
-        nums = ""
-        for i in range(3,6):
-            nums += f"{str(self.crossroads[i].ownership):^10}"
-        return nums
-
     def set_resource(self, resource):
         self.resource = resource
 
     def produce(self):
-        pass  # Todo: produce shoul call a "give resource" function to every structure in her presence.
+        pass  # Todo: produce should call a "give resource" function to every structure in her presence.
 
 
 # Todo: add special case to ports
@@ -51,17 +37,26 @@ def initiate_crossroads_for_test(crossroads_map):
 
 class Board:
     def __init__(self):
-        self.map = [[Terrain(), Terrain(), Terrain(10), Terrain(2), Terrain(9)],
-                    [Terrain(), Terrain(12), Terrain(6), Terrain(4), Terrain(10)],
+        self.map = [[Terrain(10), Terrain(2), Terrain(9)],
+                    [Terrain(12), Terrain(6), Terrain(4), Terrain(10)],
                     [Terrain(9), Terrain(11), Terrain(DESSERT), Terrain(3), Terrain(8)],
-                    [Terrain(8), Terrain(3), Terrain(4), Terrain(5), Terrain()],
-                    [Terrain(5), Terrain(6), Terrain(11), Terrain(), Terrain()]]
+                    [Terrain(8), Terrain(3), Terrain(4), Terrain(5)],
+                    [Terrain(5), Terrain(6), Terrain(11)]]
         self.crossroads = []
-        for i in range(6):
+        num_of_crossroads = 3
+        odd = True
+        step = 1
+        for i in range(12):
             line = []
-            for j in range(12):
+            for j in range(num_of_crossroads):
                 line.append(Crossroad())
             self.crossroads.append(line)
+            if odd:
+                num_of_crossroads += step
+            if i == 5:
+                step = -1
+            odd = 1 - odd
+
         initiate_crossroads_for_test(self.crossroads)
         resource_stack = [Resource.DESSERT] + [Resource.IRON] * 3 + [Resource.CLAY] * 3 + [Resource.WOOD] * 4 + [
             Resource.WHEAT] * 4 + [Resource.SHEEP] * 4
@@ -69,46 +64,23 @@ class Board:
         for line in self.map:
             j = 0
             for terrain in line:
-                if terrain.num:
-                    index = random.randrange(0, len(resource_stack))
-                    resource = resource_stack.pop(index)
-                    terrain.set_resource(resource)
-                    terrain.crossroads += [self.crossroads[i][2 * j + 1]]
-                    terrain.crossroads += [self.crossroads[i][2 * j + 2]]
-                    terrain.crossroads += [self.crossroads[i][2 * j + 3]]
-                    terrain.crossroads += [self.crossroads[i + 1][2 * j]]
-                    terrain.crossroads += [self.crossroads[i + 1][2 * j + 1]]
-                    terrain.crossroads += [self.crossroads[i + 1][2 * j + 2]]
+                index = random.randrange(0, len(resource_stack))
+                resource = resource_stack.pop(index)
+                if resource == Resource.DESSERT:
+                    self.map[2][2].num = terrain.num
+                    terrain.num = 7
+                terrain.set_resource(resource)
+                terrain.crossroads += [self.crossroads[2*i][j]]
+                terrain.crossroads += [self.crossroads[2*i+1][j]]
+                terrain.crossroads += [self.crossroads[2*i+1][j+1]]
+                terrain.crossroads += [self.crossroads[2*i+2][j]]
+                terrain.crossroads += [self.crossroads[2*i+2][j+1]]
+                terrain.crossroads += [self.crossroads[2*i+3][j]]
                 j += 1
             i += 1
 
-    def __str__(self):
-        map_str = ""
-        for line in self.map:
-            for terrain in line:
-                if terrain.num:
-                    map_str += terrain.print_top_crossroads()
-                else:
-                    s = ""
-                    map_str += f"{s:^30}"
-            map_str += "\n"
-            for terrain in line:
-                map_str += f"{str(terrain):^30}"
-            map_str += "\n"
-            for terrain in line:
-                if terrain.num:
-                    map_str += terrain.print_bot_crossroads()
-                else:
-                    s = ""
-                    map_str += f"{s:^30}"
-            map_str += "\n"
-        return map_str
-
 
 def test_terrain():
-    terrain = Terrain()
-    print(terrain)
-    print("PASS") if str(terrain) == "(0,None)" else print("FAILED")
     terrain = Terrain(3)
     print(terrain)
     print("PASS") if str(terrain) == "(3,None)" else print("FAILED")
