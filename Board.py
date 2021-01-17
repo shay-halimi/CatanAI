@@ -58,6 +58,7 @@ class Board:
             odd = 1 - odd
         for line in self.crossroads:
             print(len(line))
+        print(":::::::::::::::::::::")
 
         resource_stack = [Resource.DESSERT] + [Resource.IRON] * 3 + [Resource.CLAY] * 3 + [Resource.WOOD] * 4 + [
             Resource.WHEAT] * 4 + [Resource.SHEEP] * 4
@@ -80,26 +81,26 @@ class Board:
                 j += 1
             i += 1
 
-            self.roads = []
-            length = 3
-            step = 1
-            mid = 0
-            for i in range(11):
-                line = []
-                if i % 2:
-                    for j in range(length + 1):
-                        line.append(Road())
-                    length += step * (1 - mid)
-                else:
-                    for j in range(2 * length):
-                        line.append(Road())
-                    length += step * mid
-                if i == 4:
-                    step = 0
-                if i == 5:
-                    step = -1
-                    mid = 1
-                self.roads.append(line)
+        self.roads = []
+        length = 3
+        step = 1
+        mid = 0
+        for i in range(11):
+            line = []
+            if i % 2:
+                for j in range(length + 1):
+                    line.append(Road())
+                length += step * (1 - mid)
+            else:
+                for j in range(2 * length):
+                    line.append(Road())
+                length += step * mid
+            if i == 4:
+                step = 0
+            if i == 5:
+                step = -1
+                mid = 1
+            self.roads.append(line)
 
 
 def test_terrain():

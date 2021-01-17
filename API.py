@@ -24,7 +24,6 @@ proportion = 0.635 * 0.95
 
 # resizing the terrain and its mask by the proportion index
 terrain_size = int(sheep.size[0] * proportion), int(sheep.size[1] * proportion)
-print(terrain_size)
 sheep = sheep.resize(terrain_size)
 wheat = wheat.resize(terrain_size)
 wood = wood.resize(terrain_size)
@@ -168,13 +167,9 @@ def set_crossroads_locations(crossroads):
 def print_crossroads(crossroads, temp_img):
     for line in crossroads:
         for cr in line:
-            print(cr.ownership, end=" ")
             if cr.ownership:
-                print(cr.ownership)
                 c_r = players[cr.ownership][0].copy()
                 temp_img.paste(c_r, cr.api_location, village_mask)
-            else:
-                print("empty")
     temp_img.save('images/dst/crossroads3.jpg')
 
 
