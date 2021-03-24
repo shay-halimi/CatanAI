@@ -1,4 +1,4 @@
-import Map
+import Board
 import Dice
 import Player
 import DevStack
@@ -6,7 +6,7 @@ import DevStack
 
 class Game:
     def __init__(self, n_players=3):
-        self.map = Map()
+        self.map = Board()
         self.players = Player[n_players]
         self.devStack = DevStack()
 

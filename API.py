@@ -1,5 +1,7 @@
 from PIL import Image, ImageDraw, ImageFont
 import Board
+import DevStack
+import Game
 from Resources import Resource
 
 # where the board begin
@@ -172,6 +174,9 @@ def print_crossroads(crossroads, temp_img):
                 temp_img.paste(c_r, cr.api_location, village_mask)
     temp_img.save('images/dst/crossroads3.jpg')
 
+def DevStackTest():
+    a=DevStack()
+    print(a.stack)
 
 show_terrain(g_board)
 background = Image.open('images/dst/result5.jpg')
