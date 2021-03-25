@@ -263,8 +263,8 @@ def dev_stack_test():
 
 
 def player_test():
-    cur_game=Game.Game()
     playerA = Player.Player(1)
+    cur_game=Game.Game([playerA])
     add_resources_test(playerA)
     print(playerA.resources)
     cur_game.buy_dev_card(playerA)

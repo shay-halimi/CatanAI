@@ -1,21 +1,25 @@
 from enum import Enum
 import DevStack
 from Resources import Resource
+
+
 class Player:
     resources = {Resource.CLAY: 0, Resource.WOOD: 0, Resource.SHEEP: 0, Resource.IRON: 0, Resource.WHEAT: 0}
     devCards = []
 
-    def __init__(self, index, name=None):
+    def __init__(self, index, name=None, is_computer=False):
         self.index = index
         self.name = name
+        self.is_computer = is_computer
         self.resources = {Resource.CLAY: 0, Resource.WOOD: 0, Resource.SHEEP: 0, Resource.IRON: 0, Resource.WHEAT: 0}
         self.devCards = []
 
-    def add_resources(self,resource, number):
+    def add_resources(self, resource, number):
         self.resources[resource] += number
 
     def buy_devops(self):
-        if self.resources[Resource.SHEEP] < 1 or self.resources[Resource.IRON] < 1 or self.resources[Resource.WHEAT] < 1:
+        if self.resources[Resource.SHEEP] < 1 or self.resources[Resource.IRON] < 1 or self.resources[
+            Resource.WHEAT] < 1:
             print("Not enough resources")
             return False
         self.resources[Resource.SHEEP] -= 1
@@ -55,3 +59,12 @@ class Player:
         if "knight" in self.devCards:
             self.devCards.remove("knight")
             # TODO add a function to move the robber and get one reasource card frrom another player
+
+    #########################################################################
+    # AI player functions
+    #########################################################################
+    def computer_1st_settlement(self):
+        return (0, 0), (0, 0)
+
+    def computer_2nd_settlement(self):
+        return (1, 1), (1, 1)
