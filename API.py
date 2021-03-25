@@ -258,7 +258,7 @@ def DevStackTest():
     print(a.stack)
 
 def dev_stack_test():
-    a = DevStack()
+    a = DevStack.DevStack()
     print(a.deck)
 
 
