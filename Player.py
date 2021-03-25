@@ -1,8 +1,6 @@
 from enum import Enum
-from DevStack import DevStack
-import Game
+import DevStack
 from Resources import Resource
-
 class Player:
     resources = {Resource.CLAY: 0, Resource.WOOD: 0, Resource.SHEEP: 0, Resource.IRON: 0, Resource.WHEAT: 0}
     devCards = []
@@ -13,17 +11,17 @@ class Player:
         self.resources = {Resource.CLAY: 0, Resource.WOOD: 0, Resource.SHEEP: 0, Resource.IRON: 0, Resource.WHEAT: 0}
         self.devCards = []
 
-    def add_resources(resource, number):
-        Player.resources[resource] += number
+    def add_resources(self,resource, number):
+        self.resources[resource] += number
 
     def buy_devops(self):
-        if Resource.SHEEP < 1 or Resource.IRON < 1 or Resource.WHEAT < 1:
+        if self.resources[Resource.SHEEP] < 1 or self.resources[Resource.IRON] < 1 or self.resources[Resource.WHEAT] < 1:
             print("Not enough resources")
-            return
+            return False
         self.resources[Resource.SHEEP] -= 1
         self.resources[Resource.IRON] -= 1
         self.resources[Resource.WHEAT] -= 1
-        self.devCards.append(Game.devStack.get())
+        return True
 
     def buy_settelement(self):
         if self.resources[Resource.SHEEP] < 1 or self.resources[Resource.CLAY] < 1 or self.resources[

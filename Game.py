@@ -5,10 +5,16 @@ import DevStack
 
 
 class Game:
+    def buy_dev_card(self, player):
+        if player.buy_devops():
+            player.devCards.append(self.devStack.get())
+
     def __init__(self, n_players=3):
         self.map = Board()
-        self.players = Player()[n_players]
-        self.devStack = DevStack()
+        self.players = []
+        for i in range(n_players):
+            self.players += [Player(i)]
+        self.devStack = DevStack.DevStack()
 
     def start_game(self):
         for i in len(self.players):

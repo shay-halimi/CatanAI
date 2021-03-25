@@ -1,9 +1,9 @@
 from PIL import Image, ImageDraw, ImageFont
 import Board
-import DevStack
+from DevStack import DevStack
+import Player
 import Game
 from Resources import Resource
-from Game import Game
 
 # where the board begin
 start_of_board_x = 165
@@ -233,9 +233,29 @@ def print_dice(dice, name):
 line_x = 1100
 line_y = 500
 
-def DevStackTest():
-    a=DevStack()
-    print(a.stack)
+
+def dev_stack_test():
+    a = DevStack()
+    print(a.deck)
+
+
+def player_test():
+    cur_game=Game.Game()
+    playerA = Player.Player(1)
+    add_resources_test(playerA)
+    print(playerA.resources)
+    cur_game.buy_dev_card(playerA)
+    playerA.buy_devops()
+    assert len(playerA.devCards) == 1
+
+
+
+
+def add_resources_test(player):
+    for resource in Resource:
+        if resource is not Resource.DESSERT:
+            player.add_resources(resource, 6)
+
 
 def print_inf(names, img):
     curr_img = Image.open("images/dst/game1/" + img + ".jpg")
@@ -260,7 +280,8 @@ def game_test():
     set_roads_locations(g_board.roads, g_board.crossroads)
     print_roads(g_board.roads)
     print_inf(("shay", "shaked", "sheleg"), "turn8")
-
+    dev_stack_test()
+    player_test()
 
 print("hello world")
 game_test()

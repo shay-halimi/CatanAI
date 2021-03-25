@@ -13,5 +13,6 @@ class DevStack:
         pass
 
     def get(self):
-        return self.deck.pop
+        card=self.deck.pop()
+        return card
 
