@@ -3,6 +3,7 @@ import Board
 from DevStack import DevStack
 import Player
 import Game
+import DevStack
 from Resources import Resource
 
 # where the board begin
@@ -10,7 +11,7 @@ start_of_board_x = 165
 start_of_board_y = 572
 
 # start image
-background = Image.open('images/src/background.jpg')
+background = Image.open('images/src/background2.jpg')
 
 # terrain images and their mask
 sheep = Image.open('images/src/Sheep.jpg')
@@ -83,13 +84,6 @@ num_loc = (int(81 * proportion), int(108 * proportion))
 # resizing production number and its mask by the terrain size
 number_img = number_img.resize(terrain_size)
 number_mask = number_mask.resize(terrain_size)
-
-# dice location
-line_space = int((50 / cr_pr) * proportion)
-start_print_dice = (int((906 / cr_pr) * proportion), int((121 / (0.635 * 0.95)) * proportion))
-die1_loc = (start_print_dice[0], start_print_dice[1])
-die2_loc = (start_print_dice[0], start_print_dice[1] + line_space)
-dice_loc = (start_print_dice[0], start_print_dice[1] + line_space * 2)
 
 # board for testing
 g_board = Board.Board()
@@ -215,24 +209,53 @@ def print_roads(roads):
             print_road(road)
 
 
-def next_turn(name):
-    curr_img = Image.open("images/temp/background.jpg")
-    curr_img.save("images/dst/game1/" + name + ".jpg")
+# starting location of the log
+log_loc = (870, 70)
 
 
-def print_dice(dice, name):
-    curr_img = Image.open("images/dst/game1/" + name + ".jpg")
-    draw = ImageDraw.Draw(curr_img)
-    draw.multiline_text(die1_loc, "First Die : " + str(dice.dice1), fill=(0, 0, 0), font=font)
-    draw.multiline_text(die2_loc, "Second Die : " + str(dice.dice2), fill=(0, 0, 0), font=font)
-    draw.multiline_text(dice_loc, "Sum of Dice : " + str(dice.sum), fill=(0, 0, 0), font=font)
-    curr_img.save("images/dst/game1/" + name + ".jpg")
+def print_log(img, round, turn, dice):
+    draw = ImageDraw.Draw(img)
+    log_str = "Log:\n\n"
+    log_str += "This is round number : " + str(round) + ".\n\nNow it is " + turn + "'s turn.\n\n"
+    if dice:
+        log_str += "Sum of Dice : " + str(g_board.dice.sum) + "\n\n"
+    else:
+        log_str += "The dice have not yet been rolled."
+    draw.multiline_text(log_loc, log_str, fill=(0, 0, 0), font=font)
+    return img
 
 
-# first line location
+def next_turn(round):
+    # before the dice have been rolled
+    img = Image.open("images/temp/background.jpg")
+    img = print_log(img, round, "Shay", False)
+    img = print_stats(img, ("Shay", "Shaked", "Sheleg", "Oran"))
+    img.save("images/dst/game1/turn" + str(round) + "part1.jpg")
+
+    # after the dice have been rolled
+    # ToDo: Enter rolling of the dice
+    # ToDo: Enter actions of the game
+    img = Image.open("images/temp/background.jpg")
+    img = print_log(img, round, "Shay", True)
+    img = print_stats(img, ("Shay", "Shaked", "Sheleg", "Oran"))
+    img.save("images/dst/game1/turn" + str(round) + "part2.jpg")
+
+    # after the player has played
+    # ToDo : Enter actions of the Game
+    img = Image.open("images/temp/background.jpg")
+    img = print_log(img, round, "Shay", True)
+    img = print_stats(img, ("Shay", "Shaked", "Sheleg", "Oran"))
+    img.save("images/dst/game1/turn" + str(round) + "part3.jpg")
+
+
+# first line location of stats
 line_x = 1100
 line_y = 500
 
+
+def DevStackTest():
+    a = DevStack()
+    print(a.stack)
 
 def dev_stack_test():
     a = DevStack()
@@ -257,20 +280,36 @@ def add_resources_test(player):
             player.add_resources(resource, 6)
 
 
-def print_inf(names, img):
-    curr_img = Image.open("images/dst/game1/" + img + ".jpg")
-    draw = ImageDraw.Draw(curr_img)
-    draw.multiline_text((line_x, line_y), "hello world", fill=(0, 0, 0), font=font)
+
+def num2name_turn(turn):
+    return "turn" + str(turn)
+
+
+def num2name_part(part):
+    return "part" + str(part)
+
+
+def get_location(folder, img):
+    return "images/" + folder + "/" + img + ".jpg"
+
+
+# getting down a line - space
+line_space = int((50 / cr_pr) * proportion)
+
+
+def print_stats(img, names):
+    draw = ImageDraw.Draw(img)
+    draw.multiline_text((line_x, line_y), "Players Stats:", fill=(0, 0, 0), font=font)
     i = 0
     for name in names:
-        draw.multiline_text((line_x + 400 * i, line_y + 1 * line_space),
+        draw.multiline_text((line_x + 450 * i, line_y + 1 * line_space),
                             name + ":\n\n    Points:\n\n    Wheat:\n\n    Sheep:\n\n    Iron:\n\n    Wood:\n\n    "
                                    "Clay:\n\n    Active knights:\n\n    Sleeping nights:\n\n    Longest road:\n\n"
                                    "    Victory points:\n\n    Road builder:\n\n    Monopoly:\n\n    Year of "
                                    "prosper:\n\n",
                             fill=(0, 0, 0), font=font)
         i += 1
-    curr_img.save("images/dst/game1/" + img + ".jpg")
+    return img
 
 
 def game_test():
@@ -279,9 +318,10 @@ def game_test():
     print_crossroads(g_board.crossroads)
     set_roads_locations(g_board.roads, g_board.crossroads)
     print_roads(g_board.roads)
-    print_inf(("shay", "shaked", "sheleg"), "turn8")
+    next_turn(1)
     dev_stack_test()
     player_test()
+
 
 print("hello world")
 game_test()
