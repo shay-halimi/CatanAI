@@ -1,8 +1,7 @@
 from enum import Enum
-
+from DevStack import DevStack
 import Game
 from Resources import Resource
-
 
 class Player:
     resources = {Resource.CLAY: 0, Resource.WOOD: 0, Resource.SHEEP: 0, Resource.IRON: 0, Resource.WHEAT: 0}

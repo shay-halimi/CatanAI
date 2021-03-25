@@ -3,6 +3,7 @@ import Board
 import DevStack
 import Game
 from Resources import Resource
+from Game import Game
 
 # where the board begin
 start_of_board_x = 165
@@ -21,6 +22,8 @@ iron = Image.open('images/src/Iron.jpg')
 # mask
 terrain_mask = Image.open('images/src/mask.jpg').convert('L')
 
+# current proportion
+cr_pr = 0.635 * 0.95
 # the proportion of the board relative to original size
 proportion = 0.635 * 0.95
 
@@ -58,11 +61,14 @@ village_mask = village_mask.resize(crossroad_size)
 city_mask = city_mask.resize(crossroad_size)
 
 # crossroads start locations
-start_cr = (int(start_of_board_x + terrain_size[0] * 1.5 - crossroad_size[0] / 2)
-            , int(start_of_board_y - ter_mid_height - crossroad_size[1] / 2))
+start_cr = (int(start_of_board_x + terrain_size[0] * 1.5 - crossroad_size[0] / 2),
+            int(start_of_board_y - ter_mid_height - crossroad_size[1] / 2))
 
 # associating players with colors
-players = {1: (yellow, "yellow"), 2: (red, "red"), 3: (green, "green"), 4: (blue, "blue")}
+players = {1: {"background": yellow, "str": "yellow", "color": (255, 242, 0), "name": "none"},
+           2: {"background": red, "str": "red", "color": (255, 0, 0), "name": "none"},
+           3: {"background": green, "str": "green", "color": (35, 177, 77), "name": "none"},
+           4: {"background": blue, "str": "blue", "color": (0, 162, 232)}, "name": "none"}
 
 # production number image, its mask, font and location
 number_img = Image.open('images/src/yellow.jpg')
@@ -78,23 +84,32 @@ num_loc = (int(81 * proportion), int(108 * proportion))
 number_img = number_img.resize(terrain_size)
 number_mask = number_mask.resize(terrain_size)
 
-# natural crossroad image
-crossroad = Image.open('images/src/crossroad.jpg')
+# dice location
+line_space = int((50 / cr_pr) * proportion)
+start_print_dice = (int((906 / cr_pr) * proportion), int((121 / (0.635 * 0.95)) * proportion))
+die1_loc = (start_print_dice[0], start_print_dice[1])
+die2_loc = (start_print_dice[0], start_print_dice[1] + line_space)
+dice_loc = (start_print_dice[0], start_print_dice[1] + line_space * 2)
 
 # board for testing
 g_board = Board.Board()
 
 
-def show_terrain(board):
+# creating the terrain in the start of the game and saving it in images/temp/background.jpg
+def show_terrain(map):
+    # open starting image of background
     curr_img = background.copy()
+    # setting the y location of the start of the terrain
     y = start_of_board_y
+    # printing the terrain
     for line in range(5):
         x = start_of_board_x
         if line == 0 or line == 4:
             x += terrain_size[0]
         if line == 1 or line == 3:
             x += int(terrain_size[0] / 2)
-        for terrain in board.map[line]:
+
+        for terrain in map[line]:
 
             if terrain.resource == Resource.IRON:
                 curr_img.paste(iron, (x, y), terrain_mask)
@@ -116,34 +131,12 @@ def show_terrain(board):
                     draw.multiline_text(num_loc, str(terrain.num), fill=(255, 0, 0), font=font)
                 else:
                     draw.multiline_text(num_loc, str(terrain.num), fill=(0, 0, 0), font=font)
-                curr_num_img.save('images/dst/temp.jpg')
-                curr_num_img = Image.open('images/dst/temp.jpg')
+                curr_num_img.save('images/temp/temp.jpg')
+                curr_num_img = Image.open('images/temp/temp.jpg')
                 curr_img.paste(curr_num_img, (x, y), number_mask)
             x += terrain_size[0]
         y += ter_top_mid_height
-    curr_img.save('images/dst/result5.jpg', quality=95)
-
-
-def show_crossroads(temp_img):
-    y = start_cr[1]
-    even = False
-    step = -int(terrain_size[0] / 2)
-    start = start_cr[0]
-    for i in range(12):
-        x = start
-        if even:
-            y += ter_top_height
-        else:
-            start += step
-            y += ter_mid_height
-        if i == 5:
-            step *= -1
-        for j in range(len(g_board.crossroads[i])):
-            c_r = red.copy()
-            temp_img.paste(c_r, (x, y), village_mask)
-            x += terrain_size[0]
-        even = not even
-    temp_img.save('images/dst/crossroads2.jpg')
+    curr_img.save('images/temp/background.jpg', quality=95)
 
 
 def set_crossroads_locations(crossroads):
@@ -166,22 +159,108 @@ def set_crossroads_locations(crossroads):
         even = not even
 
 
-def print_crossroads(crossroads, temp_img):
+def set_roads_locations(roads, crossroads):
+    i = 0
+    xor = False
+    for line in roads:
+        up = 0
+        down = 0
+        if i == 5:
+            xor = True
+        for road in line:
+            x1 = crossroads[i][up].api_location[0] + int(crossroad_size[0] / 2)
+            y1 = crossroads[i][up].api_location[1] + int(crossroad_size[1] / 2)
+            x2 = crossroads[i + 1][down].api_location[0] + int(crossroad_size[0] / 2)
+            y2 = crossroads[i + 1][down].api_location[1] + int(crossroad_size[1] / 2)
+            road.api_location = (x1, y1, x2, y2)
+            if i % 2:
+                up += 1
+                down += 1
+            else:
+                if (up == down) != xor:
+                    down += 1
+                else:
+                    up += 1
+        i += 1
+
+
+def print_crossroads(crossroads):
     for line in crossroads:
         for cr in line:
-            if cr.ownership:
-                c_r = players[cr.ownership][0].copy()
-                temp_img.paste(c_r, cr.api_location, village_mask)
-    temp_img.save('images/dst/crossroads3.jpg')
+            print_crossroad(cr)
+
+
+def print_crossroad(cr):
+    curr_img = Image.open("images/temp/background.jpg")
+    if cr.ownership:
+        color = players[cr.ownership]["background"].copy()
+        if cr.building == 1:
+            curr_img.paste(color, cr.api_location, village_mask)
+        if cr.building == 2:
+            curr_img.paste(color, cr.api_location, city_mask)
+    curr_img.save("images/temp/background.jpg")
+
+
+def print_road(road):
+    curr_img = Image.open("images/temp/background.jpg")
+    if road.owner:
+        draw = ImageDraw.Draw(curr_img)
+        draw.line(road.api_location, fill=players[road.owner]["color"], width=10)
+    curr_img.save("images/temp/background.jpg")
+
+
+def print_roads(roads):
+    for line in roads:
+        for road in line:
+            print_road(road)
+
+
+def next_turn(name):
+    curr_img = Image.open("images/temp/background.jpg")
+    curr_img.save("images/dst/game1/" + name + ".jpg")
+
+
+def print_dice(dice, name):
+    curr_img = Image.open("images/dst/game1/" + name + ".jpg")
+    draw = ImageDraw.Draw(curr_img)
+    draw.multiline_text(die1_loc, "First Die : " + str(dice.dice1), fill=(0, 0, 0), font=font)
+    draw.multiline_text(die2_loc, "Second Die : " + str(dice.dice2), fill=(0, 0, 0), font=font)
+    draw.multiline_text(dice_loc, "Sum of Dice : " + str(dice.sum), fill=(0, 0, 0), font=font)
+    curr_img.save("images/dst/game1/" + name + ".jpg")
+
+
+# first line location
+line_x = 1100
+line_y = 500
 
 def DevStackTest():
     a=DevStack()
     print(a.stack)
 
-show_terrain(g_board)
-background = Image.open('images/dst/result5.jpg')
-show_crossroads(background)
-background = Image.open('images/dst/result5.jpg')
-set_crossroads_locations(g_board.crossroads)
-Board.test_crossroads(g_board.crossroads)
-print_crossroads(g_board.crossroads, background)
+def print_inf(names, img):
+    curr_img = Image.open("images/dst/game1/" + img + ".jpg")
+    draw = ImageDraw.Draw(curr_img)
+    draw.multiline_text((line_x, line_y), "hello world", fill=(0, 0, 0), font=font)
+    i = 0
+    for name in names:
+        draw.multiline_text((line_x + 400 * i, line_y + 1 * line_space),
+                            name + ":\n\n    Points:\n\n    Wheat:\n\n    Sheep:\n\n    Iron:\n\n    Wood:\n\n    "
+                                   "Clay:\n\n    Active knights:\n\n    Sleeping nights:\n\n    Longest road:\n\n"
+                                   "    Victory points:\n\n    Road builder:\n\n    Monopoly:\n\n    Year of "
+                                   "prosper:\n\n",
+                            fill=(0, 0, 0), font=font)
+        i += 1
+    curr_img.save("images/dst/game1/" + img + ".jpg")
+
+
+def game_test():
+    show_terrain(g_board.map)
+    set_crossroads_locations(g_board.crossroads)
+    print_crossroads(g_board.crossroads)
+    set_roads_locations(g_board.roads, g_board.crossroads)
+    print_roads(g_board.roads)
+    print_inf(("shay", "shaked", "sheleg"), "turn8")
+
+
+print("hello world")
+game_test()

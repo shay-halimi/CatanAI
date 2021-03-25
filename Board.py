@@ -1,5 +1,6 @@
 from Resources import Resource
 import random
+import Dice
 
 DESSERT = 7
 
@@ -31,10 +32,13 @@ class Crossroad:
 class Road:
     def __init__(self, owner=0):
         self.owner = owner
+        self.api_location = [0, 0, 0, 0]
 
 
 class Board:
     def __init__(self):
+
+        self.dice = Dice.Dice()
 
         self.map = [[Terrain(10), Terrain(2), Terrain(9)],
                     [Terrain(12), Terrain(6), Terrain(4), Terrain(10)],
@@ -56,9 +60,6 @@ class Board:
             if i == 5:
                 step = -1
             odd = 1 - odd
-        for line in self.crossroads:
-            print(len(line))
-        print(":::::::::::::::::::::")
 
         resource_stack = [Resource.DESSERT] + [Resource.IRON] * 3 + [Resource.CLAY] * 3 + [Resource.WOOD] * 4 + [
             Resource.WHEAT] * 4 + [Resource.SHEEP] * 4
@@ -71,6 +72,7 @@ class Board:
                 if resource == Resource.DESSERT:
                     self.map[2][2].num = terrain.num
                     terrain.num = 7
+                self.dice.number_to_terrain[terrain.num].append((i,j))
                 terrain.set_resource(resource)
                 terrain.crossroads += [self.crossroads[2 * i][j]]
                 terrain.crossroads += [self.crossroads[2 * i + 1][j]]
@@ -103,26 +105,14 @@ class Board:
             self.roads.append(line)
 
 
-def test_terrain():
-    terrain = Terrain(3)
-    print(terrain)
-    print("PASS") if str(terrain) == "(3,None)" else print("FAILED")
-    terrain.set_resource(Resource.IRON)
-    print(terrain)
-    print("PASS") if str(terrain) == "(3,Resource.IRON)" else print("FAILED")
-
-
-def test_board():
-    print("This is a random map:")
-    board = Board()
-    print(str(board))
-
-
 def test_crossroads(crossroads):
     for line in crossroads:
         for cr in line:
             cr.ownership = random.randrange(0, 5)
+            cr.building = random.randrange(1, 3)
 
 
-test_terrain()
-test_board()
+def test_roads(roads):
+    for line in roads:
+        for road in line:
+            road.owner = random.randrange(0, 5)
