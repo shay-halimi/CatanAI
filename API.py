@@ -1,9 +1,7 @@
 from PIL import Image, ImageDraw, ImageFont
 from Resources import Resource
 
-# where the board begin
-start_of_board_x = 165
-start_of_board_y = 572
+# ---- Images and Sizes---- #
 
 # start image
 background = Image.open('images/src/background2.jpg')
@@ -56,16 +54,6 @@ green = green.resize(crossroad_size)
 village_mask = village_mask.resize(crossroad_size)
 city_mask = city_mask.resize(crossroad_size)
 
-# crossroads start locations
-start_cr = (int(start_of_board_x + terrain_size[0] * 1.5 - crossroad_size[0] / 2),
-            int(start_of_board_y - ter_mid_height - crossroad_size[1] / 2))
-
-# associating players with colors
-players = {1: {"background": yellow, "str": "yellow", "color": (255, 242, 0), "name": "none"},
-           2: {"background": red, "str": "red", "color": (255, 0, 0), "name": "none"},
-           3: {"background": green, "str": "green", "color": (35, 177, 77), "name": "none"},
-           4: {"background": blue, "str": "blue", "color": (0, 162, 232)}, "name": "none"}
-
 # production number image, its mask, font and location
 number_img = Image.open('images/src/yellow.jpg')
 # mask
@@ -73,16 +61,46 @@ number_mask = Image.open('images/src/circle_mask.jpg').convert('L')
 # font
 font_size = int(48 * proportion)
 font = ImageFont.truetype('Library/Fonts/Arial Bold.ttf', font_size)
-# location
+# location relative to number image location
 num_loc = (int(81 * proportion), int(108 * proportion))
 
 # resizing production number and its mask by the terrain size
 number_img = number_img.resize(terrain_size)
 number_mask = number_mask.resize(terrain_size)
 
+# getting down a line - space
+line_space = int((50 / cr_pr) * proportion)
+
+# ---- Locations ---- #
+
+# starting location of the board
+start_of_board_x = 165
+start_of_board_y = 572
+
+# starting location of the cross roads
+start_cr = (int(start_of_board_x + terrain_size[0] * 1.5 - crossroad_size[0] / 2),
+            int(start_of_board_y - ter_mid_height - crossroad_size[1] / 2))
+
+# starting location of the log
+log_loc = (870, 70)
+
+# starting locations of stats
+line_x = 1100
+line_y = 500
+
+# ---- Players API info ---- #
+
+# associating players with colors
+players = {1: {"background": yellow, "str": "yellow", "color": (255, 242, 0), "name": "none"},
+           2: {"background": red, "str": "red", "color": (255, 0, 0), "name": "none"},
+           3: {"background": green, "str": "green", "color": (35, 177, 77), "name": "none"},
+           4: {"background": blue, "str": "blue", "color": (0, 162, 232)}, "name": "none"}
+
+
+# ---- start of the game functions ---- #
 
 # creating the terrain in the start of the game and saving it in images/temp/background.jpg
-def show_terrain(map):
+def show_terrain(board):
     # open starting image of background
     curr_img = background.copy()
     # setting the y location of the start of the terrain
@@ -95,7 +113,7 @@ def show_terrain(map):
         if line == 1 or line == 3:
             x += int(terrain_size[0] / 2)
 
-        for terrain in map[line]:
+        for terrain in board[line]:
 
             if terrain.resource == Resource.IRON:
                 curr_img.paste(iron, (x, y), terrain_mask)
@@ -155,10 +173,7 @@ def set_roads_locations(roads, crossroads):
             road.api_location = (x1, y1, x2, y2)
 
 
-def print_crossroads(crossroads):
-    for line in crossroads:
-        for cr in line:
-            print_crossroad(cr)
+# ---- During the game functions ---- #
 
 
 def print_crossroad(cr):
@@ -178,28 +193,6 @@ def print_road(road):
         draw = ImageDraw.Draw(curr_img)
         draw.line(road.api_location, fill=players[road.owner]["color"], width=10)
     curr_img.save("images/temp/background.jpg")
-
-
-def print_roads(roads):
-    for line in roads:
-        for road in line:
-            print_road(road)
-
-
-# starting location of the log
-log_loc = (870, 70)
-
-
-def print_log(board, img, round, turn, dice):
-    draw = ImageDraw.Draw(img)
-    log_str = "Log:\n\n"
-    log_str += "This is round number : " + str(round) + ".\n\nNow it is " + turn + "'s turn.\n\n"
-    if dice:
-        log_str += "Sum of Dice : " + str(board.dice.sum) + "\n\n"
-    else:
-        log_str += "The dice have not yet been rolled."
-    draw.multiline_text(log_loc, log_str, fill=(0, 0, 0), font=font)
-    return img
 
 
 def next_turn(board, round):
@@ -225,13 +218,16 @@ def next_turn(board, round):
     img.save("images/dst/game1/turn" + str(round) + "part3.jpg")
 
 
-# first line location of stats
-line_x = 1100
-line_y = 500
-
-
-# getting down a line - space
-line_space = int((50 / cr_pr) * proportion)
+def print_log(board, img, rnd, turn, dice):
+    draw = ImageDraw.Draw(img)
+    log_str = "Log:\n\n"
+    log_str += "This is round number : " + str(rnd) + ".\n\nNow it is " + turn + "'s turn.\n\n"
+    if dice:
+        log_str += "Sum of Dice : " + str(board.dice.sum) + "\n\n"
+    else:
+        log_str += "The dice have not yet been rolled."
+    draw.multiline_text(log_loc, log_str, fill=(0, 0, 0), font=font)
+    return img
 
 
 def print_stats(img, names):
@@ -247,6 +243,21 @@ def print_stats(img, names):
                             fill=(0, 0, 0), font=font)
         i += 1
     return img
+
+
+# ---- test functions --- #
+
+
+def print_crossroads(crossroads):
+    for line in crossroads:
+        for cr in line:
+            print_crossroad(cr)
+
+
+def print_roads(roads):
+    for line in roads:
+        for road in line:
+            print_road(road)
 
 
 def game_test(g_board):
@@ -271,6 +282,9 @@ def game_test(g_board):
             print("cr " + str(cr.location) + " :")
             for n in cr.neighbors:
                 print("n " + str(n.location) + " :")
+
+
+# ---- main ---- #
 
 
 print("hello API")
