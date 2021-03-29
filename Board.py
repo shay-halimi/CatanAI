@@ -47,6 +47,7 @@ class Crossroad:
         self.neighbors = []
         self.legal = True
         self.connected = {}
+        self.roads = []
 
     def aux_build(self, player):
         if self.ownership is None:
@@ -66,18 +67,26 @@ class Crossroad:
         if self.legal:
             return self.aux_build(player)
 
+    def add_road(self, road):
+        self.roads += [road]
+
 
 class Road:
     def __init__(self, owner=0):
         self.owner = owner
         self.api_location = [0, 0, 0, 0]
+        self.neighbors = []
+
+    def build(self, player):
+        if self.owner == 0 and (self.neighbors[0].connected[player] or self.neighbors[1].connected[player]):
+            self.owner = player
+            self.neighbors[0].connected[player] = True
+            self.neighbors[1].connected[player] = True
+            return True
+        return False
 
 
 class Board:
-    def add_neighbor_cr(self, cr, i, j):
-        if 0 <= i < 12 and 0 <= j < cr_line_len[i]:
-            cr.neighbors += [self.crossroads[i][j]]
-
     def __init__(self):
 
         self.dice = Dice.Dice()
@@ -112,6 +121,7 @@ class Board:
                     self.add_neighbor_cr(cr, i + 1, j)
                 j += 1
 
+        # shuffle the terrain on the board and link the cross roads to them
         resource_stack = [Resource.DESSERT] + [Resource.IRON] * 3 + [Resource.CLAY] * 3 + [Resource.WOOD] * 4 + [
             Resource.WHEAT] * 4 + [Resource.SHEEP] * 4
         i = 0
@@ -134,6 +144,7 @@ class Board:
                 j += 1
             i += 1
 
+        # create the roads
         self.roads = []
         length = 3
         step = 1
@@ -146,7 +157,9 @@ class Board:
                 length += step * (1 - mid)
             else:
                 for j in range(2 * length):
-                    line.append(Road())
+                    r = Road()
+                    r.neighbors += []
+                    line.append(r)
                 length += step * mid
             if i == 4:
                 step = 0
@@ -154,6 +167,39 @@ class Board:
                 step = -1
                 mid = 1
             self.roads.append(line)
+
+        # link cross roads to roads
+        self.add_neighbors_to_roads()
+
+    def add_neighbor_cr(self, cr, i, j):
+        if 0 <= i < 12 and 0 <= j < cr_line_len[i]:
+            cr.neighbors += [self.crossroads[i][j]]
+
+    # very convoluted function to link each road with its vertices cross roads and vice versa
+    def add_neighbors_to_roads(self):
+        i = 0
+        xor = False
+        for line in self.roads:
+            up = 0
+            down = 0
+            if i == 5:
+                xor = True
+            for road in line:
+                cr = self.crossroads[i][up]
+                cr.add_road(road)
+                road.neighbors += [cr]
+                cr = self.crossroads[i + 1][down]
+                cr.add_road(road)
+                road.neighbors += [cr]
+                if i % 2:
+                    up += 1
+                    down += 1
+                else:
+                    if (up == down) != xor:
+                        down += 1
+                    else:
+                        up += 1
+            i += 1
 
     # ToDo : make sure the place is legal
     def get_legal_crossroads(self):

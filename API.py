@@ -154,28 +154,13 @@ def set_crossroads_locations(crossroads):
 
 
 def set_roads_locations(roads, crossroads):
-    i = 0
-    xor = False
     for line in roads:
-        up = 0
-        down = 0
-        if i == 5:
-            xor = True
         for road in line:
-            x1 = crossroads[i][up].api_location[0] + int(crossroad_size[0] / 2)
-            y1 = crossroads[i][up].api_location[1] + int(crossroad_size[1] / 2)
-            x2 = crossroads[i + 1][down].api_location[0] + int(crossroad_size[0] / 2)
-            y2 = crossroads[i + 1][down].api_location[1] + int(crossroad_size[1] / 2)
+            x1 = road.neighbors[0].api_location[0] + int(crossroad_size[0] / 2)
+            y1 = road.neighbors[0].api_location[1] + int(crossroad_size[1] / 2)
+            x2 = road.neighbors[1].api_location[0] + int(crossroad_size[0] / 2)
+            y2 = road.neighbors[1].api_location[1] + int(crossroad_size[1] / 2)
             road.api_location = (x1, y1, x2, y2)
-            if i % 2:
-                up += 1
-                down += 1
-            else:
-                if (up == down) != xor:
-                    down += 1
-                else:
-                    up += 1
-        i += 1
 
 
 def print_crossroads(crossroads):
@@ -301,9 +286,11 @@ def print_stats(img, names):
 def game_test():
     show_terrain(g_board.map)
     set_crossroads_locations(g_board.crossroads)
-    # print_crossroads(g_board.crossroads)
+    Board.test_crossroads(g_board.crossroads)
+    print_crossroads(g_board.crossroads)
     set_roads_locations(g_board.roads, g_board.crossroads)
-    # print_roads(g_board.roads)
+    Board.test_roads(g_board.roads)
+    print_roads(g_board.roads)
     # next_turn(1)
     # game = Game()
     # game.start_game()
