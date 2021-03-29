@@ -13,6 +13,7 @@ class Player:
         self.is_computer = is_computer
         self.resources = {Resource.CLAY: 0, Resource.WOOD: 0, Resource.SHEEP: 0, Resource.IRON: 0, Resource.WHEAT: 0}
         self.devCards = []
+        self.longest_road = 0
 
     def add_resources(self, resource, number):
         self.resources[resource] += number

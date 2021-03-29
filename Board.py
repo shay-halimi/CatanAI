@@ -2,8 +2,32 @@ from Resources import Resource
 import random
 import Dice
 import API
+from Player import Player
+
+
+# ---- global variables ---- #
 
 DESSERT = 7
+
+
+# how many crossroads are in a line
+def init_cr_line_len():
+    line_len = []
+    num_of_crossroads = 3
+    step = 1
+    for i in range(12):
+        line_len += [num_of_crossroads]
+        if i % 2 == 0:
+            num_of_crossroads += step
+        if i == 5:
+            step = -1
+    return line_len
+
+
+cr_line_len = init_cr_line_len()
+
+
+# ---- classes ---- #
 
 
 class Terrain:
@@ -22,22 +46,6 @@ class Terrain:
         pass  # Todo: produce should call a "give resource" function to every structure in her presence.
 
 
-def init_cr_line_len():
-    line_len = []
-    num_of_crossroads = 3
-    step = 1
-    for i in range(12):
-        line_len += [num_of_crossroads]
-        if i % 2 == 0:
-            num_of_crossroads += step
-        if i == 5:
-            step = -1
-    return line_len
-
-
-cr_line_len = init_cr_line_len()
-
-
 # Todo: add special case to ports
 class Crossroad:
     def __init__(self):
@@ -49,6 +57,8 @@ class Crossroad:
         self.legal = True
         self.connected = {1: False, 2: False, 3: False, 4: False}
         self.roads = []
+        self.port = False
+        self.longest_road = {1: 0, 2: 0, 3: 0, 4: 0}
 
     def aux_build(self, player):
         if self.ownership is None:
@@ -79,6 +89,21 @@ class Road:
         self.api_location = [0, 0, 0, 0]
         self.neighbors = []
 
+    def upgrade_longest_road(self, player):
+        i = player.index
+        v = self.neighbors[0].longest_road
+        u = self.neighbors[1].longest_road
+        temp = v[i]
+        if v[i] == 0:
+            temp = u[i] + 1
+        if u[i] == 0:
+            u[i] = v[i] + 1
+        v[i] = temp
+        if v[i] > player.longest_road:
+            player.longest_road = v[i]
+        if u[i] > player.longest_road:
+            player.longest_road = u[i]
+
     def is_connected(self, player):
         if self.neighbors[0].connected[player] or self.neighbors[1].connected[player]:
             return True
@@ -94,6 +119,7 @@ class Road:
             self.owner = player
             self.neighbors[0].connected[player] = True
             self.neighbors[1].connected[player] = True
+            self.upgrade_longest_road(player)
             API.print_road(self)
             return True
         return False
@@ -120,7 +146,7 @@ class Board:
                 line.append(cr)
             self.crossroads.append(line)
 
-        # add cross road neighbors to each cross road
+        # add crossroad neighbors to each crossroad
         for i in range(len(self.crossroads)):
             j = 0
             for cr in self.crossroads[i]:
@@ -134,9 +160,10 @@ class Board:
                     self.add_neighbor_cr(cr, i + 1, j)
                 j += 1
 
+        # add crossroad api location to each crossroad
         API.set_crossroads_locations(self.crossroads)
 
-        # shuffle the terrain on the board and link the cross roads to them
+        # shuffle the terrain on the board and link the crossroads to them
         resource_stack = [Resource.DESSERT] + [Resource.IRON] * 3 + [Resource.CLAY] * 3 + [Resource.WOOD] * 4 + [
             Resource.WHEAT] * 4 + [Resource.SHEEP] * 4
         i = 0
@@ -190,7 +217,7 @@ class Board:
         if 0 <= i < 12 and 0 <= j < cr_line_len[i]:
             cr.neighbors += [self.crossroads[i][j]]
 
-    # very convoluted function to link each road with its vertices cross roads and vice versa
+    # very convoluted function to link each road with its vertices crossroads and vice versa
     def add_neighbors_to_roads(self):
         i = 0
         xor = False
@@ -240,6 +267,8 @@ class Board:
                     legal += [road]
 
 
+# ---- test functions ---- #
+
 def test_crossroads(crossroads):
     for line in crossroads:
         for cr in line:
@@ -252,6 +281,8 @@ def test_roads(roads):
         for road in line:
             road.owner = random.randrange(0, 5)
 
+
+# ---- main ---- #
 
 print("Hello Board")
 board = Board()
