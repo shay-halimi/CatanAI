@@ -1,6 +1,7 @@
 from Resources import Resource
 import random
 import Dice
+import API
 
 DESSERT = 7
 
@@ -56,6 +57,7 @@ class Crossroad:
                 n.legal = False
         if self.ownership == player and self.building < 2:
             self.building += 1
+            API.print_crossroad(self)
             return True
         return False
 
@@ -92,6 +94,7 @@ class Road:
             self.owner = player
             self.neighbors[0].connected[player] = True
             self.neighbors[1].connected[player] = True
+            API.print_road(self)
             return True
         return False
 
@@ -130,6 +133,8 @@ class Board:
                     self.add_neighbor_cr(cr, i - 1, j)
                     self.add_neighbor_cr(cr, i + 1, j)
                 j += 1
+
+        API.set_crossroads_locations(self.crossroads)
 
         # shuffle the terrain on the board and link the cross roads to them
         resource_stack = [Resource.DESSERT] + [Resource.IRON] * 3 + [Resource.CLAY] * 3 + [Resource.WOOD] * 4 + [
@@ -246,3 +251,10 @@ def test_roads(roads):
     for line in roads:
         for road in line:
             road.owner = random.randrange(0, 5)
+
+
+print("Hello Board")
+board = Board()
+test_roads(board.roads)
+test_crossroads(board.crossroads)
+API.game_test(board)

@@ -1,9 +1,4 @@
 from PIL import Image, ImageDraw, ImageFont
-import Board
-from DevStack import DevStack
-import Player
-from Game import Game
-import DevStack
 from Resources import Resource
 
 # where the board begin
@@ -85,9 +80,6 @@ num_loc = (int(81 * proportion), int(108 * proportion))
 number_img = number_img.resize(terrain_size)
 number_mask = number_mask.resize(terrain_size)
 
-# board for testing
-g_board = Board.Board()
-
 
 # creating the terrain in the start of the game and saving it in images/temp/background.jpg
 def show_terrain(map):
@@ -147,7 +139,7 @@ def set_crossroads_locations(crossroads):
             y += ter_mid_height
         if i == 5:
             step *= -1
-        for j in range(len(g_board.crossroads[i])):
+        for j in range(len(crossroads[i])):
             crossroads[i][j].api_location = (x, y)
             x += terrain_size[0]
         even = not even
@@ -198,22 +190,22 @@ def print_roads(roads):
 log_loc = (870, 70)
 
 
-def print_log(img, round, turn, dice):
+def print_log(board, img, round, turn, dice):
     draw = ImageDraw.Draw(img)
     log_str = "Log:\n\n"
     log_str += "This is round number : " + str(round) + ".\n\nNow it is " + turn + "'s turn.\n\n"
     if dice:
-        log_str += "Sum of Dice : " + str(g_board.dice.sum) + "\n\n"
+        log_str += "Sum of Dice : " + str(board.dice.sum) + "\n\n"
     else:
         log_str += "The dice have not yet been rolled."
     draw.multiline_text(log_loc, log_str, fill=(0, 0, 0), font=font)
     return img
 
 
-def next_turn(round):
+def next_turn(board, round):
     # before the dice have been rolled
     img = Image.open("images/temp/background.jpg")
-    img = print_log(img, round, "Shay", False)
+    img = print_log(board, img, round, "Shay", False)
     img = print_stats(img, ("Shay", "Shaked", "Sheleg", "Oran"))
     img.save("images/dst/game1/turn" + str(round) + "part1.jpg")
 
@@ -221,14 +213,14 @@ def next_turn(round):
     # ToDo: Enter rolling of the dice
     # ToDo: Enter actions of the game
     img = Image.open("images/temp/background.jpg")
-    img = print_log(img, round, "Shay", True)
+    img = print_log(board, img, round, "Shay", True)
     img = print_stats(img, ("Shay", "Shaked", "Sheleg", "Oran"))
     img.save("images/dst/game1/turn" + str(round) + "part2.jpg")
 
     # after the player has played
     # ToDo : Enter actions of the Game
     img = Image.open("images/temp/background.jpg")
-    img = print_log(img, round, "Shay", True)
+    img = print_log(board, img, round, "Shay", True)
     img = print_stats(img, ("Shay", "Shaked", "Sheleg", "Oran"))
     img.save("images/dst/game1/turn" + str(round) + "part3.jpg")
 
@@ -236,32 +228,6 @@ def next_turn(round):
 # first line location of stats
 line_x = 1100
 line_y = 500
-
-
-def DevStackTest():
-    a = DevStack()
-    print(a.stack)
-
-
-def dev_stack_test():
-    a = DevStack.DevStack()
-    print(a.deck)
-
-
-def player_test():
-    playerA = Player.Player(1)
-    cur_game = Game.Game([playerA])
-    add_resources_test(playerA)
-    print(playerA.resources)
-    cur_game.buy_dev_card(playerA)
-    playerA.buy_devops()
-    assert len(playerA.devCards) == 1
-
-
-def add_resources_test(player):
-    for resource in Resource:
-        if resource is not Resource.DESSERT:
-            player.add_resources(resource, 6)
 
 
 # getting down a line - space
@@ -283,13 +249,11 @@ def print_stats(img, names):
     return img
 
 
-def game_test():
+def game_test(g_board):
     show_terrain(g_board.map)
     set_crossroads_locations(g_board.crossroads)
-    Board.test_crossroads(g_board.crossroads)
     print_crossroads(g_board.crossroads)
     set_roads_locations(g_board.roads, g_board.crossroads)
-    Board.test_roads(g_board.roads)
     print_roads(g_board.roads)
     # next_turn(1)
     # game = Game()
@@ -309,5 +273,4 @@ def game_test():
                 print("n " + str(n.location) + " :")
 
 
-print("hello world")
-game_test()
+print("hello API")
