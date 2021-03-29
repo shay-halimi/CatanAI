@@ -45,6 +45,26 @@ class Crossroad:
         self.location = None
         self.api_location = None
         self.neighbors = []
+        self.legal = True
+        self.connected = {}
+
+    def aux_build(self, player):
+        if self.ownership is None:
+            self.ownership = player
+            for n in self.neighbors:
+                n.legal = False
+        if self.ownership == player and self.building < 2:
+            self.building += 1
+            return True
+        return False
+
+    def build(self, player):
+        if self.legal and self.connected[player]:
+            return self.aux_build(player)
+
+    def build_start(self, player):
+        if self.legal:
+            return self.aux_build(player)
 
 
 class Road:
