@@ -4,7 +4,6 @@ import Dice
 import API
 from Player import Player
 
-
 # ---- global variables ---- #
 
 DESSERT = 7
@@ -42,8 +41,10 @@ class Terrain:
     def set_resource(self, resource):
         self.resource = resource
 
-    def produce(self):
-        pass  # Todo: produce should call a "give resource" function to every structure in her presence.
+    def produce(self, players):
+        for cr in self.crossroads:
+            if cr.ownership != 0 and self.resource is not None:
+                players[cr.ownership - 1].resources[self.resource] += cr.building
 
 
 # Todo: add special case to ports
@@ -182,7 +183,6 @@ class Board:
         self.crossroads[11][0].port = Resource.CLAY
         self.crossroads[10][2].port = Resource.DESSERT
         self.crossroads[11][1].port = Resource.DESSERT
-
 
         # shuffle the terrain on the board and link the crossroads to them
         resource_stack = [Resource.DESSERT] + [Resource.IRON] * 3 + [Resource.CLAY] * 3 + [Resource.WOOD] * 4 + [

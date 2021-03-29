@@ -261,7 +261,7 @@ def print_roads(roads):
 
 
 def game_test(g_board):
-    show_terrain(g_board.map)
+    show_terrain(g_board.board)
     set_crossroads_locations(g_board.crossroads)
     print_crossroads(g_board.crossroads)
     set_roads_locations(g_board.roads, g_board.crossroads)

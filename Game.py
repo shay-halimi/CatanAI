@@ -10,7 +10,7 @@ class Game:
             player.devCards.append(self.devStack.get())
 
     def __init__(self, players):
-        self.map = Board()
+        self.board = Board()
         self.players = players
         for i in range(len(players)):
             self.players += [Player(i)]
@@ -68,3 +68,6 @@ class Game:
                     # TODO need to add road to the map
                     road_is_valid = True
 
+    def throw_dice(self):
+        for i, j in self.board.dice.throw():
+            self.board.map[i][j].produce()

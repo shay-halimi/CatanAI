@@ -31,6 +31,7 @@ class Dice:
         self.dice1.throw()
         self.dice2.throw()
         self.sum = self.dice1.number + self.dice2.number
+        return self.number_to_terrain[self.sum]
 
     def robber(self):
         pass  # ToDo: robber should activate a robber.
