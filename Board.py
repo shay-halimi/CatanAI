@@ -46,7 +46,7 @@ class Crossroad:
         self.api_location = None
         self.neighbors = []
         self.legal = True
-        self.connected = {}
+        self.connected = {1: False, 2: False, 3: False, 4: False}
         self.roads = []
 
     def aux_build(self, player):
@@ -77,8 +77,18 @@ class Road:
         self.api_location = [0, 0, 0, 0]
         self.neighbors = []
 
+    def is_connected(self, player):
+        if self.neighbors[0].connected[player] or self.neighbors[1].connected[player]:
+            return True
+        return False
+
+    def is_legal(self, player):
+        if self.owner == 0 and (self.is_connected(player)):
+            return True
+        return False
+
     def build(self, player):
-        if self.owner == 0 and (self.neighbors[0].connected[player] or self.neighbors[1].connected[player]):
+        if self.is_legal(player):
             self.owner = player
             self.neighbors[0].connected[player] = True
             self.neighbors[1].connected[player] = True
@@ -201,13 +211,28 @@ class Board:
                         up += 1
             i += 1
 
-    # ToDo : make sure the place is legal
-    def get_legal_crossroads(self):
+    def get_legal_crossroads_start(self, player):
         legal = []
-        for i in range(12):
-            for j in range(len(self.crossroads[i])):
-                legal += [(i, j)]
+        for line in self.crossroads:
+            for cr in line:
+                if cr.legal and (cr.ownership is None or cr.ownership == player):
+                    legal += [cr]
         return legal
+
+    def get_legal_crossroads(self, player):
+        legal_start = self.get_legal_crossroads_start(player)
+        legal = []
+        for cr in legal_start:
+            if cr.connected[player]:
+                legal += [cr]
+        return
+
+    def get_legal_roads(self, player):
+        legal = []
+        for line in self.roads:
+            for road in line:
+                if road.is_legal():
+                    legal += [road]
 
 
 def test_crossroads(crossroads):

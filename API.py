@@ -294,7 +294,7 @@ def game_test():
     # next_turn(1)
     # game = Game()
     # game.start_game()
-    print(g_board.get_legal_crossroads())
+    print(g_board.get_legal_crossroads(1))
     g_board.crossroads[0][2].ownership = 2
     g_board.crossroads[0][2].building = 1
     print_crossroad(g_board.crossroads[0][2])
