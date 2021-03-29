@@ -57,7 +57,7 @@ class Crossroad:
         self.legal = True
         self.connected = {1: False, 2: False, 3: False, 4: False}
         self.roads = []
-        self.port = False
+        self.port = None
         self.longest_road = {1: 0, 2: 0, 3: 0, 4: 0}
 
     def aux_build(self, player):
@@ -162,6 +162,27 @@ class Board:
 
         # add crossroad api location to each crossroad
         API.set_crossroads_locations(self.crossroads)
+
+        # build ports
+        self.crossroads[0][0].port = Resource.WOOD
+        self.crossroads[1][0].port = Resource.WOOD
+        self.crossroads[0][1].port = Resource.DESSERT
+        self.crossroads[1][2].port = Resource.DESSERT
+        self.crossroads[2][3].port = Resource.DESSERT
+        self.crossroads[3][4].port = Resource.DESSERT
+        self.crossroads[3][0].port = Resource.SHEEP
+        self.crossroads[4][0].port = Resource.SHEEP
+        self.crossroads[5][5].port = Resource.DESSERT
+        self.crossroads[6][5].port = Resource.DESSERT
+        self.crossroads[7][0].port = Resource.WHEAT
+        self.crossroads[8][0].port = Resource.WHEAT
+        self.crossroads[8][4].port = Resource.IRON
+        self.crossroads[9][3].port = Resource.IRON
+        self.crossroads[10][0].port = Resource.CLAY
+        self.crossroads[11][0].port = Resource.CLAY
+        self.crossroads[10][2].port = Resource.DESSERT
+        self.crossroads[11][1].port = Resource.DESSERT
+
 
         # shuffle the terrain on the board and link the crossroads to them
         resource_stack = [Resource.DESSERT] + [Resource.IRON] * 3 + [Resource.CLAY] * 3 + [Resource.WOOD] * 4 + [
