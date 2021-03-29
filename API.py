@@ -2,7 +2,7 @@ from PIL import Image, ImageDraw, ImageFont
 import Board
 from DevStack import DevStack
 import Player
-import Game
+from Game import Game
 import DevStack
 from Resources import Resource
 
@@ -257,6 +257,7 @@ def DevStackTest():
     a = DevStack()
     print(a.stack)
 
+
 def dev_stack_test():
     a = DevStack.DevStack()
     print(a.deck)
@@ -264,7 +265,7 @@ def dev_stack_test():
 
 def player_test():
     playerA = Player.Player(1)
-    cur_game=Game.Game([playerA])
+    cur_game = Game.Game([playerA])
     add_resources_test(playerA)
     print(playerA.resources)
     cur_game.buy_dev_card(playerA)
@@ -272,25 +273,10 @@ def player_test():
     assert len(playerA.devCards) == 1
 
 
-
-
 def add_resources_test(player):
     for resource in Resource:
         if resource is not Resource.DESSERT:
             player.add_resources(resource, 6)
-
-
-
-def num2name_turn(turn):
-    return "turn" + str(turn)
-
-
-def num2name_part(part):
-    return "part" + str(part)
-
-
-def get_location(folder, img):
-    return "images/" + folder + "/" + img + ".jpg"
 
 
 # getting down a line - space
@@ -315,12 +301,25 @@ def print_stats(img, names):
 def game_test():
     show_terrain(g_board.map)
     set_crossroads_locations(g_board.crossroads)
-    print_crossroads(g_board.crossroads)
+    # print_crossroads(g_board.crossroads)
     set_roads_locations(g_board.roads, g_board.crossroads)
-    print_roads(g_board.roads)
-    next_turn(1)
-    dev_stack_test()
-    player_test()
+    # print_roads(g_board.roads)
+    # next_turn(1)
+    # game = Game()
+    # game.start_game()
+    print(g_board.get_legal_crossroads())
+    g_board.crossroads[0][2].ownership = 2
+    g_board.crossroads[0][2].building = 1
+    print_crossroad(g_board.crossroads[0][2])
+    for n in g_board.crossroads[0][2].neighbors:
+        n.ownership = 3
+        n.building = 1
+        print_crossroad(n)
+    for line in g_board.crossroads:
+        for cr in line:
+            print("cr " + str(cr.location) + " :")
+            for n in cr.neighbors:
+                print("n " + str(n.location) + " :")
 
 
 print("hello world")
