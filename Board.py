@@ -109,7 +109,7 @@ class Road:
         self.api_location = [0, 0, 0, 0]
         self.neighbors = []
 
-    def upgrade_longest_road(self, player):
+    def upgrade_longest_road(self, player, board):
         i = player.index
         v = self.neighbors[0].longest_road
         u = self.neighbors[1].longest_road
@@ -123,6 +123,9 @@ class Road:
             player.longest_road = v[i]
         if u[i] > player.longest_road:
             player.longest_road = u[i]
+        if player.longest_road > board.longest_road_size:
+            board.longest_road_size = player.longest_road
+            board.longest_road_owner = player
 
     def is_connected(self, player):
         if self.neighbors[0].connected[player] or self.neighbors[1].connected[player]:
@@ -264,6 +267,10 @@ class Board:
         for n in range(players):
             hands += [Hand()]
 
+        # longest road stats
+        longest_road_size = 4
+        longest_road_owner = None
+
     def add_neighbor_cr(self, cr, i, j):
         if 0 <= i < 12 and 0 <= j < cr_line_len[i]:
             cr.neighbors += [self.crossroads[i][j]]
@@ -324,6 +331,7 @@ class Hand:
         active_knights, sleeping_knights, victory_points = 0, 0, 0
         road_builder, monopoly, year_of_prosper = 0, 0, 0
         longest_road, largest_army = 0, 0
+        points = 0
 
 
 # ---- test functions ---- #
