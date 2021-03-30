@@ -1,6 +1,7 @@
 from enum import Enum
 import DevStack
 from Resources import Resource
+from Board import Board
 
 
 class Player:
@@ -15,8 +16,8 @@ class Player:
         self.devCards = []
         self.longest_road = 0
 
-    def add_resources(self, resource, number):
-        self.resources[resource] += number
+    def update_resources(self, board: Board):
+        self.resources = board.hands[self.index]
 
     def buy_devops(self):
         if self.resources[Resource.SHEEP] < 1 or self.resources[Resource.IRON] < 1 or self.resources[

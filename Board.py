@@ -2,7 +2,6 @@ from Resources import Resource
 import random
 import Dice
 import API
-from Player import Player
 
 # ---- global variables ---- #
 
@@ -41,10 +40,24 @@ class Terrain:
     def set_resource(self, resource):
         self.resource = resource
 
-    def produce(self, players):
+    def produce(self, hands):
         for cr in self.crossroads:
             if cr.ownership != 0 and self.resource is not None:
-                players[cr.ownership - 1].resources[self.resource] += cr.building
+                hands[cr.ownership - 1].resources[self.resource] += cr.building
+
+    def produce_only_to(self, hands, players):
+        for p in players:
+            for cr in self.crossroads:
+                if cr.ownership == p and self.resource is not None:
+                    hands[cr.ownership - 1].resources[self.resource] += cr.building
+
+    def produce_except_to(self, hands, players):
+        for i in range(len(hands)):
+            if i not in players:
+                for cr in self.crossroads:
+                    if cr.ownership == i and self.resource is not None:
+                        hands[cr.ownership - 1].resources[self.resource] += cr.building
+
 
 
 # Todo: add special case to ports
@@ -60,6 +73,7 @@ class Crossroad:
         self.roads = []
         self.port = None
         self.longest_road = {1: 0, 2: 0, 3: 0, 4: 0}
+        self.terrains = []
 
     def aux_build(self, player):
         if self.ownership is None:
@@ -76,9 +90,15 @@ class Crossroad:
         if self.legal and self.connected[player]:
             return self.aux_build(player)
 
-    def build_start(self, player):
+    def build_first(self, player):
         if self.legal:
             return self.aux_build(player)
+
+    def build_second(self, player):
+        if self.legal:
+            rtn = self.aux_build(player)
+            for t in self.terrains:
+                t.produce()
 
     def add_road(self, road):
         self.roads += [road]
@@ -127,7 +147,7 @@ class Road:
 
 
 class Board:
-    def __init__(self):
+    def __init__(self, players):
 
         self.dice = Dice.Dice()
 
@@ -207,6 +227,12 @@ class Board:
                 j += 1
             i += 1
 
+        # link the terrains to their crossroads
+        for line in self.map:
+            for t in line:
+                for cr in t.crossroads:
+                    cr.terrains += [t]
+
         # create the roads
         self.roads = []
         length = 3
@@ -233,6 +259,11 @@ class Board:
 
         # link cross roads to roads
         self.add_neighbors_to_roads()
+
+        # create hands
+        hands = []
+        for n in range(players):
+            hands += [Hand()]
 
     def add_neighbor_cr(self, cr, i, j):
         if 0 <= i < 12 and 0 <= j < cr_line_len[i]:
@@ -284,8 +315,16 @@ class Board:
         legal = []
         for line in self.roads:
             for road in line:
-                if road.is_legal():
+                if road.is_legal(player):
                     legal += [road]
+
+
+class Hand:
+    def __init__(self):
+        resources = {Resource.WOOD: 0, Resource.IRON: 0, Resource.WHEAT: 0, Resource.SHEEP: 0, Resource.CLAY: 0}
+        active_knights, sleeping_knights, victory_points = 0, 0, 0
+        road_builder, monopoly, year_of_prosper = 0, 0, 0
+        longest_road, largest_army = 0, 0
 
 
 # ---- test functions ---- #
@@ -306,7 +345,7 @@ def test_roads(roads):
 # ---- main ---- #
 
 print("Hello Board")
-board = Board()
+board = Board(3)
 test_roads(board.roads)
 test_crossroads(board.crossroads)
 API.game_test(board)
