@@ -42,22 +42,21 @@ class Terrain:
 
     def produce(self, hands):
         for cr in self.crossroads:
-            if cr.ownership != 0 and self.resource is not None:
+            if cr.ownership != 0 and self.resource is not Resource.DESSERT:
                 hands[cr.ownership - 1].resources[self.resource] += cr.building
 
     def produce_only_to(self, hands, players):
         for p in players:
             for cr in self.crossroads:
-                if cr.ownership == p and self.resource is not None:
+                if cr.ownership == p and self.resource is not Resource.DESSERT:
                     hands[cr.ownership - 1].resources[self.resource] += cr.building
 
     def produce_except_to(self, hands, players):
         for i in range(len(hands)):
             if i not in players:
                 for cr in self.crossroads:
-                    if cr.ownership == i and self.resource is not None:
+                    if cr.ownership == i and self.resource is not Resource.DESSERT:
                         hands[cr.ownership - 1].resources[self.resource] += cr.building
-
 
 
 # Todo: add special case to ports
@@ -94,11 +93,11 @@ class Crossroad:
         if self.legal:
             return self.aux_build(player)
 
-    def build_second(self, player):
+    def build_second(self, player, hands):
         if self.legal:
             rtn = self.aux_build(player)
             for t in self.terrains:
-                t.produce()
+                t.produce_only_to(hands, player)
 
     def add_road(self, road):
         self.roads += [road]
