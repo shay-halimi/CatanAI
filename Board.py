@@ -1,4 +1,5 @@
 from Resources import Resource
+from DevStack import DevStack
 import random
 import Dice
 import API
@@ -98,6 +99,7 @@ class Crossroad:
             rtn = self.aux_build(player)
             for t in self.terrains:
                 t.produce_only_to(hands, player)
+            return rtn
 
     def add_road(self, road):
         self.roads += [road]
@@ -262,13 +264,13 @@ class Board:
         self.add_neighbors_to_roads()
 
         # create hands
-        hands = []
+        self.hands = []
         for n in range(players):
-            hands += [Hand()]
+            self.hands += [Hand()]
 
         # longest road stats
-        longest_road_size = 4
-        longest_road_owner = None
+        self.longest_road_size = 4
+        self.longest_road_owner = None
 
     def add_neighbor_cr(self, cr, i, j):
         if 0 <= i < 12 and 0 <= j < cr_line_len[i]:
@@ -326,8 +328,8 @@ class Board:
 
 class Hand:
     resources = {Resource.WOOD: 0, Resource.IRON: 0, Resource.WHEAT: 0, Resource.SHEEP: 0, Resource.CLAY: 0}
-    active_knights, sleeping_knights, victory_points = 0, 0, 0
-    road_builder, monopoly, year_of_prosper = 0, 0, 0
+    cards = {"knight": 0, "win_point": 0, "monopole": 0, "2_free_roads": 0, "2_free_resources": 0}
+    active_knights = 0
     longest_road, largest_army = 0, 0
     points = 0
     index = None
@@ -340,6 +342,43 @@ class Hand:
             self.resources[Resource.WOOD] -= 1
             self.resources[Resource.CLAY] -= 1
             road.build(self.index)
+            return True
+        return False
+
+    def can_buy_settlement(self):
+        return self.resources[Resource.WOOD] >= 1 and self.resources[Resource.CLAY] >= 1 and self.resources[
+            Resource.WHEAT] >= 1 and self.resources[Resource.SHEEP] >= 1
+
+    def buy_settlement(self, cr: Crossroad):
+        if self.can_buy_settlement() and cr.legal and cr.connected[self.index]:
+            self.resources[Resource.WOOD] -= 1
+            self.resources[Resource.CLAY] -= 1
+            self.resources[Resource.WHEAT] -= 1
+            self.resources[Resource.SHEEP] -= 1
+            cr.build(self.index)
+            return True
+        return False
+
+    def can_buy_city(self):
+        return self.resources[Resource.WHEAT] >= 2 and self.resources[Resource.IRON] >= 3
+
+    def but_city(self, cr: Crossroad):
+        if self.can_buy_city() and cr.ownership == self.index and cr.building == 1:
+            self.resources[Resource.WHEAT] -= 2
+            self.resources[Resource.IRON] -= 3
+
+    def can_buy_development_card(self):
+        return self.resources[Resource.SHEEP] >= 1 and self.resources[Resource.IRON] >= 1 and self.resources[
+            Resource.WHEAT] >= 1
+
+    def buy_development_card(self, stack: DevStack):
+        if self.can_buy_development_card() and stack.has_cards():
+            self.resources[Resource.IRON] -= 1
+            self.resources[Resource.WHEAT] -= 1
+            self.resources[Resource.SHEEP] -= 1
+            self.cards[stack.get()] += 1
+            return True
+        return False
 
 
 # ---- test functions ---- #
@@ -366,5 +405,6 @@ def main():
     test_roads(board.roads)
     test_crossroads(board.crossroads)
     API.game_test(board)
+
 
 main()
