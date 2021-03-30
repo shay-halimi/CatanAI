@@ -104,12 +104,13 @@ class Crossroad:
 
 
 class Road:
-    def __init__(self, owner=0):
+    def __init__(self, board, owner=0):
         self.owner = owner
         self.api_location = [0, 0, 0, 0]
         self.neighbors = []
+        self.board = board
 
-    def upgrade_longest_road(self, player, board):
+    def upgrade_longest_road(self, player):
         i = player.index
         v = self.neighbors[0].longest_road
         u = self.neighbors[1].longest_road
@@ -123,9 +124,9 @@ class Road:
             player.longest_road = v[i]
         if u[i] > player.longest_road:
             player.longest_road = u[i]
-        if player.longest_road > board.longest_road_size:
-            board.longest_road_size = player.longest_road
-            board.longest_road_owner = player
+        if player.longest_road > self.board.longest_road_size:
+            self.board.longest_road_size = player.longest_road
+            self.board.longest_road_owner = player
 
     def is_connected(self, player):
         if self.neighbors[0].connected[player] or self.neighbors[1].connected[player]:
@@ -244,13 +245,11 @@ class Board:
             line = []
             if i % 2:
                 for j in range(length + 1):
-                    line.append(Road())
+                    line.append(Road(self))
                 length += step * (1 - mid)
             else:
                 for j in range(2 * length):
-                    r = Road()
-                    r.neighbors += []
-                    line.append(r)
+                    line.append(Road(self))
                 length += step * mid
             if i == 4:
                 step = 0
@@ -326,12 +325,21 @@ class Board:
 
 
 class Hand:
-    def __init__(self):
-        resources = {Resource.WOOD: 0, Resource.IRON: 0, Resource.WHEAT: 0, Resource.SHEEP: 0, Resource.CLAY: 0}
-        active_knights, sleeping_knights, victory_points = 0, 0, 0
-        road_builder, monopoly, year_of_prosper = 0, 0, 0
-        longest_road, largest_army = 0, 0
-        points = 0
+    resources = {Resource.WOOD: 0, Resource.IRON: 0, Resource.WHEAT: 0, Resource.SHEEP: 0, Resource.CLAY: 0}
+    active_knights, sleeping_knights, victory_points = 0, 0, 0
+    road_builder, monopoly, year_of_prosper = 0, 0, 0
+    longest_road, largest_army = 0, 0
+    points = 0
+    index = None
+
+    def can_buy_road(self):
+        return self.resources[Resource.WOOD] >= 1 and self.resources[Resource.CLAY] >= 1
+
+    def buy_road(self, road):
+        if self.can_buy_road() and road.is_legal():
+            self.resources[Resource.WOOD] -= 1
+            self.resources[Resource.CLAY] -= 1
+            road.build(self.index)
 
 
 # ---- test functions ---- #
@@ -351,8 +359,12 @@ def test_roads(roads):
 
 # ---- main ---- #
 
-print("Hello Board")
-board = Board(3)
-test_roads(board.roads)
-test_crossroads(board.crossroads)
-API.game_test(board)
+
+def main():
+    print("Hello Board")
+    board = Board(3)
+    test_roads(board.roads)
+    test_crossroads(board.crossroads)
+    API.game_test(board)
+
+main()
