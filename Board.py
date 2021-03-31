@@ -60,7 +60,6 @@ class Terrain:
                         hands[cr.ownership - 1].resources[self.resource] += cr.building
 
 
-# Todo: add special case to ports
 class Crossroad:
     def __init__(self):
         self.ownership = None
@@ -75,6 +74,8 @@ class Crossroad:
         self.longest_road = {1: 0, 2: 0, 3: 0, 4: 0}
         self.terrains = []
         self.board = None
+        self.val = {"sum": 0, Resource.WOOD: 0, Resource.CLAY: 0, Resource.WHEAT: 0, Resource.SHEEP: 0,
+                    Resource.IRON: 0}
 
     def aux_build(self, player):
         if self.ownership is None:
@@ -129,6 +130,11 @@ class Crossroad:
             return self.trade_general(num, type)
         else:
             return self.trade_specific(num, type)
+
+    def set_heuristic_value(self):
+        for t in self.terrains:
+            self.val["sum"] += t.num
+            self.val[t.resource] +=t.num
 
 
 class Road:
@@ -264,6 +270,11 @@ class Board:
             for t in line:
                 for cr in t.crossroads:
                     cr.terrains += [t]
+
+        # set the heuristic values of the crossroads
+        for line in self.crossroads:
+            for cr in line:
+                cr.set_heuristic_value()
 
         # create the roads
         self.roads = []
