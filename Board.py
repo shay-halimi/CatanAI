@@ -74,6 +74,7 @@ class Crossroad:
         self.port = None
         self.longest_road = {1: 0, 2: 0, 3: 0, 4: 0}
         self.terrains = []
+        self.board = None
 
     def aux_build(self, player):
         if self.ownership is None:
@@ -101,8 +102,33 @@ class Crossroad:
                 t.produce_only_to(hands, player)
             return rtn
 
+    # link the crossroad with its neighbor edges
     def add_road(self, road):
         self.roads += [road]
+
+    def trade_specific(self, num, type):
+        hand = self.board.hands[self.ownership]
+        if hand.resources[self.port] >= 2 * num:
+            hand.resources[type] += num
+            hand.resources[self.port] -= 2 * num
+            return True
+        return False
+
+    def trade_general(self, num, type):
+        hand = self.board.hands[self.ownership]
+        if hand.resources[type["give"]] >= 3 * num:
+            hand.resources[type["take"]] += num
+            hand.resources[type["give"]] -= 3 * num
+            return True
+        return False
+
+    def trade(self, num, type):
+        if self.port is None:
+            return False
+        elif self.port is Resource.DESSERT:
+            return self.trade_general(num, type)
+        else:
+            return self.trade_specific(num, type)
 
 
 class Road:
@@ -169,6 +195,7 @@ class Board:
             for j in range(cr_line_len[i]):
                 cr = Crossroad()
                 cr.location = (i, j)
+                cr.board = self
                 line.append(cr)
             self.crossroads.append(line)
 
