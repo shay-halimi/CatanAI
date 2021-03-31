@@ -4,7 +4,6 @@ import random
 import Dice
 import API
 
-
 # ---- global variables ---- #
 
 DESSERT = 7
@@ -65,21 +64,21 @@ class Terrain:
 
 
 class Crossroad:
-    def __init__(self):
+    def __init__(self, board):
         self.ownership = None
         self.building = 0
         self.location = None
         self.api_location = None
         self.neighbors = []
         self.legal = True
-        self.connected = {1: False, 2: False, 3: False, 4: False}
         self.roads = []
         self.port = None
-        self.longest_road = {1: 0, 2: 0, 3: 0, 4: 0}
         self.terrains = []
-        self.board = None
+        self.board = board
         self.val = {"sum": 0, Resource.WOOD: 0, Resource.CLAY: 0, Resource.WHEAT: 0, Resource.SHEEP: 0,
                     Resource.IRON: 0}
+        self.connected = [False] * self.board.players
+        self.longest_road = [0] * self.board.players
 
     def aux_build(self, player):
         if self.ownership is None:
@@ -159,7 +158,7 @@ class Road:
         self.board = board
 
     def upgrade_longest_road(self, player):
-        i = player.index
+        i = player
         v = self.neighbors[0].longest_road
         u = self.neighbors[1].longest_road
         temp = v[i]
@@ -168,11 +167,11 @@ class Road:
         if u[i] == 0:
             u[i] = v[i] + 1
         v[i] = temp
-        if v[i] > player.longest_road:
-            player.longest_road = v[i]
-        if u[i] > player.longest_road:
-            player.longest_road = u[i]
-        if player.longest_road > self.board.longest_road_size:
+        if v[i] > self.board.hands[i].longest_road:
+            self.board.hands[i].longest_road = v[i]
+        if u[i] > self.board.hands[i].longest_road:
+            self.board.hands[i].longest_road = u[i]
+        if self.board.hands[i].longest_road > self.board.longest_road_size:
             self.board.longest_road_size = player.longest_road
             self.board.longest_road_owner = player
 
@@ -182,12 +181,15 @@ class Road:
         return False
 
     def is_legal(self, player):
-        if self.owner == 0 and (self.is_connected(player)):
+        if self.owner is None and (self.is_connected(player)):
+            print("player : " + str(player))
+            print("road : " + str(self.neighbors[0].location) + str(self.neighbors[1].location))
             return True
         return False
 
     def build(self, player):
         if self.is_legal(player):
+            print("road build")
             self.owner = player
             self.neighbors[0].connected[player] = True
             self.neighbors[1].connected[player] = True
@@ -196,9 +198,13 @@ class Road:
             return True
         return False
 
+    def get_location(self):
+        return str(self.neighbors[0].location) + " " + str(self.neighbors[1].location)
+
 
 class Board:
     def __init__(self, players):
+        self.players = players
 
         self.dice = Dice.Dice()
 
@@ -213,9 +219,8 @@ class Board:
         for i in range(12):
             line = []
             for j in range(cr_line_len[i]):
-                cr = Crossroad()
+                cr = Crossroad(self)
                 cr.location = (i, j)
-                cr.board = self
                 line.append(cr)
             self.crossroads.append(line)
 
@@ -327,10 +332,11 @@ class Board:
         self.longest_road_size = 4
         self.longest_road_owner = None
 
+        # create the API
+        API.start_api(self)
+
     def get_max_points(self):
-        max_points=max(self.hands)
-
-
+        max_points = max(self.hands)
 
     def add_neighbor_cr(self, cr, i, j):
         if 0 <= i < 12 and 0 <= j < cr_line_len[i]:
@@ -366,17 +372,17 @@ class Board:
         legal = []
         for line in self.crossroads:
             for cr in line:
-                if cr.legal and (cr.ownership is None or cr.ownership == player):
+                if cr.legal and cr.ownership is None:
                     legal += [cr]
         return legal
 
     def get_legal_crossroads(self, player):
-        legal_start = self.get_legal_crossroads_start(player)
         legal = []
-        for cr in legal_start:
-            if cr.connected[player]:
-                legal += [cr]
-        return
+        for line in self.crossroads:
+            for cr in line:
+                if cr.legal and cr.connected[player] and (cr.ownership is None or cr.ownership == player):
+                    legal += [cr]
+        return legal
 
     def get_legal_roads(self, player):
         legal = []

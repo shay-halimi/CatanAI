@@ -99,6 +99,13 @@ players = {1: {"background": yellow, "str": "yellow", "color": (255, 242, 0), "n
 
 # ---- start of the game functions ---- #
 
+# creating the API
+def start_api(board):
+    show_terrain(board.map)
+    set_crossroads_locations(board.crossroads)
+    set_roads_locations(board.roads, board.crossroads)
+
+
 # creating the terrain in the start of the game and saving it in images/temp/background.jpg
 def show_terrain(board):
     # open starting image of background
@@ -177,9 +184,10 @@ def set_roads_locations(roads, crossroads):
 
 
 def print_crossroad(cr):
+    print(cr.location)
     curr_img = Image.open("images/temp/background.jpg")
-    if cr.ownership:
-        color = players[cr.ownership]["background"].copy()
+    if cr.ownership is not None:
+        color = players[cr.ownership + 1]["background"].copy()
         if cr.building == 1:
             curr_img.paste(color, cr.api_location, village_mask)
         if cr.building == 2:
@@ -188,10 +196,12 @@ def print_crossroad(cr):
 
 
 def print_road(road):
+    print("print road")
+    print(road.get_location())
     curr_img = Image.open("images/temp/background.jpg")
-    if road.owner:
+    if road.owner is not None:
         draw = ImageDraw.Draw(curr_img)
-        draw.line(road.api_location, fill=players[road.owner]["color"], width=10)
+        draw.line(road.api_location, fill=players[road.owner + 1]["color"], width=10)
     curr_img.save("images/temp/background.jpg")
 
 
