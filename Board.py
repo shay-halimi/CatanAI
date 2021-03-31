@@ -34,6 +34,8 @@ class Terrain:
         self.resource = None
         self.num = num
         self.crossroads = []
+        self.has_bandit = False
+        self.board = None
 
     def __str__(self):
         return "(" + str(self.num) + "," + str(self.resource) + ")"
@@ -42,22 +44,23 @@ class Terrain:
         self.resource = resource
 
     def produce(self, hands):
-        for cr in self.crossroads:
-            if cr.ownership != 0 and self.resource is not Resource.DESSERT:
-                hands[cr.ownership - 1].resources[self.resource] += cr.building
-
-    def produce_only_to(self, hands, players):
-        for p in players:
+        if not self.has_bandit:
             for cr in self.crossroads:
-                if cr.ownership == p and self.resource is not Resource.DESSERT:
+                if cr.ownership != 0 and self.resource is not Resource.DESSERT:
                     hands[cr.ownership - 1].resources[self.resource] += cr.building
 
-    def produce_except_to(self, hands, players):
-        for i in range(len(hands)):
-            if i not in players:
-                for cr in self.crossroads:
-                    if cr.ownership == i and self.resource is not Resource.DESSERT:
-                        hands[cr.ownership - 1].resources[self.resource] += cr.building
+    def can_put_bandit(self):
+        return not self.has_bandit
+
+    def put_bandit(self):
+        if self.can_put_bandit():
+            self.board.bandit_location.has_bandit = False
+            self.has_bandit = True
+            steal_stack = []
+            for cr in self.crossroads:
+                if cr.ownership is not None:
+                    steal_stack += [cr.ownership]
+            return steal_stack
 
 
 class Crossroad:
@@ -100,36 +103,36 @@ class Crossroad:
         if self.legal:
             rtn = self.aux_build(player)
             for t in self.terrains:
-                t.produce_only_to(hands, player)
+                hands[player].resources[t.resource] += 1
             return rtn
 
     # link the crossroad with its neighbor edges
     def add_road(self, road):
         self.roads += [road]
 
-    def trade_specific(self, num, type):
+    def trade_specific(self, num, r_type):
         hand = self.board.hands[self.ownership]
         if hand.resources[self.port] >= 2 * num:
-            hand.resources[type] += num
+            hand.resources[r_type] += num
             hand.resources[self.port] -= 2 * num
             return True
         return False
 
-    def trade_general(self, num, type):
+    def trade_general(self, num, r_type):
         hand = self.board.hands[self.ownership]
-        if hand.resources[type["give"]] >= 3 * num:
-            hand.resources[type["take"]] += num
-            hand.resources[type["give"]] -= 3 * num
+        if hand.resources[r_type["give"]] >= 3 * num:
+            hand.resources[r_type["take"]] += num
+            hand.resources[r_type["give"]] -= 3 * num
             return True
         return False
 
-    def trade(self, num, type):
+    def trade(self, num, r_type):
         if self.port is None:
             return False
         elif self.port is Resource.DESSERT:
-            return self.trade_general(num, type)
+            return self.trade_general(num, r_type)
         else:
-            return self.trade_specific(num, type)
+            return self.trade_specific(num, r_type)
 
     def set_heuristic_value(self):
         for t in self.terrains:
@@ -139,7 +142,7 @@ class Crossroad:
 
 
 class Road:
-    def __init__(self, board, owner=0):
+    def __init__(self, board, owner=None):
         self.owner = owner
         self.api_location = [0, 0, 0, 0]
         self.neighbors = []
@@ -250,11 +253,14 @@ class Board:
         for line in self.map:
             j = 0
             for terrain in line:
+                terrain.board = self
                 index = random.randrange(0, len(resource_stack))
                 resource = resource_stack.pop(index)
                 if resource == Resource.DESSERT:
                     self.map[2][2].num = terrain.num
                     terrain.num = 7
+                    terrain.has_bandit = True
+                    self.bandit_location = terrain
                 self.dice.number_to_terrain[terrain.num].append((i, j))
                 terrain.set_resource(resource)
                 terrain.crossroads += [self.crossroads[2 * i][j]]
@@ -367,7 +373,8 @@ class Board:
 
 class Hand:
     resources = {Resource.WOOD: 0, Resource.IRON: 0, Resource.WHEAT: 0, Resource.SHEEP: 0, Resource.CLAY: 0}
-    cards = {"knight": 0, "win_point": 0, "monopole": 0, "2_free_roads": 0, "2_free_resources": 0}
+    resources_num = 0
+    cards = {"knight": [], "win_point": [], "monopole": [], "2_free_roads": [], "2_free_resources": []}
     active_knights = 0
     longest_road, largest_army = 0, 0
     points = 0
@@ -417,6 +424,26 @@ class Hand:
             self.resources[Resource.SHEEP] -= 1
             self.cards[stack.get()] += 1
             return True
+        return False
+
+    def steal(self, dst):
+        if dst.resources_num == 0:
+            return False
+        index = random.randrange(len(dst.resources_num))
+        for resource in dst.resources.keys():
+            if dst[resource] >= index:
+                self.resources[resource] += 1
+                dst[resource] -= 1
+                return resource
+            else:
+                index -= dst[resource]
+        return True
+
+    def use_knight(self, terrain: Terrain, dst):
+        for knight in self.cards["knight"]:
+            if knight.ok_to_use:
+                if terrain.put_bandit():
+                    return self.steal(dst)
         return False
 
 
