@@ -393,14 +393,15 @@ class Board:
 
 
 class Hand:
-    resources = {Resource.WOOD: 0, Resource.IRON: 0, Resource.WHEAT: 0, Resource.SHEEP: 0, Resource.CLAY: 0}
-    resources_num = 0
-    cards = {"knight": [], "win_point": [], "monopole": [], "road builder": [], "year of prosper": []}
-    active_knights = 0
-    longest_road, largest_army = 0, 0
-    points = 0
-    index = None
-    name = None
+    def __init__(self):
+        self.resources = {Resource.WOOD: 0, Resource.IRON: 0, Resource.WHEAT: 0, Resource.SHEEP: 0, Resource.CLAY: 0}
+        self.resources_num = 0
+        self.cards = {"knight": [], "win_point": [], "monopole": [], "road builder": [], "year of prosper": []}
+        self.active_knights = 0
+        self.longest_road, largest_army = 0, 0
+        self.points = 0
+        self.index = None
+        self.name = None
 
     def can_buy_road(self):
         return self.resources[Resource.WOOD] >= 1 and self.resources[Resource.CLAY] >= 1
