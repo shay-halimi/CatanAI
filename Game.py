@@ -13,10 +13,10 @@ class Game:
             player.devCards.append(self.devStack.get())
 
     def __init__(self, players):
-        self.board = Board()
+        self.board = Board(players)
         self.players = players
         for i in range(len(players)):
-            player = Player(i)
+            player = Player(i, self.board)
             player.board = self.board
             self.players += [player]
         self.devStack = DevStack.DevStack()
