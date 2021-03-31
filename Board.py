@@ -182,14 +182,11 @@ class Road:
 
     def is_legal(self, player):
         if self.owner is None and (self.is_connected(player)):
-            print("player : " + str(player))
-            print("road : " + str(self.neighbors[0].location) + str(self.neighbors[1].location))
             return True
         return False
 
     def build(self, player):
         if self.is_legal(player):
-            print("road build")
             self.owner = player
             self.neighbors[0].connected[player] = True
             self.neighbors[1].connected[player] = True
@@ -391,15 +388,19 @@ class Board:
                 if road.is_legal(player):
                     legal += [road]
 
+    def next_turn(self, turn, rnd):
+        API.next_turn(self, turn, rnd, self.hands)
+
 
 class Hand:
     resources = {Resource.WOOD: 0, Resource.IRON: 0, Resource.WHEAT: 0, Resource.SHEEP: 0, Resource.CLAY: 0}
     resources_num = 0
-    cards = {"knight": [], "win_point": [], "monopole": [], "2_free_roads": [], "2_free_resources": []}
+    cards = {"knight": [], "win_point": [], "monopole": [], "road builder": [], "year of prosper": []}
     active_knights = 0
     longest_road, largest_army = 0, 0
     points = 0
     index = None
+    name = None
 
     def can_buy_road(self):
         return self.resources[Resource.WOOD] >= 1 and self.resources[Resource.CLAY] >= 1

@@ -6,10 +6,14 @@ from Board import Crossroad
 class Player:
     def __init__(self, index, board: Board, name=None, is_computer=True):
         self.index = index
-        self.name = name
+        if name is None:
+            self.name = "Player" + str(index)
+        else:
+            self.name = name
         self.is_computer = is_computer
         self.board = board
         self.hand = board.hands[index]
+        self.hand.name = self.name
 
     def buy_devops(self):
         return self.hand.buy_development_card()

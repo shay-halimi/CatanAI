@@ -10,6 +10,8 @@ class Game:
             player.devCards.append(self.devStack.get())
 
     def __init__(self, players):
+        self.round = 0
+        self.turn = 0
         self.board = Board(players)
         self.players = []
         for i in range(players):
@@ -25,6 +27,7 @@ class Game:
                 road.build(i)
             else:
                 pass
+            self.next_turn()
         for i in range(len(self.players) - 1, -1, -1):
             if self.players[i].is_computer:
                 crossroad, road = self.players[i].computer_1st_settlement()
@@ -33,16 +36,25 @@ class Game:
                 road.build(i)
             else:
                 pass
+            self.next_turn()
 
     def throw_dice(self):
         for i, j in self.board.dice.throw():
             self.board.map[i][j].produce()
+
+    def next_turn(self):
+        self.turn += 1
+        if self.turn == len(self.players):
+            self.turn = 0
+            self.round += 1
+        self.board.next_turn(self.turn, self.round)
 
     def play_round(self):
         for player in range(len(self.players)):
             self.play_turn(player)
             if max(list(map(lambda x: x.points, self.board.hands))) >= 10:
                 break
+            self.next_turn()
 
     def compute_turn(self, player):
         pass

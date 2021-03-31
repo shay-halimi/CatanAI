@@ -184,7 +184,6 @@ def set_roads_locations(roads, crossroads):
 
 
 def print_crossroad(cr):
-    print(cr.location)
     curr_img = Image.open("images/temp/background.jpg")
     if cr.ownership is not None:
         color = players[cr.ownership + 1]["background"].copy()
@@ -196,8 +195,6 @@ def print_crossroad(cr):
 
 
 def print_road(road):
-    print("print road")
-    print(road.get_location())
     curr_img = Image.open("images/temp/background.jpg")
     if road.owner is not None:
         draw = ImageDraw.Draw(curr_img)
@@ -205,7 +202,8 @@ def print_road(road):
     curr_img.save("images/temp/background.jpg")
 
 
-def next_turn(board, round):
+"""
+def next_turn(board, turn, rnd):
     # before the dice have been rolled
     img = Image.open("images/temp/background.jpg")
     img = print_log(board, img, round, "Shay", False)
@@ -226,6 +224,15 @@ def next_turn(board, round):
     img = print_log(board, img, round, "Shay", True)
     img = print_stats(img, ("Shay", "Shaked", "Sheleg", "Oran"))
     img.save("images/dst/game1/turn" + str(round) + "part3.jpg")
+"""
+
+
+def next_turn(board, turn, rnd, hands):
+    # before the dice have been rolled
+    img = Image.open("images/temp/background.jpg")
+    img = print_log(board, img, rnd, hands[turn].name, False)
+    img = print_stats(img, hands)
+    img.save("images/dst/game1/round" + str(rnd) + "turn" + str(turn) + ".jpg")
 
 
 def print_log(board, img, rnd, turn, dice):
@@ -240,17 +247,23 @@ def print_log(board, img, rnd, turn, dice):
     return img
 
 
-def print_stats(img, names):
+def print_stats(img, hands):
     draw = ImageDraw.Draw(img)
     draw.multiline_text((line_x, line_y), "Players Stats:", fill=(0, 0, 0), font=font)
     i = 0
-    for name in names:
-        draw.multiline_text((line_x + 450 * i, line_y + 1 * line_space),
-                            name + ":\n\n    Points:\n\n    Wheat:\n\n    Sheep:\n\n    Iron:\n\n    Wood:\n\n    "
-                                   "Clay:\n\n    Active knights:\n\n    Sleeping nights:\n\n    Longest road:\n\n"
-                                   "    Victory points:\n\n    Road builder:\n\n    Monopoly:\n\n    Year of "
-                                   "prosper:\n\n",
-                            fill=(0, 0, 0), font=font)
+    for name in list(map(lambda x: x.name, hands)):
+        text = name
+        text += ":\n\n    Points: " + str(hands[i].points) + "\n\n    Wheat: " + str(hands[i].resources[Resource.WHEAT])
+        text += "\n\n    Sheep: " + str(hands[i].resources[Resource.SHEEP]) + "\n\n    Iron: " + str(hands[i].resources[Resource.IRON])
+        text += "\n\n    Wood: " + str(hands[i].resources[Resource.WOOD]) + "\n\n   Clay: " + str(hands[i].resources[Resource.CLAY])
+        text += "\n\n    Active knights: " + str(len(hands[i].cards["knight"]))
+        text += "\n\n    Sleeping nights: "
+        text += "\n\n    Longest road: "
+        text += "\n\n    Victory points: " + str(len(hands[i].cards["win_point"]))
+        text += "\n\n    Road builder: " + str(len(hands[i].cards["road builder"]))
+        text += "\n\n    Monopoly: " + str(len(hands[i].cards["monopole"]))
+        text += "\n\n    Year of prosper: " + str(len(hands[i].cards["year of prosper"])) + "\n\n"
+        draw.multiline_text((line_x + 450 * i, line_y + 1 * line_space), text, fill=(0, 0, 0), font=font)
         i += 1
     return img
 
