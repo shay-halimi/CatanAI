@@ -205,7 +205,7 @@ class Road:
 class Board:
     def __init__(self, players):
         self.players = players
-
+        self.devStack = DevStack()
         self.dice = Dice.Dice()
 
         self.map = [[Terrain(10), Terrain(2), Terrain(9)],

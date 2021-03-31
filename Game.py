@@ -57,6 +57,9 @@ class Game:
         game.start_game()
         while max(list(map(lambda x: x.points, game.board.hands))) < 10:
             game.play_round()
+            for hand in self.board.hands:
+                for card in hand.cards:
+                    card.ok_to_use = True
 
 
 # ---- main ---- #
