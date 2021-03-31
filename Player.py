@@ -15,6 +15,34 @@ class Player:
         self.hand = board.hands[index]
         self.hand.name = self.name
 
+    def get_legal_moves(self):
+        # TODO add legal moves by type. i.e move bandit need to come with all the locations you can move
+        legal_moves = []
+        # finding legal moves from devCards
+        if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["knight"]))) > 0:
+            # need to check if the cards
+            legal_moves += ["move bandit"]
+        if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["monopole"]))) > 0:
+            # need to check if the cards
+            legal_moves += ["use monopole"]
+        if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["road building"]))) > 0:
+            # need to check if the cards
+            legal_moves += ["build 2 roads"]
+        if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["year of plenty"]))) > 0:
+            # need to check if the cards
+            legal_moves += ["use year of plenty"]
+        if self.board.hands[self.index].can_buy_road:
+            legal_moves += ["build road"]
+        if self.board.hands[self.index].can_buy_settlement:
+            legal_moves += ["build settlement"]
+        if self.board.hands[self.index].can_buy_city:
+            legal_moves += ["build city"]
+        if self.board.hands[self.index].can_buy_Devcard:
+            legal_moves += ["buy Devcard"]
+
+
+
+
     def buy_devops(self):
         return self.hand.buy_development_card()
 
