@@ -1,9 +1,10 @@
 from Resources import Resource
 from Board import Board
+from Board import Crossroad
 
 
 class Player:
-    def __init__(self, index, board: Board, name=None, is_computer=False):
+    def __init__(self, index, board: Board, name=None, is_computer=True):
         self.index = index
         self.name = name
         self.is_computer = is_computer
@@ -29,7 +30,11 @@ class Player:
     # AI player functions
     #########################################################################
     def computer_1st_settlement(self):
-        return (0, 0), (0, 0)
+        legal_crossroads = self.board.get_legal_crossroads_start(self.index)
+        cr = Crossroad.greatest_crossroad(legal_crossroads)
+        return cr, cr.roads[0]
 
     def computer_2nd_settlement(self):
-        return (1, 1), (1, 1)
+        legal_crossroads = self.board.get_legal_crossroads_start(self.index)
+        cr = Crossroad.greatest_crossroad(legal_crossroads)
+        return cr, cr.roads[0]

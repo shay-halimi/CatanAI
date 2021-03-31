@@ -66,7 +66,7 @@ class Terrain:
 class Crossroad:
     def __init__(self):
         self.ownership = None
-        self.building = None
+        self.building = 0
         self.location = None
         self.api_location = None
         self.neighbors = []
@@ -139,6 +139,15 @@ class Crossroad:
             if t.resource != Resource.DESSERT:
                 self.val["sum"] += t.num
                 self.val[t.resource] += t.num
+
+    @staticmethod
+    def greatest_crossroad(crossroads):
+        max_cr = {"cr": None, "sum": 0}
+        for cr in crossroads:
+            if cr.val["sum"] > max_cr["sum"]:
+                max_cr["sum"] = cr.val["sum"]
+                max_cr["cr"] = cr
+        return max_cr["cr"]
 
 
 class Road:
@@ -467,10 +476,10 @@ def test_roads(roads):
 
 def main():
     print("Hello Board")
-    board = Board(3)
-    test_roads(board.roads)
-    test_crossroads(board.crossroads)
-    API.game_test(board)
+    # board = Board(3)
+    # test_roads(board.roads)
+    # test_crossroads(board.crossroads)
+    # API.game_test(board)
 
 
 main()
