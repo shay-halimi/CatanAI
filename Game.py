@@ -4,6 +4,9 @@ from Player import Player
 import DevStack
 
 
+
+
+
 class Game:
     def buy_dev_card(self, player):
         if player.buy_devops():
@@ -24,7 +27,7 @@ class Game:
             settlement_is_valid = False
             while not settlement_is_valid:
                 if(self.players[i].is_computer):
-                    road_coords, loc_coords=computer_1st_settlment()
+                    road_coords, loc_coords = Player.computer_1st_settlment()
                 else:
                     # ToDo: implement for cp agents as well
                     print("Player", i, "In Which location do you want to build your 1st settlement?")
@@ -50,7 +53,7 @@ class Game:
             settlement_is_valid = False
             while not settlement_is_valid:
                 if(self.players[i].is_computer):
-                    road_coords, loc_coords=computer_1st_settlment()
+                    road_coords, loc_coords=Player.computer_2nd_settlment()
                 else:
                     print("Player", i, "In Which location do you want to build your 2nd settlement?")
                     road_coords = input()

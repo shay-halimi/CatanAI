@@ -8,7 +8,6 @@ class DevStack:
             "monopole", "monopole", "2_free_roads", "2_free_roads", "2_free_resources", "2_free_resources"]
 
     def __init__(self):
-        # TODO : make it work
         shuffle(self.deck)
         pass
 
