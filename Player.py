@@ -7,51 +7,26 @@ class Player:
     resources = {Resource.CLAY: 0, Resource.WOOD: 0, Resource.SHEEP: 0, Resource.IRON: 0, Resource.WHEAT: 0}
     devCards = []
 
-    def __init__(self, index, name=None, is_computer=False):
+    def __init__(self, index, board, name=None, is_computer=False):
         self.index = index
         self.name = name
         self.is_computer = is_computer
         self.devCards = []
         self.longest_road = 0
-        self.board = None
+        self.board = board
+        self.hand = board.hands[index]
 
     def buy_devops(self):
-        if self.resources[Resource.SHEEP] < 1 or self.resources[Resource.IRON] < 1 or self.resources[
-            Resource.WHEAT] < 1:
-            print("Not enough resources")
-            return False
-        self.resources[Resource.SHEEP] -= 1
-        self.resources[Resource.IRON] -= 1
-        self.resources[Resource.WHEAT] -= 1
-        return True
+        return self.hand.buy_development_card()
 
-    def buy_settelement(self):
-        if self.resources[Resource.SHEEP] < 1 or self.resources[Resource.CLAY] < 1 or self.resources[
-            Resource.WHEAT] < 1 or self.resources[Resource.WOOD] < 1:
-            print("Not enough resources")
-            return
-        self.resources[Resource.SHEEP] -= 1
-        self.resources[Resource.WOOD] -= 1
-        self.resources[Resource.WHEAT] -= 1
-        self.resources[Resource.CLAY] -= 1
-        # TODO need to add the settlement to the map with the right color
-        return
+    def buy_settlement(self, cr):
+        return self.hand.buy_settlement()
 
-    def buy_City(self):
-        if self.resources[Resource.IRON] < 3 or self.resources[Resource.WHEAT] < 2:
-            print("Not enough resources")
-            return
-        self.resources[Resource.WHEAT] -= 2
-        self.resources[Resource.IRON] -= 3
-        # TODO need to add the city to the map with the right color
-        return
+    def buy_city(self, cr):
+        return self.hand.buy_city(cr)
 
-    def buy_road(self):
-        if self.resources[Resource.CLAY] < 1 or self.resources[Resource.WOOD] < 1:
-            print("Not enough resources")
-            return
-        self.resources[Resource.CLAY] -= 1
-        self.resources[Resource.WOOD] -= 1
+    def buy_road(self, road):
+        return self.hand.buy_road(road)
 
     def use_knight(self):
         if "knight" in self.devCards:

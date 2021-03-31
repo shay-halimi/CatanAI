@@ -401,7 +401,7 @@ class Hand:
     def can_buy_city(self):
         return self.resources[Resource.WHEAT] >= 2 and self.resources[Resource.IRON] >= 3
 
-    def but_city(self, cr: Crossroad):
+    def buy_city(self, cr: Crossroad):
         if self.can_buy_city() and cr.ownership == self.index and cr.building == 1:
             self.resources[Resource.WHEAT] -= 2
             self.resources[Resource.IRON] -= 3
