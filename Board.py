@@ -4,6 +4,7 @@ import random
 import Dice
 import API
 
+
 # ---- global variables ---- #
 
 DESSERT = 7
@@ -325,6 +326,11 @@ class Board:
         # longest road stats
         self.longest_road_size = 4
         self.longest_road_owner = None
+
+    def get_max_points(self):
+        max_points=max(self.hands)
+
+
 
     def add_neighbor_cr(self, cr, i, j):
         if 0 <= i < 12 and 0 <= j < cr_line_len[i]:

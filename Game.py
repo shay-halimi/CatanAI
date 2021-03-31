@@ -82,6 +82,27 @@ class Game:
         for i, j in self.board.dice.throw():
             self.board.map[i][j].produce()
 
+    def play_round(self):
+        for player in range(len(self.players)):
+            self.play_turn(player)
+            if max(list(map(lambda x: x.points, self.board.hands))) >= 10:
+                break
+
+    def compute_turn(self, player):
+        pass
+
+    def play_turn(self, player):
+        if self.players[player].is_computer:
+            Game.compute_turn(self, player)
+
+    def play_game(self):
+        num_players = input("how many players are playing?")
+        game = Game(num_players)
+        game.start_game()
+        while max(list(map(lambda x: x.points, game.board.hands))) < 10:
+            game.play_round()
+
+
 
 # ---- main ---- #
 
