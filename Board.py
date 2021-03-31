@@ -133,8 +133,9 @@ class Crossroad:
 
     def set_heuristic_value(self):
         for t in self.terrains:
-            self.val["sum"] += t.num
-            self.val[t.resource] +=t.num
+            if t.resource != Resource.DESSERT:
+                self.val["sum"] += t.num
+                self.val[t.resource] += t.num
 
 
 class Road:

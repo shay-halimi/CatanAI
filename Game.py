@@ -13,7 +13,9 @@ class Game:
         self.board = Board()
         self.players = players
         for i in range(len(players)):
-            self.players += [Player(i)]
+            player = Player(i)
+            player.board = self.board
+            self.players += [player]
         self.devStack = DevStack.DevStack()
 
     # ToDo (shay) : link to API

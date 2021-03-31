@@ -11,12 +11,9 @@ class Player:
         self.index = index
         self.name = name
         self.is_computer = is_computer
-        self.resources = {Resource.CLAY: 0, Resource.WOOD: 0, Resource.SHEEP: 0, Resource.IRON: 0, Resource.WHEAT: 0}
         self.devCards = []
         self.longest_road = 0
-
-    def update_resources(self, board: Board):
-        self.resources = board.hands[self.index]
+        self.board = None
 
     def buy_devops(self):
         if self.resources[Resource.SHEEP] < 1 or self.resources[Resource.IRON] < 1 or self.resources[
