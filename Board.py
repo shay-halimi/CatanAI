@@ -3,6 +3,7 @@ from DevStack import DevStack
 import random
 import Dice
 import API
+import Log
 
 # ---- global variables ---- #
 
@@ -329,6 +330,10 @@ class Board:
         self.longest_road_size = 4
         self.longest_road_owner = None
 
+        # largest army stats
+        self.largest_army_size = 2
+        self.largest_army_owner = None
+
         # create the API
         API.start_api(self)
 
@@ -390,18 +395,30 @@ class Board:
 
     def next_turn(self, turn, rnd):
         API.next_turn(self, turn, rnd, self.hands)
+        Log.next_turn(rnd, turn, self.hands)
+        Log.save_game()
 
 
 class Hand:
     def __init__(self):
         self.resources = {Resource.WOOD: 0, Resource.IRON: 0, Resource.WHEAT: 0, Resource.SHEEP: 0, Resource.CLAY: 0}
-        self.resources_num = 0
-        self.cards = {"knight": [], "win_point": [], "monopole": [], "road builder": [], "year of prosper": []}
-        self.active_knights = 0
-        self.longest_road, largest_army = 0, 0
+        self.cards = {"knight": [], "victory points": [], "monopole": [], "road builder": [], "year of prosper": []}
+        self.longest_road, self.largest_army = 0, 0
         self.points = 0
         self.index = None
         self.name = None
+
+    def get_resources_number(self):
+        sum = 0
+        for r in self.resources.values():
+            sum += r
+        return sum
+
+    def get_cards_number(self):
+        sum = 0
+        for c in self.cards:
+            sum += len(c)
+        return sum
 
     def can_buy_road(self):
         return self.resources[Resource.WOOD] >= 1 and self.resources[Resource.CLAY] >= 1

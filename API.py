@@ -259,7 +259,7 @@ def print_stats(img, hands):
         text += "\n\n    Active knights: " + str(len(hands[i].cards["knight"]))
         text += "\n\n    Sleeping nights: "
         text += "\n\n    Longest road: "
-        text += "\n\n    Victory points: " + str(len(hands[i].cards["win_point"]))
+        text += "\n\n    Victory points: " + str(len(hands[i].cards["victory points"]))
         text += "\n\n    Road builder: " + str(len(hands[i].cards["road builder"]))
         text += "\n\n    Monopoly: " + str(len(hands[i].cards["monopole"]))
         text += "\n\n    Year of prosper: " + str(len(hands[i].cards["year of prosper"])) + "\n\n"
