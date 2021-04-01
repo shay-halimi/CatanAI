@@ -391,9 +391,6 @@ class Board:
         # create the API
         API.start_api(self)
 
-    def get_max_points(self):
-        max_points = max(self.hands)
-
     def add_neighbor_cr(self, cr, i, j):
         if 0 <= i < 12 and 0 <= j < cr_line_len[i]:
             cr.neighbors += [Neighbor(self.crossroads[i][j])]
