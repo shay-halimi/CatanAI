@@ -324,7 +324,7 @@ class Board:
         # create hands
         self.hands = []
         for n in range(players):
-            self.hands += [Hand()]
+            self.hands += [Hand(n,self)]
 
         # longest road stats
         self.longest_road_size = 4
@@ -400,12 +400,13 @@ class Board:
 
 
 class Hand:
-    def __init__(self):
+    def __init__(self,index,board):
         self.resources = {Resource.WOOD: 0, Resource.IRON: 0, Resource.WHEAT: 0, Resource.SHEEP: 0, Resource.CLAY: 0}
         self.cards = {"knight": [], "victory points": [], "monopole": [], "road builder": [], "year of prosper": []}
         self.longest_road, self.largest_army = 0, 0
         self.points = 0
-        self.index = None
+        self.board = board
+        self.index = index
         self.name = None
 
     def get_resources_number(self):
@@ -430,6 +431,45 @@ class Hand:
             road.build(self.index)
             return True
         return False
+
+    def build_2_roads(self, road1, road2):
+        for card in self.cards["road building"]:
+            if card.is_valid():
+                if road1.is_legal() and road2.is_legal():
+                    road1.build(self.index)
+                    road2.build(self.index)
+                    self.cards["road building"].remove(card)
+                    return True
+        return False
+
+    def use_year_of_plenty(self,resource1,resource2):
+        for card in self.cards["year of plenty"]:
+            if card.is_valid():
+                if resource1 != Resource.DESSERT and resource2 != Resource.DESSERT:
+                    self.resources[resource1] += 1
+                    self.resources[resource2] += 1
+                    self.cards["year of plenty"].remove(card)
+                    return True
+        return False
+
+    def use_monopole(self, resource):
+        for card in self.cards["monopole"]:
+            if card.is_valid():
+                if resource != Resource.DESSERT:
+                    for hand in self.board.hands:
+                        if hand.index != self.index:
+                            self.resources[resource] += hand.resources[resource]
+                            hand.resources[resource] = 0
+                    return True
+        return False
+
+    def use_victory_point(self):
+        for card in self.cards["victory point"]
+            if card.is_valid():
+                self.points += 1
+                return True
+        return False
+
 
     def can_buy_settlement(self):
         return self.resources[Resource.WOOD] >= 1 and self.resources[Resource.CLAY] >= 1 and self.resources[
@@ -462,7 +502,7 @@ class Hand:
             self.resources[Resource.IRON] -= 1
             self.resources[Resource.WHEAT] -= 1
             self.resources[Resource.SHEEP] -= 1
-            self.cards[stack.get()] += 1
+            self.cards[stack.get().get_name()] += 1
             return True
         return False
 
@@ -481,8 +521,9 @@ class Hand:
 
     def use_knight(self, terrain: Terrain, dst):
         for knight in self.cards["knight"]:
-            if knight.ok_to_use:
+            if knight.is_valid():
                 if terrain.put_bandit():
+                    self.cards["knight"].remove(knight)
                     return self.steal(dst)
         return False
 

@@ -40,9 +40,6 @@ class Player:
         if self.board.hands[self.index].can_buy_Devcard:
             legal_moves += ["buy Devcard"]
 
-
-
-
     def buy_devops(self):
         return self.hand.buy_development_card()
 

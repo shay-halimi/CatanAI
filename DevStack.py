@@ -6,6 +6,11 @@ class DevCard:
     name = "DevCard"
     ok_to_use = False
 
+    def get_name(self):
+        return self.name
+
+    def is_valid(self):
+        return self.ok_to_use
 
 class KnightCard(DevCard):
     name = "knight"
@@ -25,7 +30,7 @@ class RoadBuilding(DevCard):
 
 
 class YearOfPlenty(DevCard):
-    name = "year of pleanty"
+    name = "year of plenty"
 
 
 class DevStack:
