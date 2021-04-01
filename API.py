@@ -297,14 +297,15 @@ def game_test(g_board):
     g_board.crossroads[0][2].building = 1
     print_crossroad(g_board.crossroads[0][2])
     for n in g_board.crossroads[0][2].neighbors:
-        n.ownership = 3
-        n.building = 1
-        print_crossroad(n)
+        cr = n.crossroad
+        cr.ownership = 3
+        cr.building = 1
+        print_crossroad(cr)
     for line in g_board.crossroads:
         for cr in line:
             print("cr " + str(cr.location) + " :")
             for n in cr.neighbors:
-                print("n " + str(n.location) + " :")
+                print("n " + str(n.crossroad.location) + " :")
 
 
 # ---- main ---- #

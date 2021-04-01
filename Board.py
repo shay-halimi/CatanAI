@@ -66,26 +66,57 @@ class Terrain:
 
 class Crossroad:
     def __init__(self, board):
-        self.ownership = None
-        self.building = 0
+        # logistic
         self.location = None
         self.api_location = None
-        self.neighbors = []
-        self.legal = True
-        self.roads = []
-        self.port = None
-        self.terrains = []
         self.board = board
+        self.terrains = []
+        self.neighbors = []
+        # rules
+        self.connected = [False] * self.board.players
+        self.legal = True
+        # heuristic
         self.val = {"sum": 0, Resource.WOOD: 0, Resource.CLAY: 0, Resource.WHEAT: 0, Resource.SHEEP: 0,
                     Resource.IRON: 0}
-        self.connected = [False] * self.board.players
         self.longest_road = [0] * self.board.players
+        self.distance = [{}] * board.players
+        # game
+        self.ownership = None
+        self.building = 0
+        self.port = None
+
+    def initial_distances(self, player):
+        for line in self.board.crossroads:
+            for cr in line:
+                self.distance[player][cr] = 30
+
+    def set_distances(self, player):
+        self.initial_distances(player)
+        stack = []
+        self.distance[player][self] = 0
+        for n in self.neighbors:
+            cr = n.crossroad
+            stack += [cr]
+        while stack:
+            cr = stack.pop()
+            push_neighbors = False
+            for n in cr.neighbors:
+                if n.my_road(player):
+                    self.distance[player][cr] = 0
+                    push_neighbors = True
+                    break
+                if n.can_go() and self.distance[player][cr] > self.distance[player][n.crossroad] + 1:
+                    self.distance[player][cr] = self.distance[player][n.crossroad] + 1
+                    push_neighbors = True
+            if push_neighbors and (cr.ownership is None or cr.ownership == player):
+                for n in cr.neighbors:
+                    stack += [n.crossroad]
 
     def aux_build(self, player):
         if self.ownership is None:
             self.ownership = player
             for n in self.neighbors:
-                n.legal = False
+                n.crossroad.legal = False
         if self.ownership == player and self.building < 2:
             self.building += 1
             API.print_crossroad(self)
@@ -104,12 +135,13 @@ class Crossroad:
         if self.legal:
             rtn = self.aux_build(player)
             for t in self.terrains:
-                hands[player].resources[t.resource] += 1
+                if t.resource != Resource.DESSERT:
+                    hands[player].resources[t.resource] += 1
             return rtn
 
     # link the crossroad with its neighbor edges
-    def add_road(self, road):
-        self.roads += [road]
+    def add_neighbor(self, road, crossroad):
+        self.neighbors += [Neighbor(crossroad, road)]
 
     def trade_specific(self, num, r_type):
         hand = self.board.hands[self.ownership]
@@ -138,8 +170,9 @@ class Crossroad:
     def set_heuristic_value(self):
         for t in self.terrains:
             if t.resource != Resource.DESSERT:
-                self.val["sum"] += t.num
-                self.val[t.resource] += t.num
+                heu_val = 6 - abs(7 - t.num)
+                self.val["sum"] += heu_val
+                self.val[t.resource] += heu_val
 
     @staticmethod
     def greatest_crossroad(crossroads):
@@ -200,6 +233,21 @@ class Road:
         return str(self.neighbors[0].location) + " " + str(self.neighbors[1].location)
 
 
+class Neighbor:
+    def __init__(self, cr: Crossroad, road: Road):
+        self.crossroad = cr
+        self.road = road
+
+    def can_go(self, player):
+        return self.road.owner is None or self.road.owner == player
+
+    def my_road(self, player):
+        return self.road.owner == player
+
+    def get_owner(self):
+        return self.crossroad.ownership
+
+
 class Board:
     def __init__(self, players):
         self.players = players
@@ -222,19 +270,25 @@ class Board:
                 line.append(cr)
             self.crossroads.append(line)
 
+        """
         # add crossroad neighbors to each crossroad
-        for i in range(len(self.crossroads)):
-            j = 0
-            for cr in self.crossroads[i]:
+        for i, line in enumerate(self.crossroads):
+            for j, cr in enumerate(line):
                 if i % 2 == 0:
                     self.add_neighbor_cr(cr, i - 1, j)
                     self.add_neighbor_cr(cr, i + 1, j)
-                    self.add_neighbor_cr(cr, i + 1, j + 1)
+                    if i < 6:
+                        self.add_neighbor_cr(cr, i + 1, j + 1)
+                    else:
+                        self.add_neighbor_cr(cr, i + 1, j - 1)
                 else:
-                    self.add_neighbor_cr(cr, i - 1, j - 1)
+                    if i < 6:
+                        self.add_neighbor_cr(cr, i - 1, j - 1)
+                    else:
+                        self.add_neighbor_cr(cr, i - 1, j + 1)
                     self.add_neighbor_cr(cr, i - 1, j)
                     self.add_neighbor_cr(cr, i + 1, j)
-                j += 1
+        """
 
         # add crossroad api location to each crossroad
         API.set_crossroads_locations(self.crossroads)
@@ -324,7 +378,7 @@ class Board:
         # create hands
         self.hands = []
         for n in range(players):
-            self.hands += [Hand(n,self)]
+            self.hands += [Hand(n, self)]
 
         # longest road stats
         self.longest_road_size = 4
@@ -342,7 +396,7 @@ class Board:
 
     def add_neighbor_cr(self, cr, i, j):
         if 0 <= i < 12 and 0 <= j < cr_line_len[i]:
-            cr.neighbors += [self.crossroads[i][j]]
+            cr.neighbors += [Neighbor(self.crossroads[i][j])]
 
     # very convoluted function to link each road with its vertices crossroads and vice versa
     def add_neighbors_to_roads(self):
@@ -354,12 +408,12 @@ class Board:
             if i == 5:
                 xor = True
             for road in line:
-                cr = self.crossroads[i][up]
-                cr.add_road(road)
-                road.neighbors += [cr]
-                cr = self.crossroads[i + 1][down]
-                cr.add_road(road)
-                road.neighbors += [cr]
+                cr1 = self.crossroads[i][up]
+                road.neighbors += [cr1]
+                cr2 = self.crossroads[i + 1][down]
+                road.neighbors += [cr2]
+                cr1.add_neighbor(road, cr2)
+                cr2.add_neighbor(road, cr1)
                 if i % 2:
                     up += 1
                     down += 1
@@ -400,7 +454,7 @@ class Board:
 
 
 class Hand:
-    def __init__(self,index,board):
+    def __init__(self, index, board):
         self.resources = {Resource.WOOD: 0, Resource.IRON: 0, Resource.WHEAT: 0, Resource.SHEEP: 0, Resource.CLAY: 0}
         self.cards = {"knight": [], "victory points": [], "monopole": [], "road builder": [], "year of prosper": []}
         self.longest_road, self.largest_army = 0, 0
@@ -442,7 +496,7 @@ class Hand:
                     return True
         return False
 
-    def use_year_of_plenty(self,resource1,resource2):
+    def use_year_of_plenty(self, resource1, resource2):
         for card in self.cards["year of plenty"]:
             if card.is_valid():
                 if resource1 != Resource.DESSERT and resource2 != Resource.DESSERT:
@@ -464,12 +518,11 @@ class Hand:
         return False
 
     def use_victory_point(self):
-        for card in self.cards["victory point"]
+        for card in self.cards["victory point"]:
             if card.is_valid():
                 self.points += 1
                 return True
         return False
-
 
     def can_buy_settlement(self):
         return self.resources[Resource.WOOD] >= 1 and self.resources[Resource.CLAY] >= 1 and self.resources[

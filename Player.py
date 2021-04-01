@@ -61,9 +61,9 @@ class Player:
     def computer_1st_settlement(self):
         legal_crossroads = self.board.get_legal_crossroads_start(self.index)
         cr = Crossroad.greatest_crossroad(legal_crossroads)
-        return cr, cr.roads[0]
+        return cr, cr.neighbors[0].road
 
     def computer_2nd_settlement(self):
         legal_crossroads = self.board.get_legal_crossroads_start(self.index)
         cr = Crossroad.greatest_crossroad(legal_crossroads)
-        return cr, cr.roads[0]
+        return cr, cr.neighbors[0].road

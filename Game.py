@@ -77,9 +77,22 @@ class Game:
 # ---- main ---- #
 
 
+def print_distance(game):
+    for line in game.board.crossroads:
+        for cr in line:
+            cr.set_distances()
+            print(str(cr.location) + " : " + str(cr.distance[cr]))
+            for l in game.board.crossroads:
+                for c in l:
+                    print("     " + str(c.location) + " : " + str(cr.distance[c]))
+                    for n in c.neighbors:
+                        print(n.crossroad.location)
+
+
 def main():
     game = Game(3)
     game.start_game()
+    # print_distance(game)
 
 
 print("Hello Game")
