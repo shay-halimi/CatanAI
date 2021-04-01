@@ -464,7 +464,7 @@ class Hand:
         return False
 
     def use_victory_point(self):
-        for card in self.cards["victory point"]
+        for card in self.cards["victory point"]:
             if card.is_valid():
                 self.points += 1
                 return True

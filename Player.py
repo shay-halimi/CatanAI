@@ -21,7 +21,8 @@ class Player:
         # finding legal moves from devCards
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["knight"]))) > 0:
             # need to check if the cards
-            legal_moves += ["move bandit"]
+            for road in self.board.get_legal_roads(self.index):
+                legal_moves += ["move bandit to "+str(road)]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["monopole"]))) > 0:
             # need to check if the cards
             legal_moves += ["use monopole"]
@@ -39,6 +40,7 @@ class Player:
             legal_moves += ["build city"]
         if self.board.hands[self.index].can_buy_Devcard:
             legal_moves += ["buy Devcard"]
+        return legal_moves
 
     def buy_devops(self):
         return self.hand.buy_development_card()
