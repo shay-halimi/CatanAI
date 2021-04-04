@@ -200,16 +200,19 @@ class Road:
             self.temp_build_info["connected1"] = self.neighbors[1].connected[player]
             self.neighbors[0].connected[player] = True
             self.neighbors[1].connected[player] = True
+            self.temp_build_info["longest_road_size"] = self.board.longest_road_size
+            self.temp_build_info["longest road owner"] = self.board.longest_road_owner
             self.upgrade_longest_road(player)
-            API.print_road(self)
             return True
         return False
 
-    def undo_temp_build(self):
+    def undo_build(self):
         player = self.owner
         self.owner = None
         self.neighbors[0].connected[player] = self.temp_build_info["connected0"]
         self.neighbors[1].connected[player] = self.temp_build_info["connected1"]
+        self.board.longest_road_size = self.temp_build_info["longest_road_size"]
+        self.board.longest_road_owner = self.temp_build_info["longest road owner"]
 
     def build(self, player):
         if self.is_legal(player):
@@ -440,6 +443,13 @@ class Board:
         Log.next_turn(rnd, turn, self.hands)
         Log.save_game()
 
+    def update_longest_road(self, player):
+        former = self.longest_road_owner
+        if former is not None:
+            self.hands[former].points -= 2
+        self.hands[player].points += 2
+        self.longest_road_size += 1
+
 
 class Hand:
     def __init__(self, index, board):
@@ -467,6 +477,14 @@ class Hand:
         return self.resources[Resource.WOOD] >= 1 and self.resources[Resource.CLAY] >= 1
 
     def buy_road(self, road):
+        if self.can_buy_road() and road.is_legal():
+            self.resources[Resource.WOOD] -= 1
+            self.resources[Resource.CLAY] -= 1
+            road.build(self.index)
+            return True
+        return False
+
+    def tmp_buy_road(self, road):
         if self.can_buy_road() and road.is_legal():
             self.resources[Resource.WOOD] -= 1
             self.resources[Resource.CLAY] -= 1
