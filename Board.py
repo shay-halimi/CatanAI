@@ -412,7 +412,7 @@ class Board:
                         up += 1
             i += 1
 
-    def get_legal_crossroads_start(self):
+    def get_legal_crossroads_start(self, player):
         legal = []
         for line in self.crossroads:
             for cr in line:
@@ -450,35 +450,6 @@ class Hand:
         self.board = board
         self.index = index
         self.name = None
-        self.distance = {}
-
-    def set_distances(self):
-        stack = []
-        for line in self.board.crossroads:
-            for cr in line:
-                if cr.ownership == self.index:
-                    self.distance[cr] = 0
-                    for n in cr.neighbors:
-                        cr = n.crossroad
-                        stack += [cr]
-                else:
-                    self.distance[cr] = 100
-        while stack:
-            cr = stack.pop()
-            if self.distance[cr] == 0:
-                continue
-            push_neighbors = False
-            for n in cr.neighbors:
-                if n.my_road(self.index):
-                    self.distance[cr] = 0
-                    push_neighbors = True
-                    break
-                if n.can_go(self.index) and self.distance[cr] > self.distance[n.crossroad] + 1:
-                    self.distance[cr] = self.distance[n.crossroad] + 1
-                    push_neighbors = True
-            if push_neighbors and (cr.ownership is None or cr.ownership == self.index):
-                for n in cr.neighbors:
-                    stack += [n.crossroad]
 
     def get_resources_number(self):
         sum = 0
