@@ -85,33 +85,6 @@ class Crossroad:
         self.building = 0
         self.port = None
 
-    def initial_distances(self, player):
-        for line in self.board.crossroads:
-            for cr in line:
-                self.distance[player][cr] = 30
-
-    def set_distances(self, player):
-        self.initial_distances(player)
-        stack = []
-        self.distance[player][self] = 0
-        for n in self.neighbors:
-            cr = n.crossroad
-            stack += [cr]
-        while stack:
-            cr = stack.pop()
-            push_neighbors = False
-            for n in cr.neighbors:
-                if n.my_road(player):
-                    self.distance[player][cr] = 0
-                    push_neighbors = True
-                    break
-                if n.can_go() and self.distance[player][cr] > self.distance[player][n.crossroad] + 1:
-                    self.distance[player][cr] = self.distance[player][n.crossroad] + 1
-                    push_neighbors = True
-            if push_neighbors and (cr.ownership is None or cr.ownership == player):
-                for n in cr.neighbors:
-                    stack += [n.crossroad]
-
     def aux_build(self, player):
         if self.ownership is None:
             self.ownership = player
@@ -190,6 +163,7 @@ class Road:
         self.api_location = [0, 0, 0, 0]
         self.neighbors = []
         self.board = board
+        self.temp_build_info = {}
 
     def upgrade_longest_road(self, player):
         i = player
@@ -218,6 +192,24 @@ class Road:
         if self.owner is None and (self.is_connected(player)):
             return True
         return False
+
+    def temp_build(self, player):
+        if self.is_legal(player):
+            self.owner = player
+            self.temp_build_info["connected0"] = self.neighbors[0].connected[player]
+            self.temp_build_info["connected1"] = self.neighbors[1].connected[player]
+            self.neighbors[0].connected[player] = True
+            self.neighbors[1].connected[player] = True
+            self.upgrade_longest_road(player)
+            API.print_road(self)
+            return True
+        return False
+
+    def undo_temp_build(self):
+        player = self.owner
+        self.owner = None
+        self.neighbors[0].connected[player] = self.temp_build_info["connected0"]
+        self.neighbors[1].connected[player] = self.temp_build_info["connected1"]
 
     def build(self, player):
         if self.is_legal(player):
@@ -394,10 +386,6 @@ class Board:
     def get_max_points(self):
         max_points = max(self.hands)
 
-    def add_neighbor_cr(self, cr, i, j):
-        if 0 <= i < 12 and 0 <= j < cr_line_len[i]:
-            cr.neighbors += [Neighbor(self.crossroads[i][j])]
-
     # very convoluted function to link each road with its vertices crossroads and vice versa
     def add_neighbors_to_roads(self):
         i = 0
@@ -424,7 +412,7 @@ class Board:
                         up += 1
             i += 1
 
-    def get_legal_crossroads_start(self, player):
+    def get_legal_crossroads_start(self):
         legal = []
         for line in self.crossroads:
             for cr in line:
@@ -462,6 +450,35 @@ class Hand:
         self.board = board
         self.index = index
         self.name = None
+        self.distance = {}
+
+    def set_distances(self):
+        stack = []
+        for line in self.board.crossroads:
+            for cr in line:
+                if cr.ownership == self.index:
+                    self.distance[cr] = 0
+                    for n in cr.neighbors:
+                        cr = n.crossroad
+                        stack += [cr]
+                else:
+                    self.distance[cr] = 100
+        while stack:
+            cr = stack.pop()
+            if self.distance[cr] == 0:
+                continue
+            push_neighbors = False
+            for n in cr.neighbors:
+                if n.my_road(self.index):
+                    self.distance[cr] = 0
+                    push_neighbors = True
+                    break
+                if n.can_go(self.index) and self.distance[cr] > self.distance[n.crossroad] + 1:
+                    self.distance[cr] = self.distance[n.crossroad] + 1
+                    push_neighbors = True
+            if push_neighbors and (cr.ownership is None or cr.ownership == self.index):
+                for n in cr.neighbors:
+                    stack += [n.crossroad]
 
     def get_resources_number(self):
         sum = 0
