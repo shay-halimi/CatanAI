@@ -44,11 +44,11 @@ class Terrain:
     def set_resource(self, resource):
         self.resource = resource
 
-    def produce(self, hands):
+    def produce(self):
         if not self.has_bandit:
             for cr in self.crossroads:
-                if cr.ownership != 0 and self.resource is not Resource.DESSERT:
-                    hands[cr.ownership - 1].resources[self.resource] += cr.building
+                if cr.ownership is not None and self.resource is not Resource.DESSERT:
+                    self.board.hands[cr.ownership - 1].resources[self.resource] += cr.building
 
     def can_put_bandit(self):
         return not self.has_bandit
