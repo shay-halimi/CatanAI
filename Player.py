@@ -192,8 +192,11 @@ class Player:
 
     def computer_random_action(self):
         legal_moves = self.get_legal_moves()
-        random_index = randint(0, len(legal_moves) - 1)
-        legal_moves[random_index].do_action(self)
+        if legal_moves:
+            random_index = randint(0, len(legal_moves) - 1)
+            legal_moves[random_index].do_action(self)
+        return
+
 
     def compute_turn(self):
         self.computer_random_action()
