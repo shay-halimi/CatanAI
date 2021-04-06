@@ -471,6 +471,7 @@ class Board:
             for road in line:
                 if road.is_legal(player):
                     legal += [road]
+        return legal
 
 
 class Hand:

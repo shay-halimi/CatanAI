@@ -1,8 +1,8 @@
-from random import random
 from abc import ABC, abstractmethod
 from Resources import Resource
 from Board import Board
 from Board import Crossroad
+from random import randint
 
 
 class Action(ABC):
@@ -138,24 +138,24 @@ class Player:
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["monopole"]))) > 0:
             for i in range(1, 6):
                 legal_moves += [use_monopole(Resource[i])]
-        if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["road building"]))) > 0:
+        if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["road builder"]))) > 0:
             for [road1, road2] in self.board.get_two_legal_roads(self.index):
                 legal_moves += [use_build_roads(road1, road2)]
-        if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["year of plenty"]))) > 0:
+        if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["year of prosper"]))) > 0:
             # need to check if the cards
             for i in range(1, 6):
                 for j in range(1, 6):
                     legal_moves += [use_year_of_plenty(Resource[i], Resource[j])]
-        if self.board.hands[self.index].can_buy_road:
+        if self.board.hands[self.index].can_buy_road():
             for road in self.board.get_legal_roads(self.index):
                 legal_moves += [build_road(road)]
-        if self.board.hands[self.index].can_buy_settlement:
-            for crossword in self.board.get_legal_crossroads():
+        if self.board.hands[self.index].can_buy_settlement():
+            for crossword in self.board.get_legal_crossroads(self.index):
                 legal_moves += [build_settlement(crossword)]
-        if self.board.hands[self.index].can_buy_city:
+        if self.board.hands[self.index].can_buy_city():
             # todo get settlements
             pass
-        if self.board.hands[self.index].can_buy_Devcard:
+        if self.board.hands[self.index].can_buy_development_card():
             legal_moves += [buy_dev_card()]
         return legal_moves
 
@@ -192,5 +192,8 @@ class Player:
 
     def computer_random_action(self):
         legal_moves = self.get_legal_moves()
-        random_index = random.randint(0, len(legal_moves) - 1)
+        random_index = randint(0, len(legal_moves) - 1)
         legal_moves[random_index].do_action(self)
+
+    def compute_turn(self):
+        self.computer_random_action()
