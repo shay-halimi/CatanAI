@@ -455,6 +455,7 @@ class Hand:
     def __init__(self, index, board):
         self.resources = {Resource.WOOD: 0, Resource.IRON: 0, Resource.WHEAT: 0, Resource.SHEEP: 0, Resource.CLAY: 0}
         self.cards = {"knight": [], "victory points": [], "monopole": [], "road builder": [], "year of prosper": []}
+        self.ports = {}
         self.longest_road, self.largest_army = 0, 0
         self.points = 0
         self.board = board
@@ -488,9 +489,14 @@ class Hand:
         if self.can_buy_road() and road.is_legal():
             self.resources[Resource.WOOD] -= 1
             self.resources[Resource.CLAY] -= 1
-            road.build(self.index)
+            road.temp_build(self.index)
             return True
         return False
+
+    def undo_buy_road(self, road):
+        self.resources[Resource.WOOD] += 1
+        self.resources[Resource.CLAY] += 1
+        road.undo_build(self.index)
 
     def build_2_roads(self, road1, road2):
         for card in self.cards["road building"]:
@@ -541,6 +547,8 @@ class Hand:
             self.resources[Resource.WHEAT] -= 1
             self.resources[Resource.SHEEP] -= 1
             cr.build(self.index)
+            if cr.port is not None:
+                self.ports += [cr.port]
             return True
         return False
 
@@ -551,6 +559,9 @@ class Hand:
         if self.can_buy_city() and cr.ownership == self.index and cr.building == 1:
             self.resources[Resource.WHEAT] -= 2
             self.resources[Resource.IRON] -= 3
+            cr.build(self.index)
+            return True
+        return False
 
     def can_buy_development_card(self):
         return self.resources[Resource.SHEEP] >= 1 and self.resources[Resource.IRON] >= 1 and self.resources[
@@ -585,6 +596,19 @@ class Hand:
                     self.cards["knight"].remove(knight)
                     return self.steal(dst)
         return False
+
+    def can_trade(self, src: Resource, dst: Resource, amount):
+        if dst in self.ports:
+            if dst is Resource.DESSERT:
+                return self.resources[src] >= amount * 3
+            else:
+                return self.resources[src] >= amount * 2
+        return False
+
+    def trade(self, src: Resource, dst: Resource, amount):
+        if self.can_trade(src, dst, amount):
+            self.resources[src] -= 2 * amount
+            self.resources[dst] += amount
 
 
 # ---- test functions ---- #
