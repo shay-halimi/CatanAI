@@ -97,12 +97,13 @@ class build_road(Action):
 class trade(Action):
     name = 'trade'
 
-    def __init__(self, give, take):
-        self.give = give
-        self.take = take
+    def __init__(self, src, dst, amount):
+        self.src = src
+        self.dst = dst
+        self.amount = amount
 
     def do_action(self, player):
-        # TODO use trade function from hand when possible
+        player.hand.trade(self.src, self.dst, )
         pass
 
 
@@ -126,7 +127,6 @@ class Player:
         self.hand.name = self.name
 
     def get_legal_moves(self):
-        # TODO add legal moves by type. i.e move bandit need to come with all the locations you can move
         legal_moves = []
         # finding legal moves from devCards
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["knight"]))) > 0:
@@ -139,10 +139,8 @@ class Player:
             for i in range(1, 6):
                 legal_moves += [use_monopole(Resource[i])]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["road building"]))) > 0:
-            for road1 in self.board.get_legal_roads(self.index):
-                # TODO we need to copy the board and add road1 to the map and than get legal roads
-                for road2 in self.board.get_legal_roads(self.index):
-                    legal_moves += [use_build_roads(road1, road2)]
+            for [road1, road2] in self.board.get_two_legal_roads(self.index):
+                legal_moves += [use_build_roads(road1, road2)]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["year of plenty"]))) > 0:
             # need to check if the cards
             for i in range(1, 6):
@@ -155,8 +153,8 @@ class Player:
             for crossword in self.board.get_legal_crossroads():
                 legal_moves += [build_settlement(crossword)]
         if self.board.hands[self.index].can_buy_city:
+            # todo get settlements
             pass
-            # TODO finish here legal_moves += [build_city(crossword)]
         if self.board.hands[self.index].can_buy_Devcard:
             legal_moves += [buy_dev_card()]
         return legal_moves

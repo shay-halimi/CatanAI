@@ -50,18 +50,17 @@ class Game:
         self.board.next_turn(self.turn, self.round)
 
     def play_round(self):
-        for player in range(len(self.players)):
+        for player in (self.players):
             self.play_turn(player)
             if max(list(map(lambda x: x.points, self.board.hands))) >= 10:
                 break
             self.next_turn()
 
-    def compute_turn(self, player):
-        pass
 
     def play_turn(self, player):
+        self.throw_dice()
         if self.players[player].is_computer:
-            Game.compute_turn(self, player)
+            player.compute_turn(self, player)
 
     def play_game(self):
         num_players = input("how many players are playing?")
