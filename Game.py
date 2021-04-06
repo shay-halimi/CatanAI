@@ -90,7 +90,8 @@ def print_distance(game):
 
 def main():
     game = Game(3)
-    game.start_game()
+    game.play_game()
+
     # print_distance(game)
 
 
