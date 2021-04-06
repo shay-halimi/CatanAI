@@ -415,29 +415,6 @@ class Board:
                         up += 1
             i += 1
 
-    def get_legal_crossroads_start(self, player):
-        legal = []
-        for line in self.crossroads:
-            for cr in line:
-                if cr.legal and cr.ownership is None:
-                    legal += [cr]
-        return legal
-
-    def get_legal_crossroads(self, player):
-        legal = []
-        for line in self.crossroads:
-            for cr in line:
-                if cr.legal and cr.connected[player] and (cr.ownership is None or cr.ownership == player):
-                    legal += [cr]
-        return legal
-
-    def get_legal_roads(self, player):
-        legal = []
-        for line in self.roads:
-            for road in line:
-                if road.is_legal(player):
-                    legal += [road]
-
     def get_two_legal_roads(self, player):
         legal = []
         for line1 in self.roads:
@@ -461,6 +438,39 @@ class Board:
             self.hands[former].points -= 2
         self.hands[player].points += 2
         self.longest_road_size += 1
+
+    # ---- get legal moves ---- #
+
+    def get_settlements(self, player):
+        legal = []
+        for line in self.crossroads:
+            for cr in line:
+                if cr.ownership is player:
+                    legal += [cr]
+        return legal
+
+    def get_legal_crossroads_start(self, player):
+        legal = []
+        for line in self.crossroads:
+            for cr in line:
+                if cr.legal and cr.ownership is None:
+                    legal += [cr]
+        return legal
+
+    def get_legal_crossroads(self, player):
+        legal = []
+        for line in self.crossroads:
+            for cr in line:
+                if cr.legal and cr.connected[player] and (cr.ownership is None or cr.ownership == player):
+                    legal += [cr]
+        return legal
+
+    def get_legal_roads(self, player):
+        legal = []
+        for line in self.roads:
+            for road in line:
+                if road.is_legal(player):
+                    legal += [road]
 
 
 class Hand:
