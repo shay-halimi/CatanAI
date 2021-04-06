@@ -438,6 +438,18 @@ class Board:
                 if road.is_legal(player):
                     legal += [road]
 
+    def get_two_legal_roads(self, player):
+        legal = []
+        for line1 in self.roads:
+            for road1 in line1:
+                if road1.is_legal(player):
+                    road1.temp_build(player)
+                    for line2 in self.roads:
+                        for road2 in line2:
+                            if road2.is_legal(player):
+                                legal += [(road1, road2)]
+        return legal
+
     def next_turn(self, turn, rnd):
         API.next_turn(self, turn, rnd, self.hands)
         Log.next_turn(rnd, turn, self.hands)
