@@ -501,7 +501,7 @@ class Hand:
         return self.resources[Resource.WOOD] >= 1 and self.resources[Resource.CLAY] >= 1
 
     def buy_road(self, road):
-        if self.can_buy_road() and road.is_legal():
+        if self.can_buy_road() and road.is_legal(self.index):
             self.resources[Resource.WOOD] -= 1
             self.resources[Resource.CLAY] -= 1
             road.build(self.index)
@@ -595,7 +595,7 @@ class Hand:
             self.resources[Resource.IRON] -= 1
             self.resources[Resource.WHEAT] -= 1
             self.resources[Resource.SHEEP] -= 1
-            self.cards[stack.get().get_name()] += 1
+            self.cards[stack.get().name] += 1
             return True
         return False
 
