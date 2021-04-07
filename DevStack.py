@@ -17,7 +17,7 @@ class KnightCard(DevCard):
 
 
 class VictoryPointCard(DevCard):
-    name = "victory point"
+    name = "victory points"
     ok_to_use = True
 
 
@@ -26,7 +26,7 @@ class Monopole(DevCard):
 
 
 class RoadBuilding(DevCard):
-    name = "road building"
+    name = "road builder"
 
 
 class YearOfPlenty(DevCard):

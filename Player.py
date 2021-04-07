@@ -22,6 +22,7 @@ class use_knight(Action):
         self.dst = dst
 
     def do_action(self, player):
+        print(self)
         player.hand.use_knight(self.terrain, self.dst)
 
 
@@ -32,6 +33,7 @@ class use_monopole(Action):
         self.resource = resource
 
     def do_action(self, player):
+        print(self)
         player.hand.use_monopole(self.resource)
 
 
@@ -43,6 +45,7 @@ class use_year_of_plenty(Action):
         self.resource2 = resource2
 
     def do_action(self, player):
+        print(self)
         player.hand.use_year_of_plenty(self.resource1, self.resource2)
 
 
@@ -54,6 +57,7 @@ class use_build_roads(Action):
         self.road2 = road2
 
     def do_action(self, player):
+        print(self)
         player.hand.build_2_roads(self.road1, self.road2)
 
 
@@ -61,6 +65,7 @@ class use_victory_point(Action):
     name = "use victory_point"
 
     def do_action(self, player):
+        print(self)
         player.hand.use_victory_point()
 
 
@@ -71,6 +76,7 @@ class build_settlement(Action):
         self.crossroad = crossroad
 
     def do_action(self, player):
+        print(self)
         player.hand.buy_settlement(self.crossroad)
 
 
@@ -81,6 +87,7 @@ class build_city(Action):
         self.crossroad = crossroad
 
     def do_action(self, player):
+        print(self)
         player.hand.buy_city(self.crossroad)
 
 
@@ -91,6 +98,7 @@ class build_road(Action):
         self.road = road
 
     def do_action(self, player):
+        print(self)
         player.hand.buy_road(self.road)
 
 
@@ -103,7 +111,7 @@ class trade(Action):
         self.amount = amount
 
     def do_action(self, player):
-        player.hand.trade(self.src, self.dst, )
+        player.hand.trade(self.src, self.dst)
         pass
 
 

@@ -69,10 +69,10 @@ class Game:
             game.play_round()
             print(game.round)
             for hand in self.board.hands:
-                print(hand.cards)
-                for type in hand.cards:
-                    for card in type:
-                        card.ok_to_use = True
+                for typeCard in hand.cards.values():
+                    if typeCard:
+                        for card in typeCard:
+                            card.ok_to_use = True
 
 
 # ---- main ---- #

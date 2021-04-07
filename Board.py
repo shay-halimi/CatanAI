@@ -595,6 +595,8 @@ class Hand:
             self.resources[Resource.IRON] -= 1
             self.resources[Resource.WHEAT] -= 1
             self.resources[Resource.SHEEP] -= 1
+            print((self.cards))
+            print((stack.get().name))
             self.cards[stack.get().name] += 1
             return True
         return False
