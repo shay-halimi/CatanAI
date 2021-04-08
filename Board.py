@@ -597,7 +597,8 @@ class Hand:
             self.resources[Resource.SHEEP] -= 1
             print((self.cards))
             print((stack.get().name))
-            self.cards[stack.get().name] += 1
+            card = stack.get()
+            self.cards[card.name] += card
             return True
         return False
 
