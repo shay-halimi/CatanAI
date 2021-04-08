@@ -29,8 +29,8 @@ class RoadBuilding(DevCard):
     name = "road builder"
 
 
-class YearOfPlenty(DevCard):
-    name = "year of plenty"
+class YearOfProsper(DevCard):
+    name = "year of prosper"
 
 
 class DevStack:
@@ -45,12 +45,14 @@ class DevStack:
         for i in range(2):
             self.deck += [RoadBuilding()]
         for i in range(2):
-            self.deck += [YearOfPlenty()]
+            self.deck += [YearOfProsper()]
         shuffle(self.deck)
 
     def get(self):
-        card = self.deck.pop()
-        return card
+        if self.deck:
+            card = self.deck.pop()
+            return card
+        return None
 
     def has_cards(self):
         if len(self.deck) != 0:

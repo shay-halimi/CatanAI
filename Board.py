@@ -180,7 +180,7 @@ class Road:
         if u[i] > self.board.hands[i].longest_road:
             self.board.hands[i].longest_road = u[i]
         if self.board.hands[i].longest_road > self.board.longest_road_size:
-            self.board.longest_road_size = player.longest_road
+            self.board.longest_road_size = player.hand.longest_road
             self.board.longest_road_owner = player
 
     def is_connected(self, player):
@@ -598,6 +598,8 @@ class Hand:
             print((self.cards))
             print((stack.get().name))
             card = stack.get()
+            if card is None:
+                return False
             self.cards[card.name] += [card]
             return True
         return False
