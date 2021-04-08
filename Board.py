@@ -598,7 +598,7 @@ class Hand:
             print((self.cards))
             print((stack.get().name))
             card = stack.get()
-            self.cards[card.name] += card
+            self.cards[card.name] += [card]
             return True
         return False
 
