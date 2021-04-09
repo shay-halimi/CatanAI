@@ -6,18 +6,20 @@ from random import randint
 
 
 class Action(ABC):
-    name = 'action'
-    heuristic = 0
+    def __init__(self):
+        self.name = 'action'
+        self.heuristic = 0
 
     @abstractmethod
     def do_action(self, player):
         pass
 
 
-class use_knight(Action):
+class UseKnight(Action):
     name = 'use knight'
 
     def __init__(self, terrain, dst):
+        super().__init__()
         self.terrain = terrain
         self.dst = dst
 
@@ -26,21 +28,23 @@ class use_knight(Action):
         player.hand.use_knight(self.terrain, self.dst)
 
 
-class use_monopole(Action):
+class UseMonopole(Action):
     name = 'use monopole'
 
     def __init__(self, resource):
+        super().__init__()
         self.resource = resource
 
     def do_action(self, player):
         print(self)
-        player.hand.use_monopole(self.resource)
+        self.hand.use_monopole(self.resource)
 
 
-class use_year_of_plenty(Action):
+class UseYearOfPlenty(Action):
     name = 'use year of plenty'
 
     def __init__(self, resource1, resource2):
+        super().__init__()
         self.resource1 = resource1
         self.resource2 = resource2
 
@@ -49,10 +53,11 @@ class use_year_of_plenty(Action):
         player.hand.use_year_of_plenty(self.resource1, self.resource2)
 
 
-class use_build_roads(Action):
+class UseBuildRoads(Action):
     name = 'use build roads'
 
     def __init__(self, road1, road2):
+        super().__init__()
         self.road1 = road1
         self.road2 = road2
 
@@ -61,7 +66,7 @@ class use_build_roads(Action):
         player.hand.build_2_roads(self.road1, self.road2)
 
 
-class use_victory_point(Action):
+class UseVictoryPoint(Action):
     name = "use victory_point"
 
     def do_action(self, player):
@@ -69,10 +74,11 @@ class use_victory_point(Action):
         player.hand.use_victory_point()
 
 
-class build_settlement(Action):
+class BuildSettlement(Action):
     name = 'build settlement'
 
     def __init__(self, crossroad):
+        super().__init__()
         self.crossroad = crossroad
 
     def do_action(self, player):
@@ -80,10 +86,11 @@ class build_settlement(Action):
         player.hand.buy_settlement(self.crossroad)
 
 
-class build_city(Action):
+class BuildCity(Action):
     name = 'build city'
 
     def __init__(self, crossroad):
+        super().__init__()
         self.crossroad = crossroad
 
     def do_action(self, player):
@@ -91,10 +98,11 @@ class build_city(Action):
         player.hand.buy_city(self.crossroad)
 
 
-class build_road(Action):
+class BuildRoad(Action):
     name = 'build road'
 
     def __init__(self, road):
+        super().__init__()
         self.road = road
 
     def do_action(self, player):
@@ -102,10 +110,11 @@ class build_road(Action):
         player.hand.buy_road(self.road)
 
 
-class trade(Action):
+class Trade(Action):
     name = 'trade'
 
     def __init__(self, src, dst, amount):
+        super().__init__()
         self.src = src
         self.dst = dst
         self.amount = amount
@@ -115,7 +124,7 @@ class trade(Action):
         pass
 
 
-class buy_dev_card(Action):
+class BuyDevCard(Action):
     name = 'buy devCard'
 
     def do_action(self, player):
@@ -142,29 +151,31 @@ class Player:
             for terrain in self.board.map:
                 for player in self.board.players:
                     if terrain == self.board.bandit_location: continue
-                    legal_moves += [use_knight(terrain)]
+                    for p in range(self.board.players):
+                        if p is not self.index:
+                            legal_moves += [UseKnight(terrain, p)]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["monopole"]))) > 0:
             for i in range(1, 6):
-                legal_moves += [use_monopole(Resource[i])]
+                legal_moves += [UseMonopole(Resource[i])]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["road builder"]))) > 0:
             for [road1, road2] in self.board.get_two_legal_roads(self.index):
-                legal_moves += [use_build_roads(road1, road2)]
+                legal_moves += [UseBuildRoads(road1, road2)]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["year of prosper"]))) > 0:
             # need to check if the cards
             for i in range(1, 6):
                 for j in range(1, 6):
-                    legal_moves += [use_year_of_plenty(Resource[i], Resource[j])]
+                    legal_moves += [UseYearOfPlenty(Resource[i], Resource[j])]
         if self.board.hands[self.index].can_buy_road():
             for road in self.board.get_legal_roads(self.index):
-                legal_moves += [build_road(road)]
+                legal_moves += [BuildRoad(road)]
         if self.board.hands[self.index].can_buy_settlement():
             for crossword in self.board.get_legal_crossroads(self.index):
-                legal_moves += [build_settlement(crossword)]
+                legal_moves += [BuildSettlement(crossword)]
         if self.board.hands[self.index].can_buy_city():
             # todo get settlements
             pass
         if self.board.hands[self.index].can_buy_development_card():
-            legal_moves += [buy_dev_card()]
+            legal_moves += [BuyDevCard()]
         return legal_moves
 
     def buy_devops(self):
@@ -205,6 +216,23 @@ class Player:
             legal_moves[random_index].do_action(self)
         return
 
+    def simple_choice(self):
+        actions = self.get_legal_moves()
+        for a in actions:
+            if isinstance(a, BuildSettlement):
+                a.do_action(self)
+                return
+        for a in actions:
+            if isinstance(a, BuildCity):
+                a.do_action(self)
+        if not self.hand.get_lands():
+            for a in actions:
+                if isinstance(a, BuildRoad):
+                    a.do_action(self)
+        if False:
+            for a in actions:
+                if isinstance(a, Trade):
+                    a.do_action(self)
 
     def compute_turn(self):
-        self.computer_random_action()
+        self.simple_choice()

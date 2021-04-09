@@ -35,5 +35,3 @@ def next_turn(rnd, turn, hands):
 def save_game():
     with open("game.json", 'w') as outfile:
         json.dump(game, outfile)
-
-

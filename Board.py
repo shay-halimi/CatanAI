@@ -8,6 +8,7 @@ import Log
 # ---- global variables ---- #
 
 DESSERT = 7
+INFINITY = 100
 
 
 # how many crossroads are in a line
@@ -79,7 +80,8 @@ class Crossroad:
         self.val = {"sum": 0, Resource.WOOD: 0, Resource.CLAY: 0, Resource.WHEAT: 0, Resource.SHEEP: 0,
                     Resource.IRON: 0}
         self.longest_road = [0] * self.board.players
-        self.distance = [{}] * board.players
+        self.distance = [INFINITY, INFINITY, INFINITY, INFINITY]
+        self.fertility_dist = 0
         # game
         self.ownership = None
         self.building = 0
@@ -92,6 +94,7 @@ class Crossroad:
                 n.crossroad.legal = False
         if self.ownership == player and self.building < 2:
             self.building += 1
+            self.fertility_dist = INFINITY
             API.print_crossroad(self)
             return True
         return False
@@ -180,7 +183,7 @@ class Road:
         if u[i] > self.board.hands[i].longest_road:
             self.board.hands[i].longest_road = u[i]
         if self.board.hands[i].longest_road > self.board.longest_road_size:
-            self.board.longest_road_size = player.hand.longest_road
+            self.board.longest_road_size = self.board.hands[i].longest_road
             self.board.longest_road_owner = player
 
     def is_connected(self, player):
@@ -478,12 +481,14 @@ class Hand:
     def __init__(self, index, board):
         self.resources = {Resource.WOOD: 0, Resource.IRON: 0, Resource.WHEAT: 0, Resource.SHEEP: 0, Resource.CLAY: 0}
         self.cards = {"knight": [], "victory points": [], "monopole": [], "road builder": [], "year of prosper": []}
-        self.ports = {}
+        self.ports = set()
         self.longest_road, self.largest_army = 0, 0
         self.points = 0
         self.board = board
         self.index = index
         self.name = None
+
+    # ---- get information ---- #
 
     def get_resources_number(self):
         sum = 0
@@ -497,29 +502,95 @@ class Hand:
             sum += len(c)
         return sum
 
+    def get_lands(self):
+        lands = []
+        for line in self.board.crossroads:
+            for cr in line:
+                if cr.connected[self.index] and cr.building == 0 and cr.legal:
+                    lands += [cr]
+        return lands
+
+    # check if an action can be taken ---- #
+
     def can_buy_road(self):
         return self.resources[Resource.WOOD] >= 1 and self.resources[Resource.CLAY] >= 1
+
+    def can_buy_settlement(self):
+        return self.resources[Resource.WOOD] >= 1 and self.resources[Resource.CLAY] >= 1 and self.resources[
+            Resource.WHEAT] >= 1 and self.resources[Resource.SHEEP] >= 1
+
+    def can_buy_city(self):
+        return self.resources[Resource.WHEAT] >= 2 and self.resources[Resource.IRON] >= 3
+
+    def can_buy_development_card(self):
+        return self.resources[Resource.SHEEP] >= 1 and self.resources[Resource.IRON] >= 1 and self.resources[
+            Resource.WHEAT] >= 1
+
+    def can_trade(self, src: Resource, dst: Resource, amount):
+        if dst in self.ports:
+            if dst is Resource.DESSERT:
+                return self.resources[src] >= amount * 3
+            else:
+                return self.resources[src] >= amount * 2
+        return False
+
+    # ---- take an action ---- #
+
+    # ---- ---- buy ---- ---- #
 
     def buy_road(self, road):
         if self.can_buy_road() and road.is_legal(self.index):
             self.resources[Resource.WOOD] -= 1
             self.resources[Resource.CLAY] -= 1
             road.build(self.index)
+            self.set_distances()
             return True
         return False
 
-    def tmp_buy_road(self, road):
-        if self.can_buy_road() and road.is_legal():
+    def buy_settlement(self, cr: Crossroad):
+        if self.can_buy_settlement() and cr.legal and cr.connected[self.index]:
             self.resources[Resource.WOOD] -= 1
             self.resources[Resource.CLAY] -= 1
-            road.temp_build(self.index)
+            self.resources[Resource.WHEAT] -= 1
+            self.resources[Resource.SHEEP] -= 1
+            cr.build(self.index)
+            self.set_distances()
+            if cr.port is not None:
+                self.ports.add(cr.port)
             return True
         return False
 
-    def undo_buy_road(self, road):
-        self.resources[Resource.WOOD] += 1
-        self.resources[Resource.CLAY] += 1
-        road.undo_build(self.index)
+    def buy_city(self, cr: Crossroad):
+        if self.can_buy_city() and cr.ownership == self.index and cr.building == 1:
+            self.resources[Resource.WHEAT] -= 2
+            self.resources[Resource.IRON] -= 3
+            cr.build(self.index)
+            self.set_distances()
+            return True
+        return False
+
+    def buy_development_card(self, stack: DevStack):
+        if self.can_buy_development_card() and stack.has_cards():
+            self.resources[Resource.IRON] -= 1
+            self.resources[Resource.WHEAT] -= 1
+            self.resources[Resource.SHEEP] -= 1
+            print((self.cards))
+            print((stack.get().name))
+            card = stack.get()
+            if card is None:
+                return False
+            self.cards[card.name] += [card]
+            return True
+        return False
+
+    # ---- ---- trade ---- ---- #
+
+    def trade(self, src: Resource, dst: Resource, amount):
+        if self.can_trade(src, dst, amount):
+            self.resources[src] -= 2 * amount
+            self.resources[dst] += amount
+
+    # ---- ---- use a development card ---- ---- #
 
     def build_2_roads(self, road1, road2):
         for card in self.cards["road building"]:
@@ -559,50 +630,34 @@ class Hand:
                 return True
         return False
 
-    def can_buy_settlement(self):
-        return self.resources[Resource.WOOD] >= 1 and self.resources[Resource.CLAY] >= 1 and self.resources[
-            Resource.WHEAT] >= 1 and self.resources[Resource.SHEEP] >= 1
+    # terrain = where to put the bandit
+    # dst = from who to steal
+    def use_knight(self, terrain: Terrain, dst):
+        for knight in self.cards["knight"]:
+            if knight.is_valid():
+                if terrain.put_bandit():
+                    self.cards["knight"].remove(knight)
+                    return self.steal(dst)
+        return False
 
-    def buy_settlement(self, cr: Crossroad):
-        if self.can_buy_settlement() and cr.legal and cr.connected[self.index]:
+    # ---- take a temporary action ---- #
+
+    def tmp_buy_road(self, road):
+        if self.can_buy_road() and road.is_legal():
             self.resources[Resource.WOOD] -= 1
             self.resources[Resource.CLAY] -= 1
-            self.resources[Resource.WHEAT] -= 1
-            self.resources[Resource.SHEEP] -= 1
-            cr.build(self.index)
-            if cr.port is not None:
-                self.ports += [cr.port]
+            road.temp_build(self.index)
             return True
         return False
 
-    def can_buy_city(self):
-        return self.resources[Resource.WHEAT] >= 2 and self.resources[Resource.IRON] >= 3
+    # ---- undo an action ---- #
 
-    def buy_city(self, cr: Crossroad):
-        if self.can_buy_city() and cr.ownership == self.index and cr.building == 1:
-            self.resources[Resource.WHEAT] -= 2
-            self.resources[Resource.IRON] -= 3
-            cr.build(self.index)
-            return True
-        return False
+    def undo_buy_road(self, road):
+        self.resources[Resource.WOOD] += 1
+        self.resources[Resource.CLAY] += 1
+        road.undo_build(self.index)
 
-    def can_buy_development_card(self):
-        return self.resources[Resource.SHEEP] >= 1 and self.resources[Resource.IRON] >= 1 and self.resources[
-            Resource.WHEAT] >= 1
-
-    def buy_development_card(self, stack: DevStack):
-        if self.can_buy_development_card() and stack.has_cards():
-            self.resources[Resource.IRON] -= 1
-            self.resources[Resource.WHEAT] -= 1
-            self.resources[Resource.SHEEP] -= 1
-            print((self.cards))
-            print((stack.get().name))
-            card = stack.get()
-            if card is None:
-                return False
-            self.cards[card.name] += [card]
-            return True
-        return False
+    # ---- auxiliary functions ---- #
 
     def steal(self, dst):
         if dst.resources_num == 0:
@@ -617,29 +672,37 @@ class Hand:
                 index -= dst[resource]
         return True
 
-    def use_knight(self, terrain: Terrain, dst):
-        for knight in self.cards["knight"]:
-            if knight.is_valid():
-                if terrain.put_bandit():
-                    self.cards["knight"].remove(knight)
-                    return self.steal(dst)
-        return False
-
-    def can_trade(self, src: Resource, dst: Resource, amount):
-        if dst in self.ports:
-            if dst is Resource.DESSERT:
-                return self.resources[src] >= amount * 3
-            else:
-                return self.resources[src] >= amount * 2
-        return False
-
-    def trade(self, src: Resource, dst: Resource, amount):
-        if self.can_trade(src, dst, amount):
-            self.resources[src] -= 2 * amount
-            self.resources[dst] += amount
+    def set_distances(self):
+        stack = []
+        stack_fert = []
+        for line in self.board.crossroads:
+            for cr in line:
+                cr.fertility_dist = INFINITY
+                if cr.ownership is not None:
+                    cr.distance[cr.ownership] = 0
+                    stack.extend(x.crossroad for x in cr.neighbors if x.crossroad not in stack)
+                else:
+                    if cr.legal:
+                        cr.fertility_dist = 0
+        while stack:
+            cr = stack.pop()
+            for n in cr.neighbors:
+                ncr = n.crossroad
+                for i in range(self.board.players):
+                    if cr.distance[i] > ncr.distance[i] + 1:
+                        cr.distance[i] = ncr.distance[i] + 1
+                        stack.extend(x.crossroad for x in cr.neighbors if x.crossroad not in stack)
+        while stack_fert:
+            cr = stack_fert.pop()
+            for n in cr.neighbors:
+                ncr = n.crossroad
+                if cr.fertility_dist > ncr.fertility_dist + 1:
+                    cr.fertility_dist = ncr.fertility_dist + 1
+                    stack_fert.extend(x.crossroad for x in cr.neighbors if x.crossroad not in stack)
 
 
 # ---- test functions ---- #
+
 
 def test_crossroads(crossroads):
     for line in crossroads:
