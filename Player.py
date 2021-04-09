@@ -3,6 +3,7 @@ from Resources import Resource
 from Board import Board
 from Board import Crossroad
 from random import randint
+from Heuristics import SimpleHeuristic
 
 
 class Action(ABC):
@@ -120,8 +121,7 @@ class Trade(Action):
         self.amount = amount
 
     def do_action(self, player):
-        player.hand.trade(self.src, self.dst)
-        pass
+        player.hand.trade(self.src, self.dst, self.amount)
 
 
 class BuyDevCard(Action):
@@ -142,6 +142,7 @@ class Player:
         self.board = board
         self.hand = board.hands[index]
         self.hand.name = self.name
+        self.simple_heuristic = SimpleHeuristic(self.index, self.board)
 
     def get_legal_moves(self):
         legal_moves = []
@@ -176,6 +177,12 @@ class Player:
             pass
         if self.board.hands[self.index].can_buy_development_card():
             legal_moves += [BuyDevCard()]
+        for resource in Resource:
+            if resource is not Resource.DESSERT:
+                if self.hand.can_trade(resource, 1):
+                    for dst in Resource:
+                        if resource is not Resource.DESSERT:
+                            legal_moves += [Trade(resource, dst, 1)]
         return legal_moves
 
     def buy_devops(self):
@@ -229,9 +236,9 @@ class Player:
             for a in actions:
                 if isinstance(a, BuildRoad):
                     a.do_action(self)
-        if False:
-            for a in actions:
-                if isinstance(a, Trade):
+        for a in actions:
+            if isinstance(a, Trade):
+                if self.simple_heuristic.accept_trade(a):
                     a.do_action(self)
 
     def compute_turn(self):

@@ -526,13 +526,12 @@ class Hand:
         return self.resources[Resource.SHEEP] >= 1 and self.resources[Resource.IRON] >= 1 and self.resources[
             Resource.WHEAT] >= 1
 
-    def can_trade(self, src: Resource, dst: Resource, amount):
-        if dst in self.ports:
-            if dst is Resource.DESSERT:
-                return self.resources[src] >= amount * 3
-            else:
-                return self.resources[src] >= amount * 2
-        return False
+    def can_trade(self, src: Resource, amount):
+        if src in self.ports:
+            return self.resources[src] >= amount * 2
+        if Resource.DESSERT in self.ports:
+            return self.resources[src] >= amount * 3
+        return self.resources[src] >= amount * 4
 
     # ---- take an action ---- #
 
@@ -586,9 +585,13 @@ class Hand:
     # ---- ---- trade ---- ---- #
 
     def trade(self, src: Resource, dst: Resource, amount):
-        if self.can_trade(src, dst, amount):
-            self.resources[src] -= 2 * amount
-            self.resources[dst] += amount
+        if src in self.ports:
+            self.resources[src] -= amount * 2
+        elif Resource.DESSERT in self.ports:
+            self.resources[src] -= amount * 3
+        else:
+            self.resources[src] -= amount * 4
+        self.resources[dst] += amount
 
     # ---- ---- use a development card ---- ---- #
 
