@@ -105,6 +105,7 @@ class Crossroad:
 
     def build_first(self, player):
         if self.legal:
+
             return self.aux_build(player)
 
     def build_second(self, player, hands):
@@ -184,7 +185,10 @@ class Road:
             self.board.hands[i].longest_road = u[i]
         if self.board.hands[i].longest_road > self.board.longest_road_size:
             self.board.longest_road_size = self.board.hands[i].longest_road
+            if self.board.longest_road_owner is not None:
+                self.board.hands[self.board.longest_road_owner].points -= 2
             self.board.longest_road_owner = player
+            self.board.hands[player].points += 2
 
     def is_connected(self, player):
         if self.neighbors[0].connected[player] or self.neighbors[1].connected[player]:
@@ -487,6 +491,9 @@ class Hand:
         self.board = board
         self.index = index
         self.name = None
+        self.settlement_pieces = 5
+        self.city_pieces = 4
+        self.road_pieces = 12
 
     # ---- get information ---- #
 
@@ -513,56 +520,59 @@ class Hand:
     # check if an action can be taken ---- #
 
     def can_buy_road(self):
-        return self.resources[Resource.WOOD] >= 1 and self.resources[Resource.CLAY] >= 1
+        return self.resources[Resource.WOOD] >= 1 and self.resources[Resource.CLAY] >= 1 and self.road_pieces
 
     def can_buy_settlement(self):
         return self.resources[Resource.WOOD] >= 1 and self.resources[Resource.CLAY] >= 1 and self.resources[
-            Resource.WHEAT] >= 1 and self.resources[Resource.SHEEP] >= 1
+            Resource.WHEAT] >= 1 and self.resources[Resource.SHEEP] >= 1 and self.settlement_pieces
 
     def can_buy_city(self):
-        return self.resources[Resource.WHEAT] >= 2 and self.resources[Resource.IRON] >= 3
+        return self.resources[Resource.WHEAT] >= 2 and self.resources[Resource.IRON] >= 3 and self.city_pieces
 
     def can_buy_development_card(self):
         return self.resources[Resource.SHEEP] >= 1 and self.resources[Resource.IRON] >= 1 and self.resources[
-            Resource.WHEAT] >= 1
+            Resource.WHEAT] >= 1 and self.board.devStack
 
     def can_trade(self, src: Resource, amount):
         if src in self.ports:
-            return self.resources[src] >= amount * 2
+            return self.resources[src] >= amount * 2, 2
         if Resource.DESSERT in self.ports:
-            return self.resources[src] >= amount * 3
-        return self.resources[src] >= amount * 4
+            return self.resources[src] >= amount * 3, 3
+        return self.resources[src] >= amount * 4, 4
 
     # ---- take an action ---- #
 
     # ---- ---- buy ---- ---- #
 
     def buy_road(self, road):
-        if self.can_buy_road() and road.is_legal(self.index):
+        if self.can_buy_road() and road.is_legal(self.index) and self.road_pieces:
             self.resources[Resource.WOOD] -= 1
             self.resources[Resource.CLAY] -= 1
+            self.road_pieces -= 1
             road.build(self.index)
             self.set_distances()
             return True
         return False
 
     def buy_settlement(self, cr: Crossroad):
-        if self.can_buy_settlement() and cr.legal and cr.connected[self.index]:
-            self.resources[Resource.WOOD] -= 1
-            self.resources[Resource.CLAY] -= 1
-            self.resources[Resource.WHEAT] -= 1
-            self.resources[Resource.SHEEP] -= 1
-            cr.build(self.index)
-            self.set_distances()
-            if cr.port is not None:
-                self.ports.add(cr.port)
-            return True
-        return False
+        self.resources[Resource.WOOD] -= 1
+        self.resources[Resource.CLAY] -= 1
+        self.resources[Resource.WHEAT] -= 1
+        self.resources[Resource.SHEEP] -= 1
+        self.settlement_pieces -= 1
+        self.points += 1
+        cr.build(self.index)
+        self.set_distances()
+        if cr.port is not None:
+            self.ports.add(cr.port)
 
     def buy_city(self, cr: Crossroad):
-        if self.can_buy_city() and cr.ownership == self.index and cr.building == 1:
+        if self.can_buy_city() and cr.ownership == self.index and cr.building == 1 and self.city_pieces:
             self.resources[Resource.WHEAT] -= 2
             self.resources[Resource.IRON] -= 3
+            self.city_pieces -= 1
+            self.settlement_pieces += 1
+            self.points += 1
             cr.build(self.index)
             self.set_distances()
             return True
@@ -584,14 +594,10 @@ class Hand:
 
     # ---- ---- trade ---- ---- #
 
-    def trade(self, src: Resource, dst: Resource, amount):
-        if src in self.ports:
-            self.resources[src] -= amount * 2
-        elif Resource.DESSERT in self.ports:
-            self.resources[src] -= amount * 3
-        else:
-            self.resources[src] -= amount * 4
-        self.resources[dst] += amount
+    def trade(self, trade):
+        self.resources[trade.src] -= trade.give
+        self.resources[trade.dst] += trade.take
+        Log.add_trade(trade)
 
     # ---- ---- use a development card ---- ---- #
 

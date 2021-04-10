@@ -22,9 +22,6 @@ class Game:
         for i in range(len(self.players)):
             if self.players[i].is_computer:
                 crossroad, road = self.players[i].computer_1st_settlement(self.players[i].index)
-                crossroad.build_first(i)
-                crossroad.connected[i] = True
-                road.build(i)
             else:
                 pass
             self.next_turn()

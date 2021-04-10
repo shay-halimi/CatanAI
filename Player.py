@@ -17,12 +17,11 @@ class Action(ABC):
 
 
 class UseKnight(Action):
-    name = 'use knight'
-
     def __init__(self, terrain, dst):
         super().__init__()
         self.terrain = terrain
         self.dst = dst
+        self.name = 'use knight'
 
     def do_action(self, player):
         print(self)
@@ -30,24 +29,22 @@ class UseKnight(Action):
 
 
 class UseMonopole(Action):
-    name = 'use monopole'
-
     def __init__(self, resource):
         super().__init__()
         self.resource = resource
+        self.name = 'use monopole'
 
     def do_action(self, player):
         print(self)
-        self.hand.use_monopole(self.resource)
+        player.hand.use_monopole(self.resource)
 
 
 class UseYearOfPlenty(Action):
-    name = 'use year of plenty'
-
     def __init__(self, resource1, resource2):
         super().__init__()
         self.resource1 = resource1
         self.resource2 = resource2
+        self.name = 'use year of plenty'
 
     def do_action(self, player):
         print(self)
@@ -55,12 +52,11 @@ class UseYearOfPlenty(Action):
 
 
 class UseBuildRoads(Action):
-    name = 'use build roads'
-
     def __init__(self, road1, road2):
         super().__init__()
         self.road1 = road1
         self.road2 = road2
+        self.name = 'use build roads'
 
     def do_action(self, player):
         print(self)
@@ -68,19 +64,17 @@ class UseBuildRoads(Action):
 
 
 class UseVictoryPoint(Action):
-    name = "use victory_point"
-
     def do_action(self, player):
         print(self)
         player.hand.use_victory_point()
+        self.name = "use victory_point"
 
 
 class BuildSettlement(Action):
-    name = 'build settlement'
-
     def __init__(self, crossroad):
         super().__init__()
         self.crossroad = crossroad
+        self.name = 'build settlement'
 
     def do_action(self, player):
         print(self)
@@ -88,11 +82,10 @@ class BuildSettlement(Action):
 
 
 class BuildCity(Action):
-    name = 'build city'
-
     def __init__(self, crossroad):
         super().__init__()
         self.crossroad = crossroad
+        self.name = 'build city'
 
     def do_action(self, player):
         print(self)
@@ -100,11 +93,10 @@ class BuildCity(Action):
 
 
 class BuildRoad(Action):
-    name = 'build road'
-
     def __init__(self, road):
         super().__init__()
         self.road = road
+        self.name = 'build road'
 
     def do_action(self, player):
         print(self)
@@ -112,23 +104,22 @@ class BuildRoad(Action):
 
 
 class Trade(Action):
-    name = 'trade'
-
-    def __init__(self, src, dst, amount):
+    def __init__(self, src, exchange_rate, dst, take):
         super().__init__()
         self.src = src
         self.dst = dst
-        self.amount = amount
+        self.take = take
+        self.give = take * exchange_rate
+        self.name = 'trade'
 
     def do_action(self, player):
-        player.hand.trade(self.src, self.dst, self.amount)
+        player.hand.trade(self)
 
 
 class BuyDevCard(Action):
-    name = 'buy devCard'
-
     def do_action(self, player):
         player.hand.buy_development_card(player.board.devStack)
+        self.name = 'buy devCard'
 
 
 class Player:
@@ -179,10 +170,11 @@ class Player:
             legal_moves += [BuyDevCard()]
         for resource in Resource:
             if resource is not Resource.DESSERT:
-                if self.hand.can_trade(resource, 1):
+                can_trade, exchange_rate = self.hand.can_trade(resource, 1)
+                if can_trade:
                     for dst in Resource:
                         if resource is not Resource.DESSERT:
-                            legal_moves += [Trade(resource, dst, 1)]
+                            legal_moves += [Trade(resource, exchange_rate, dst, 1)]
         return legal_moves
 
     def buy_devops(self):
@@ -232,7 +224,7 @@ class Player:
         for a in actions:
             if isinstance(a, BuildCity):
                 a.do_action(self)
-        if not self.hand.get_lands():
+        if not self.hand.get_lands() and self.hand.settlement_pieces:
             for a in actions:
                 if isinstance(a, BuildRoad):
                     a.do_action(self)

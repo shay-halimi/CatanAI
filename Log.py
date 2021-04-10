@@ -1,26 +1,29 @@
 import json
 from Resources import Resource
+from Auxilary import r2s
 
 game = {'round': []}
-curr_rnd = []
+rounds = []
+this_turn = {'round': 0, 'turn': 0, 'stats': [], 'actions': []}
 
 
 def next_turn(rnd, turn, hands):
+    global rounds
     if turn == 0:
-        global curr_rnd
-        game['round'].append(curr_rnd)
-        curr_rnd = []
-    this_turn = {'round': rnd, 'turn': turn, 'stats': []}
+        game['round'].append(rounds)
+        rounds = []
+    global this_turn
+    this_turn = {'round': rnd, 'turn': turn, 'stats': [], 'actions': []}
     for h in hands:
         this_turn['stats'].append({
             'name': h.name,
             'points': h.points,
             'total number of resources': h.get_resources_number(),
             'wood': h.resources[Resource.WOOD],
-            'clay': h.resources[Resource.WOOD],
-            'wheat': h.resources[Resource.WOOD],
-            'sheep': h.resources[Resource.WOOD],
-            'iron': h.resources[Resource.WOOD],
+            'clay': h.resources[Resource.CLAY],
+            'wheat': h.resources[Resource.WHEAT],
+            'sheep': h.resources[Resource.SHEEP],
+            'iron': h.resources[Resource.IRON],
             'largest army': h.largest_army,
             'longest road': h.longest_road,
             'victory points': len(h.cards["victory points"]),
@@ -29,9 +32,24 @@ def next_turn(rnd, turn, hands):
             'road builder': len(h.cards["road builder"]),
             'year of prosper': len(h.cards["year of prosper"])
         })
-    curr_rnd.append(this_turn)
+    rounds.append(this_turn)
+
+
+def add_trade(trade):
+    action = {'name': trade.name, 'source type': r2s(trade.src), 'give': trade.give, 'destination type': r2s(trade.dst),
+              'take': trade.take}
+    global this_turn
+    this_turn['actions'].append(action)
 
 
 def save_game():
     with open("game.json", 'w') as outfile:
         json.dump(game, outfile)
+    with open("actions.json", 'w') as outfile:
+        actions = []
+        for rnd in game['round']:
+            for turn in rnd:
+                for action in turn['actions']:
+                    zip = {'round': turn['round'], 'turn': turn['turn'], 'action': action}
+                    actions += [zip]
+        json.dump(actions, outfile)

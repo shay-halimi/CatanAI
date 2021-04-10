@@ -247,24 +247,29 @@ def print_log(board, img, rnd, turn, dice):
     return img
 
 
+def print_stat(draw, hand, location):
+    text = hand.name + ":"
+    text += "\n\n    Points: " + str(hand.points)
+    text += "\n\n    Wheat: " + str(hand.resources[Resource.WHEAT])
+    text += "\n\n    Sheep: " + str(hand.resources[Resource.SHEEP])
+    text += "\n\n    Iron: " + str(hand.resources[Resource.IRON])
+    text += "\n\n    Wood: " + str(hand.resources[Resource.WOOD])
+    text += "\n\n    Clay: " + str(hand.resources[Resource.CLAY])
+    text += "\n\n    Active knights: " + str(hand.largest_army)
+    text += "\n\n    Sleeping nights: " + str(len(hand.cards["knight"]))
+    text += "\n\n    Longest road: " + str(hand.longest_road)
+    text += "\n\n    Victory points: " + str(len(hand.cards["victory points"]))
+    text += "\n\n    Road builder: " + str(len(hand.cards["road builder"]))
+    text += "\n\n    Monopoly: " + str(len(hand.cards["monopole"]))
+    text += "\n\n    Year of prosper: " + str(len(hand.cards["year of prosper"])) + "\n\n"
+    draw.multiline_text(location, text, fill=(0, 0, 0), font=font)
+
+
 def print_stats(img, hands):
     draw = ImageDraw.Draw(img)
     draw.multiline_text((line_x, line_y), "Players Stats:", fill=(0, 0, 0), font=font)
-    i = 0
-    for name in list(map(lambda x: x.name, hands)):
-        text = name
-        text += ":\n\n    Points: " + str(hands[i].points) + "\n\n    Wheat: " + str(hands[i].resources[Resource.WHEAT])
-        text += "\n\n    Sheep: " + str(hands[i].resources[Resource.SHEEP]) + "\n\n    Iron: " + str(hands[i].resources[Resource.IRON])
-        text += "\n\n    Wood: " + str(hands[i].resources[Resource.WOOD]) + "\n\n   Clay: " + str(hands[i].resources[Resource.CLAY])
-        text += "\n\n    Active knights: " + str(len(hands[i].cards["knight"]))
-        text += "\n\n    Sleeping nights: "
-        text += "\n\n    Longest road: "
-        text += "\n\n    Victory points: " + str(len(hands[i].cards["victory points"]))
-        text += "\n\n    Road builder: " + str(len(hands[i].cards["road builder"]))
-        text += "\n\n    Monopoly: " + str(len(hands[i].cards["monopole"]))
-        text += "\n\n    Year of prosper: " + str(len(hands[i].cards["year of prosper"])) + "\n\n"
-        draw.multiline_text((line_x + 450 * i, line_y + 1 * line_space), text, fill=(0, 0, 0), font=font)
-        i += 1
+    for i, hand in enumerate(hands):
+        print_stat(draw, hand, (line_x + 450 * i, line_y + 1 * line_space))
     return img
 
 
