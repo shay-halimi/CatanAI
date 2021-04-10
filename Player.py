@@ -6,14 +6,19 @@ from random import randint
 from Heuristics import SimpleHeuristic
 
 
+def after_action(player):
+    player.hand.print_resources()
+    print("\n# ----   ---- #\n")
+
+
 class Action(ABC):
     def __init__(self):
         self.name = 'action'
         self.heuristic = 0
 
-    @abstractmethod
     def do_action(self, player):
-        pass
+        player.hand.print_resources()
+        print("player : " + player.name + " " + self.name)
 
 
 class UseKnight(Action):
@@ -24,8 +29,9 @@ class UseKnight(Action):
         self.name = 'use knight'
 
     def do_action(self, player):
-        print(self)
+        super().do_action(player)
         player.hand.use_knight(self.terrain, self.dst)
+        after_action(player)
 
 
 class UseMonopole(Action):
@@ -35,8 +41,9 @@ class UseMonopole(Action):
         self.name = 'use monopole'
 
     def do_action(self, player):
-        print(self)
+        super().do_action(player)
         player.hand.use_monopole(self.resource)
+        after_action(player)
 
 
 class UseYearOfPlenty(Action):
@@ -47,8 +54,9 @@ class UseYearOfPlenty(Action):
         self.name = 'use year of plenty'
 
     def do_action(self, player):
-        print(self)
+        super().do_action(player)
         player.hand.use_year_of_plenty(self.resource1, self.resource2)
+        after_action(player)
 
 
 class UseBuildRoads(Action):
@@ -59,15 +67,20 @@ class UseBuildRoads(Action):
         self.name = 'use build roads'
 
     def do_action(self, player):
-        print(self)
+        super().do_action(player)
         player.hand.build_2_roads(self.road1, self.road2)
+        after_action(player)
 
 
 class UseVictoryPoint(Action):
-    def do_action(self, player):
-        print(self)
-        player.hand.use_victory_point()
+    def __init__(self, road1, road2):
+        super().__init__()
         self.name = "use victory_point"
+
+    def do_action(self, player):
+        super().do_action(player)
+        player.hand.use_victory_point()
+        after_action(player)
 
 
 class BuildSettlement(Action):
@@ -77,8 +90,9 @@ class BuildSettlement(Action):
         self.name = 'build settlement'
 
     def do_action(self, player):
-        print(self)
+        super().do_action(player)
         player.hand.buy_settlement(self.crossroad)
+        after_action(player)
 
 
 class BuildCity(Action):
@@ -88,8 +102,9 @@ class BuildCity(Action):
         self.name = 'build city'
 
     def do_action(self, player):
-        print(self)
+        super().do_action(player)
         player.hand.buy_city(self.crossroad)
+        after_action(player)
 
 
 class BuildRoad(Action):
@@ -99,8 +114,9 @@ class BuildRoad(Action):
         self.name = 'build road'
 
     def do_action(self, player):
-        print(self)
+        super().do_action(player)
         player.hand.buy_road(self.road)
+        after_action(player)
 
 
 class Trade(Action):
@@ -113,13 +129,20 @@ class Trade(Action):
         self.name = 'trade'
 
     def do_action(self, player):
+        super().do_action(player)
         player.hand.trade(self)
+        after_action(player)
 
 
 class BuyDevCard(Action):
-    def do_action(self, player):
-        player.hand.buy_development_card(player.board.devStack)
+    def __init__(self):
+        super().__init__()
         self.name = 'buy devCard'
+
+    def do_action(self, player):
+        super().do_action(player)
+        player.hand.buy_development_card(player.board.devStack)
+        after_action(player)
 
 
 class Player:
@@ -227,14 +250,17 @@ class Player:
         for a in actions:
             if isinstance(a, BuildCity):
                 a.do_action(self)
+                return
         if not self.hand.get_lands() and self.hand.settlement_pieces:
             for a in actions:
                 if isinstance(a, BuildRoad):
                     a.do_action(self)
+                    return
         for a in actions:
             if isinstance(a, Trade):
                 if self.simple_heuristic.accept_trade(a):
                     a.do_action(self)
+                    return
 
     def compute_turn(self):
         self.simple_choice()

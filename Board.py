@@ -4,6 +4,7 @@ import random
 import Dice
 import API
 import Log
+from Auxilary import r2s
 
 # ---- global variables ---- #
 
@@ -536,10 +537,8 @@ class Hand:
         self.create_settlement(cr)
 
     def buy_city(self, cr: Crossroad):
-        if self.can_buy_city() and cr.ownership == self.index and cr.building == 1 and self.city_pieces:
-
-            return True
-        return False
+        self.pay(CITY_PRICE)
+        self.create_city(cr)
 
     def buy_development_card(self, stack: DevStack):
         if self.can_buy_development_card() and stack.has_cards():
@@ -686,6 +685,13 @@ class Hand:
         if cr.port is not None:
             self.ports.add(cr.port)
 
+    def create_city(self, cr: Crossroad):
+        self.settlement_pieces += 1
+        self.city_pieces -= 1
+        self.points += 1
+        cr.build(self.index)
+        self.set_distances()
+
     def can_pay(self, price):
         for resource in price:
             if self.resources[resource] < price[resource]:
@@ -695,6 +701,14 @@ class Hand:
     def pay(self, price):
         for resource in price:
             self.resources[resource] -= price[resource]
+
+    # ---- test functions ---- #
+
+    def print_resources(self):
+        print("resources of player : " + self.name)
+        for resource in self.resources:
+            print(r2s(resource) + " : " + str(self.resources[resource]) + "|||", end="")
+        print()
 
 
 # ---- test functions ---- #
