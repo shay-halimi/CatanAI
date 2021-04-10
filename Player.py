@@ -158,6 +158,15 @@ class Player:
         self.hand.name = self.name
         self.simple_heuristic = SimpleHeuristic(self.index, self.board)
 
+    def throw_my_cards(self, num_cards):
+        while num_cards > 0:
+            resource_index = randint(1, 5)
+            resource = Resource(resource_index)
+            if min(self.hand.resources[resource], num_cards) > 0:
+                cards_to_throw = randint(1, min(self.hand.resources[resource], num_cards))
+                self.hand.resources[resource] -= cards_to_throw
+                num_cards -= cards_to_throw
+
     def get_legal_moves(self):
         legal_moves = []
         # finding legal moves from devCards

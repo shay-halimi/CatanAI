@@ -467,10 +467,6 @@ class Board:
                     legal += [road]
         return legal
 
-    def throw_cards(self):
-        print("7 BOOM")
-        return
-
 
 class Hand:
     def __init__(self, index, board):

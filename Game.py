@@ -1,5 +1,6 @@
 from Board import Board
 import Dice
+import  math
 from Player import Player
 import DevStack
 
@@ -36,8 +37,13 @@ class Game:
         for i, j in self.board.dice.throw():
             self.board.map[i][j].produce()
         if self.board.dice.sum == 7:
-            self.board.throw_cards()
+            self.throw_cards()
 
+    def throw_cards(self):
+        for player in self.players:
+            num_cards = sum(player.hand.resources.values())
+            if num_cards > 7:
+                player.throw_my_cards(math.floor(num_cards/2))
 
     def next_turn(self):
         self.turn += 1
