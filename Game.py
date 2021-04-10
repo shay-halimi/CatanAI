@@ -35,6 +35,9 @@ class Game:
     def throw_dice(self):
         for i, j in self.board.dice.throw():
             self.board.map[i][j].produce()
+        if self.board.dice.sum == 7:
+            self.board.throw_cards()
+
 
     def next_turn(self):
         self.turn += 1
@@ -68,6 +71,9 @@ class Game:
                     if typeCard:
                         for card in typeCard:
                             card.ok_to_use = True
+        for hand in game.board.hands:
+            if hand.points >= 10:
+                print("player number "+str(hand.index)+" is the winner")
 
 
 # ---- main ---- #
