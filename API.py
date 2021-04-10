@@ -288,31 +288,6 @@ def print_roads(roads):
             print_road(road)
 
 
-def game_test(g_board):
-    show_terrain(g_board.map)
-    set_crossroads_locations(g_board.crossroads)
-    print_crossroads(g_board.crossroads)
-    set_roads_locations(g_board.roads, g_board.crossroads)
-    print_roads(g_board.roads)
-    # next_turn(1)
-    # game = Game()
-    # game.start_game()
-    print(g_board.get_legal_crossroads(1))
-    g_board.crossroads[0][2].ownership = 2
-    g_board.crossroads[0][2].building = 1
-    print_crossroad(g_board.crossroads[0][2])
-    for n in g_board.crossroads[0][2].neighbors:
-        cr = n.crossroad
-        cr.ownership = 3
-        cr.building = 1
-        print_crossroad(cr)
-    for line in g_board.crossroads:
-        for cr in line:
-            print("cr " + str(cr.location) + " :")
-            for n in cr.neighbors:
-                print("n " + str(n.crossroad.location) + " :")
-
-
 # ---- main ---- #
 
 

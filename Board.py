@@ -9,6 +9,10 @@ import Log
 
 DESSERT = 7
 INFINITY = 100
+ROAD_PRICE = {Resource.WOOD: 1, Resource.CLAY: 1}
+SETTLEMENT_PRICE = {Resource.WOOD: 1, Resource.CLAY: 1, Resource.WHEAT: 1, Resource.SHEEP: 1}
+CITY_PRICE = {Resource.WHEAT: 2, Resource.IRON: 3}
+DEV_PRICE = {Resource.SHEEP: 1, Resource.WHEAT: 1, Resource.IRON: 1}
 
 
 # how many crossroads are in a line
@@ -452,7 +456,7 @@ class Board:
         legal = []
         for line in self.crossroads:
             for cr in line:
-                if cr.ownership is player:
+                if cr.ownership is player and cr.building == 1:
                     legal += [cr]
         return legal
 
@@ -464,13 +468,8 @@ class Board:
                     legal += [cr]
         return legal
 
-    def get_legal_crossroads(self, player):
-        legal = []
-        for line in self.crossroads:
-            for cr in line:
-                if cr.legal and cr.connected[player] and (cr.ownership is None or cr.ownership == player):
-                    legal += [cr]
-        return legal
+    def get_lands(self, player):
+        return self.hands[player].get_lands()
 
     def get_legal_roads(self, player):
         legal = []
@@ -520,18 +519,16 @@ class Hand:
     # check if an action can be taken ---- #
 
     def can_buy_road(self):
-        return self.resources[Resource.WOOD] >= 1 and self.resources[Resource.CLAY] >= 1 and self.road_pieces
+        return self.can_pay(ROAD_PRICE) and self.road_pieces
 
     def can_buy_settlement(self):
-        return self.resources[Resource.WOOD] >= 1 and self.resources[Resource.CLAY] >= 1 and self.resources[
-            Resource.WHEAT] >= 1 and self.resources[Resource.SHEEP] >= 1 and self.settlement_pieces
+        return self.can_pay(SETTLEMENT_PRICE) and self.settlement_pieces
 
     def can_buy_city(self):
-        return self.resources[Resource.WHEAT] >= 2 and self.resources[Resource.IRON] >= 3 and self.city_pieces
+        return self.can_pay(CITY_PRICE) and self.city_pieces
 
     def can_buy_development_card(self):
-        return self.resources[Resource.SHEEP] >= 1 and self.resources[Resource.IRON] >= 1 and self.resources[
-            Resource.WHEAT] >= 1 and self.board.devStack
+        return self.can_pay(DEV_PRICE) and self.board.devStack
 
     def can_trade(self, src: Resource, amount):
         if src in self.ports:
@@ -545,36 +542,16 @@ class Hand:
     # ---- ---- buy ---- ---- #
 
     def buy_road(self, road):
-        if self.can_buy_road() and road.is_legal(self.index) and self.road_pieces:
-            self.resources[Resource.WOOD] -= 1
-            self.resources[Resource.CLAY] -= 1
-            self.road_pieces -= 1
-            road.build(self.index)
-            self.set_distances()
-            return True
-        return False
+        self.pay(ROAD_PRICE)
+        self.create_road(road)
 
     def buy_settlement(self, cr: Crossroad):
-        self.resources[Resource.WOOD] -= 1
-        self.resources[Resource.CLAY] -= 1
-        self.resources[Resource.WHEAT] -= 1
-        self.resources[Resource.SHEEP] -= 1
-        self.settlement_pieces -= 1
-        self.points += 1
-        cr.build(self.index)
-        self.set_distances()
-        if cr.port is not None:
-            self.ports.add(cr.port)
+        self.pay(SETTLEMENT_PRICE)
+        self.create_settlement(cr)
 
     def buy_city(self, cr: Crossroad):
         if self.can_buy_city() and cr.ownership == self.index and cr.building == 1 and self.city_pieces:
-            self.resources[Resource.WHEAT] -= 2
-            self.resources[Resource.IRON] -= 3
-            self.city_pieces -= 1
-            self.settlement_pieces += 1
-            self.points += 1
-            cr.build(self.index)
-            self.set_distances()
+
             return True
         return False
 
@@ -708,6 +685,29 @@ class Hand:
                 if cr.fertility_dist > ncr.fertility_dist + 1:
                     cr.fertility_dist = ncr.fertility_dist + 1
                     stack_fert.extend(x.crossroad for x in cr.neighbors if x.crossroad not in stack)
+
+    def create_road(self, road: Road):
+        self.road_pieces -= 1
+        road.build(self.index)
+        self.set_distances()
+
+    def create_settlement(self, cr : Crossroad):
+        self.settlement_pieces -= 1
+        self.points += 1
+        cr.build(self.index)
+        self.set_distances()
+        if cr.port is not None:
+            self.ports.add(cr.port)
+
+    def can_pay(self, price):
+        for resource in price:
+            if self.resources[resource] < price[resource]:
+                return False
+        return True
+
+    def pay(self, price):
+        for resource in price:
+            self.resources[resource] -= price[resource]
 
 
 # ---- test functions ---- #

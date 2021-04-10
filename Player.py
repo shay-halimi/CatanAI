@@ -161,11 +161,11 @@ class Player:
             for road in self.board.get_legal_roads(self.index):
                 legal_moves += [BuildRoad(road)]
         if self.board.hands[self.index].can_buy_settlement():
-            for crossword in self.board.get_legal_crossroads(self.index):
+            for crossword in self.board.get_lands(self.index):
                 legal_moves += [BuildSettlement(crossword)]
         if self.board.hands[self.index].can_buy_city():
-            # todo get settlements
-            pass
+            for settlement in self.board.get_settlements(self.index):
+                legal_moves += [BuildCity(settlement)]
         if self.board.hands[self.index].can_buy_development_card():
             legal_moves += [BuyDevCard()]
         for resource in Resource:
