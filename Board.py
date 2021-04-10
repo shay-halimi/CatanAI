@@ -4,6 +4,7 @@ import random
 import Dice
 import API
 import Log
+import  math
 from Auxilary import r2s
 
 # ---- global variables ---- #
@@ -475,7 +476,7 @@ class Hand:
         # ---- hand ---- #
         self.resources = {Resource.WOOD: 0, Resource.IRON: 0, Resource.WHEAT: 0, Resource.SHEEP: 0, Resource.CLAY: 0}
         self.cards = {"knight": [], "victory points": [], "monopole": [], "road builder": [], "year of prosper": []}
-        self.road_pieces = 12
+        self.road_pieces = 15
         self.settlement_pieces = 5
         self.city_pieces = 4
         # ---- board --- #
@@ -483,7 +484,15 @@ class Hand:
         self.ports = set()
         # ---- achievements and stats ---- #
         self.longest_road, self.largest_army = 0, 0
-        self.heuristic = Heuristic()
+        self.heuristic = 0
+        # these are values that we can maniplute according to succes
+        self.longest_road_value = 5
+        self.biggest_army_value = 4.5
+        self.production = {Resource.CLAY: 0, Resource.WOOD: 0, Resource.WHEAT: 0, Resource.IRON: 0,
+                           Resource.SHEEP: 0}
+        self.production_all = 0
+        self.resource_value = {Resource.CLAY: 1, Resource.WOOD: 1, Resource.WHEAT: 1, Resource.IRON: 1,
+                               Resource.SHEEP: 1}
 
     # ---- get information ---- #
 
@@ -533,24 +542,46 @@ class Hand:
     # ---- ---- buy ---- ---- #
 
     def buy_road(self, road):
+        was_longest_road = self.index == self.board.longest_road_owner
+        former_longest_road_owner = self.board.longest_road_owner
         self.pay(ROAD_PRICE)
         self.create_road(road)
+        if former_longest_road_owner is None:
+            self.heuristic += int(self.board.longest_road_owner == self.index)
+            return
+        self.heuristic += self.index == (self.board.longest_road_owner ^ was_longest_road) * self.longest_road_value
+        return
 
     def buy_settlement(self, cr: Crossroad):
+        old_production_variety = len(list(filter(lambda x: x.value != 0, self.production)))
+        old_production=self.production
         self.pay(SETTLEMENT_PRICE)
         self.create_settlement(cr)
+        # prioritize having a variety of resource produce
+        self.heuristic += len(list(filter(lambda x: x.value != 0, self.production))) - old_production_variety
+        for resource in self.production:
+            self.heuristic += (self.production[resource] - old_production[resource]) * self.resource_value[resource]
+
+        self.update_resource_values()
 
     def buy_city(self, cr: Crossroad):
+        old_production_variety = len(list(filter(lambda x: x.value != 0, self.production)))
+        old_production = self.production
         self.pay(CITY_PRICE)
         self.create_city(cr)
+        self.heuristic += len(list(filter(lambda x: x.value != 0, self.production))) - old_production_variety
+        for resource in self.production:
+            self.heuristic += (self.production[resource] - old_production[resource]) * self.resource_value[resource]
+
+        self.update_resource_values()
 
     def buy_development_card(self, stack: DevStack):
         if self.can_buy_development_card() and stack.has_cards():
             self.resources[Resource.IRON] -= 1
             self.resources[Resource.WHEAT] -= 1
             self.resources[Resource.SHEEP] -= 1
-            print((self.cards))
-            print((stack.get().name))
+            print(self.cards)
+            print(stack.get().name)
             card = stack.get()
             if card is None:
                 return False
@@ -602,7 +633,11 @@ class Hand:
         for card in self.cards["victory point"]:
             if card.is_valid():
                 self.points += 1
+                self.heuristic -= 100
+                if self.points >= 10:
+                    self.heauristic = math.inf
                 return True
+
         return False
 
     # terrain = where to put the bandit
@@ -718,13 +753,17 @@ class Hand:
             print(r2s(resource) + " : " + str(self.resources[resource]) + "|||", end="")
         print()
 
+    def update_resource_values(self):
+        pass
 
-class Heuristic:
-    def __init__(self):
-        self.production = {'all': 0, Resource.CLAY: 0, Resource.WOOD: 0, Resource.WHEAT: 0, Resource.IRON: 0,
-                           Resource.SHEEP: 0}
-        self.resource_value = {Resource.CLAY: 1, Resource.WOOD: 1, Resource.WHEAT: 1, Resource.IRON: 1,
-                               Resource.SHEEP: 1}
+    class Heuristic:
+        def __init__(self):
+            self.production = {Resource.CLAY: 0, Resource.WOOD: 0, Resource.WHEAT: 0, Resource.IRON: 0,
+                               Resource.SHEEP: 0}
+            self.production_all = 0
+            self.resource_value = {Resource.CLAY: 1, Resource.WOOD: 1, Resource.WHEAT: 1, Resource.IRON: 1,
+                                   Resource.SHEEP: 1}
+            self.value = 0
 
 
 # ---- test functions ---- #
