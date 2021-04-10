@@ -194,11 +194,20 @@ def print_crossroad(cr):
     curr_img.save("images/temp/background.jpg")
 
 
+def resize_road(percent, location):
+    x1, y1, x2, y2 = location
+    x1 += (x2 - x1) * percent
+    x2 += (x1 - x2) * percent
+    y1 += (y2 - y1) * percent
+    y2 += (y1 - y2) * percent
+    return x1, y1, x2, y2
+
+
 def print_road(road):
     curr_img = Image.open("images/temp/background.jpg")
     if road.owner is not None:
         draw = ImageDraw.Draw(curr_img)
-        draw.line(road.api_location, fill=players[road.owner + 1]["color"], width=10)
+        draw.line(resize_road(0.2, road.api_location), fill=players[road.owner + 1]["color"], width=10)
     curr_img.save("images/temp/background.jpg")
 
 

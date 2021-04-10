@@ -91,7 +91,7 @@ class Crossroad:
         self.building = 0
         self.port = None
 
-    def aux_build(self, player):
+    def build(self, player):
         if self.ownership is None:
             self.ownership = player
             for n in self.neighbors:
@@ -100,25 +100,11 @@ class Crossroad:
             self.building += 1
             self.fertility_dist = INFINITY
             API.print_crossroad(self)
-            return True
-        return False
 
-    def build(self, player):
-        if self.legal and self.connected[player]:
-            return self.aux_build(player)
-
-    def build_first(self, player):
-        if self.legal:
-
-            return self.aux_build(player)
-
-    def build_second(self, player, hands):
-        if self.legal:
-            rtn = self.aux_build(player)
-            for t in self.terrains:
-                if t.resource != Resource.DESSERT:
-                    hands[player].resources[t.resource] += 1
-            return rtn
+    def produce(self, player):
+        for t in self.terrains:
+            if t.resource != Resource.DESSERT:
+                self.board.hands[player].resources[t.resource] += 1
 
     # link the crossroad with its neighbor edges
     def add_neighbor(self, road, crossroad):
@@ -692,6 +678,7 @@ class Hand:
         self.set_distances()
 
     def create_settlement(self, cr : Crossroad):
+        cr.connected[self.index] = True
         self.settlement_pieces -= 1
         self.points += 1
         cr.build(self.index)

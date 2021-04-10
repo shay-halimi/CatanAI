@@ -201,12 +201,15 @@ class Player:
     def computer_1st_settlement(self, player):
         legal_crossroads = self.board.get_legal_crossroads_start(player)
         cr = Crossroad.greatest_crossroad(legal_crossroads)
-        return cr, cr.neighbors[0].road
+        self.hand.create_settlement(cr)
+        self.hand.create_road(cr.neighbors[0].road)
 
     def computer_2nd_settlement(self, player):
         legal_crossroads = self.board.get_legal_crossroads_start(player)
         cr = Crossroad.greatest_crossroad(legal_crossroads)
-        return cr, cr.neighbors[0].road
+        self.hand.create_settlement(cr)
+        cr.produce(self.index)
+        self.hand.create_road(cr.neighbors[0].road)
 
     def computer_random_action(self):
         legal_moves = self.get_legal_moves()
