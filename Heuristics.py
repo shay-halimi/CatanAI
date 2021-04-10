@@ -1,4 +1,5 @@
 from Board import Board
+from Board import Terrain
 from Resources import Resource
 
 
@@ -30,3 +31,6 @@ class SimpleHeuristic:
             do_trade += self.need_resource(Resource.WHEAT, 2, trade)
             do_trade += self.need_resource(Resource.IRON, 3, trade)
         return do_trade > 0
+
+    def terrain_production_value(self, terrain: Terrain):
+        pass

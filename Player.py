@@ -246,21 +246,22 @@ class Player:
         for a in actions:
             if isinstance(a, BuildSettlement):
                 a.do_action(self)
-                return
+                return True
         for a in actions:
             if isinstance(a, BuildCity):
                 a.do_action(self)
-                return
+                return True
         if not self.hand.get_lands() and self.hand.settlement_pieces:
             for a in actions:
                 if isinstance(a, BuildRoad):
                     a.do_action(self)
-                    return
+                    return True
         for a in actions:
             if isinstance(a, Trade):
                 if self.simple_heuristic.accept_trade(a):
                     a.do_action(self)
-                    return
+                    return True
+        return False
 
     def compute_turn(self):
         self.simple_choice()

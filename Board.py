@@ -469,17 +469,21 @@ class Board:
 
 class Hand:
     def __init__(self, index, board):
-        self.resources = {Resource.WOOD: 0, Resource.IRON: 0, Resource.WHEAT: 0, Resource.SHEEP: 0, Resource.CLAY: 0}
-        self.cards = {"knight": [], "victory points": [], "monopole": [], "road builder": [], "year of prosper": []}
-        self.ports = set()
-        self.longest_road, self.largest_army = 0, 0
-        self.points = 0
-        self.board = board
         self.index = index
         self.name = None
+        self.points = 0
+        # ---- hand ---- #
+        self.resources = {Resource.WOOD: 0, Resource.IRON: 0, Resource.WHEAT: 0, Resource.SHEEP: 0, Resource.CLAY: 0}
+        self.cards = {"knight": [], "victory points": [], "monopole": [], "road builder": [], "year of prosper": []}
+        self.road_pieces = 12
         self.settlement_pieces = 5
         self.city_pieces = 4
-        self.road_pieces = 12
+        # ---- board --- #
+        self.board = board
+        self.ports = set()
+        # ---- achievements and stats ---- #
+        self.longest_road, self.largest_army = 0, 0
+        self.heuristic = Heuristic()
 
     # ---- get information ---- #
 
@@ -676,10 +680,14 @@ class Hand:
         road.build(self.index)
         self.set_distances()
 
-    def create_settlement(self, cr : Crossroad):
+    def create_settlement(self, cr: Crossroad):
         cr.connected[self.index] = True
         self.settlement_pieces -= 1
         self.points += 1
+        for resource in Resource:
+            if resource is not Resource.DESSERT:
+                pass
+
         cr.build(self.index)
         self.set_distances()
         if cr.port is not None:
@@ -709,6 +717,14 @@ class Hand:
         for resource in self.resources:
             print(r2s(resource) + " : " + str(self.resources[resource]) + "|||", end="")
         print()
+
+
+class Heuristic:
+    def __init__(self):
+        self.production = {'all': 0, Resource.CLAY: 0, Resource.WOOD: 0, Resource.WHEAT: 0, Resource.IRON: 0,
+                           Resource.SHEEP: 0}
+        self.resource_value = {Resource.CLAY: 1, Resource.WOOD: 1, Resource.WHEAT: 1, Resource.IRON: 1,
+                               Resource.SHEEP: 1}
 
 
 # ---- test functions ---- #

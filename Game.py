@@ -53,7 +53,8 @@ class Game:
     def play_turn(self, player):
         self.throw_dice()
         if self.players[player.index].is_computer:
-            player.compute_turn()
+            while player.compute_turn():
+                pass
 
     def play_game(self):
         num_players = input("how many players are playing?")
