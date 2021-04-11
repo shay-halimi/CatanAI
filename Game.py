@@ -22,13 +22,13 @@ class Game:
     def start_game(self):
         for i in range(len(self.players)):
             if self.players[i].is_computer:
-                self.players[i].computer_1st_settlement(self.players[i].index)
+                self.players[i].computer_1st_settlement()
             else:
                 pass
             self.next_turn()
         for i in range(len(self.players) - 1, -1, -1):
             if self.players[i].is_computer:
-                self.players[i].computer_2nd_settlement(self.players[i].index)
+                self.players[i].computer_2nd_settlement()
             else:
                 pass
             self.next_turn()
@@ -80,6 +80,7 @@ class Game:
         for hand in game.board.hands:
             if hand.points >= 10:
                 print("player number "+str(hand.index)+" is the winner")
+                self.board.end_game()
 
 
 # ---- main ---- #

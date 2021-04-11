@@ -216,8 +216,10 @@ class Road:
     def build(self, player):
         if self.is_legal(player):
             self.owner = player
-            self.neighbors[0].connected[player] = True
-            self.neighbors[1].connected[player] = True
+            for i in range(2):
+                if not self.neighbors[i].connected[player]:
+                    self.board.hands[player].lands_log += [self.neighbors[i]]
+                    self.neighbors[i].connected[player] = True
             self.upgrade_longest_road(player)
             API.print_road(self)
             return True
@@ -429,7 +431,9 @@ class Board:
     def next_turn(self, turn, rnd):
         API.next_turn(self, turn, rnd, self.hands)
         Log.next_turn(rnd, turn, self.hands)
-        Log.save_game()
+
+    def end_game(self):
+        Log.save_game(self.hands)
 
     def update_longest_road(self, player):
         former = self.longest_road_owner
@@ -566,7 +570,7 @@ class Hand:
             self.heuristic += (self.production[resource] - old_production[resource]) * self.resource_value[resource]
 
         self.update_resource_values()
-        self.settlements += cr
+        self.settlements += [cr]
 
     def buy_city(self, cr: Crossroad):
         old_production_variety = len(list(filter(lambda x: x.value != 0, self.production)))
@@ -726,7 +730,7 @@ class Hand:
         self.points += 1
         for resource in Resource:
             if resource is not Resource.DESSERT:
-                self.heuristic.production_all += cr.val[resource] / 36
+                self.production_all += cr.val[resource] / 36
         cr.build(self.index)
         self.set_distances()
         if cr.port is not None:
