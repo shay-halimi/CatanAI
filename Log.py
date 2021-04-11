@@ -78,11 +78,41 @@ def save_game(hands):
                     zip = {'round': turn['round'], 'turn': turn['turn'], 'action': action}
                     actions += [zip]
         json.dump(actions, outfile)
-    with open('statistics.json') as json_file:
+    with open('data.json') as json_file:
         information = information_to_json(hands)
-        statistics = json.load(json_file)
-        statistics['settlement'] += information['settlement']
-        statistics['settlements number'] += information['settlements number']
+        data = json.load(json_file)
+        data['settlement'] += information['settlement']
+        data['settlements number'] += information['settlements number']
+    with open('data.json', 'w') as outfile:
+        json.dump(data, outfile)
+    build_statistics()
+
+
+def build_statistics():
+    with open('data.json') as json_file:
+        data = json.load(json_file)
+        statistics = {'settlement': {}}
+        st = dict()
+        st['production'] = {}
+        for resource in Resource:
+            if resource is not Resource.DESSERT:
+                st[r2s(resource)] = {}
+        for settlement in data['settlement']:
+            t = settlement['time']
+            production = settlement['production']
+            win = 1 if settlement['points'] > 9 else 0
+            if str((t, production)) in st['production']:
+                st['production'][str((t, production))]['win'] += win
+                st['production'][str((t, production))]['event'] += 1
+            else:
+                st['production'][str((t, production))] = {'win': win, 'event': 1}
+            for resource in Resource:
+                if resource is not Resource.DESSERT:
+                    if str((t, settlement[r2s(resource)])) in st[r2s(resource)]:
+                        st[r2s(resource)][str((t, settlement[r2s(resource)]))]['win'] += win
+                        st[r2s(resource)][str((t, settlement[r2s(resource)]))]['event'] += 1
+                    else:
+                        st[r2s(resource)][str((t, settlement[r2s(resource)]))] = {'event': 1, 'win': win}
+        statistics['settlement'] = st
     with open('statistics.json', 'w') as outfile:
         json.dump(statistics, outfile)
-
