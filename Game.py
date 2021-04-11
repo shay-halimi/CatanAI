@@ -22,13 +22,13 @@ class Game:
     def start_game(self):
         for i in range(len(self.players)):
             if self.players[i].is_computer:
-                self.players[i].computer_1st_settlement()
+                self.players[i].computer_1st_settlement(self.players[i].index)
             else:
                 pass
             self.next_turn()
         for i in range(len(self.players) - 1, -1, -1):
             if self.players[i].is_computer:
-                self.players[i].computer_2nd_settlement()
+                self.players[i].computer_2nd_settlement(self.players[i].index)
             else:
                 pass
             self.next_turn()
@@ -66,19 +66,18 @@ class Game:
                 pass
 
     def play_game(self):
-        num_players = input("how many players are playing?")
-        game = Game(int(num_players))
-        game.start_game()
-        while max(list(map(lambda x: x.points, game.board.hands))) < 10:
-            game.play_round()
-            print(game.round)
+        self.start_game()
+        while max(list(map(lambda x: x.points, self.board.hands))) < 10:
+            self.play_round()
+            print(self.round)
             for hand in self.board.hands:
                 for typeCard in hand.cards.values():
                     if typeCard:
                         for card in typeCard:
                             card.ok_to_use = True
-        for hand in game.board.hands:
+        for hand in self.board.hands:
             if hand.points >= 10:
+                #TODO need to call Log.finish_game
                 print("player number "+str(hand.index)+" is the winner")
                 self.board.end_game()
 

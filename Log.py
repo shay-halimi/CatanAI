@@ -5,6 +5,18 @@ from Auxilary import r2s
 game = {'round': []}
 rounds = []
 this_turn = {'round': 0, 'turn': 0, 'stats': [], 'actions': []}
+game_finish = {'round': None, 'winning player': None, 'winning resource': None, 'losing resources': []}
+games_stats = []
+
+
+def end_game(rnd, win_player, hands):
+    global game_finish
+    game_finish['round'] = rnd
+    game_finish['winning player'] = win_player
+    game_finish['winning resource'] = max(hands[win_player].production, key=hands[win_player].production.get)
+    for hand in hands:
+        if hand.index != win_player:
+            game_finish['losing resources'].append(max(hand.production, key=hand.production.get))
 
 
 def next_turn(rnd, turn, hands):
