@@ -286,9 +286,6 @@ class Board:
                     self.add_neighbor_cr(cr, i + 1, j)
         """
 
-        # add crossroad api location to each crossroad
-        API.set_crossroads_locations(self.crossroads)
-
         # build ports
         self.crossroads[0][0].port = Resource.WOOD
         self.crossroads[1][0].port = Resource.WOOD

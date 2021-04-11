@@ -86,8 +86,9 @@ class Game:
 
 
 def main():
-    game = Game(3)
-    game.play_game()
+    for i in range(100):
+        game = Game(3)
+        game.play_game()
 
     # print_distance(game)
 

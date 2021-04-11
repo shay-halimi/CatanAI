@@ -99,8 +99,14 @@ players = {1: {"background": yellow, "str": "yellow", "color": (255, 242, 0), "n
 
 # ---- start of the game functions ---- #
 
+
+api_off = True
+
+
 # creating the API
 def start_api(board):
+    if api_off:
+        return
     show_terrain(board.map)
     set_crossroads_locations(board.crossroads)
     set_roads_locations(board.roads, board.crossroads)
@@ -184,6 +190,8 @@ def set_roads_locations(roads, crossroads):
 
 
 def print_crossroad(cr):
+    if api_off:
+        return
     curr_img = Image.open("images/temp/background.jpg")
     if cr.ownership is not None:
         color = players[cr.ownership + 1]["background"].copy()
@@ -204,6 +212,8 @@ def resize_road(percent, location):
 
 
 def print_road(road):
+    if api_off:
+        return
     curr_img = Image.open("images/temp/background.jpg")
     if road.owner is not None:
         draw = ImageDraw.Draw(curr_img)
@@ -211,32 +221,9 @@ def print_road(road):
     curr_img.save("images/temp/background.jpg")
 
 
-"""
-def next_turn(board, turn, rnd):
-    # before the dice have been rolled
-    img = Image.open("images/temp/background.jpg")
-    img = print_log(board, img, round, "Shay", False)
-    img = print_stats(img, ("Shay", "Shaked", "Sheleg", "Oran"))
-    img.save("images/dst/game1/turn" + str(round) + "part1.jpg")
-
-    # after the dice have been rolled
-    # ToDo: Enter rolling of the dice
-    # ToDo: Enter actions of the game
-    img = Image.open("images/temp/background.jpg")
-    img = print_log(board, img, round, "Shay", True)
-    img = print_stats(img, ("Shay", "Shaked", "Sheleg", "Oran"))
-    img.save("images/dst/game1/turn" + str(round) + "part2.jpg")
-
-    # after the player has played
-    # ToDo : Enter actions of the Game
-    img = Image.open("images/temp/background.jpg")
-    img = print_log(board, img, round, "Shay", True)
-    img = print_stats(img, ("Shay", "Shaked", "Sheleg", "Oran"))
-    img.save("images/dst/game1/turn" + str(round) + "part3.jpg")
-"""
-
-
 def next_turn(board, turn, rnd, hands):
+    if api_off:
+        return
     # before the dice have been rolled
     img = Image.open("images/temp/background.jpg")
     img = print_log(board, img, rnd, hands[turn].name, False)
