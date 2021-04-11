@@ -3,6 +3,8 @@ from Board import Terrain
 from Board import Crossroad
 from Resources import Resource
 import json
+from Auxilary import r2s
+from random import uniform
 
 
 class SimpleHeuristic:
@@ -39,14 +41,27 @@ class SimpleHeuristic:
 
 
 class StatisticsHeuristic:
-    def __init__(self):
-        with open('statistics.json') as json_file:
-            self.statistics = json.load(json_file)
+    with open('statistics.json') as json_file:
+        statistics = json.load(json_file)
 
     def settlement_value(self, cr: Crossroad, time):
-        population = self.statistics['settlement'][time][cr.val['sum']]['occurrences']
-        wins = self.statistics['settlement'][time][cr.val['sum']]['occurrences']
-        return wins / population
+        book = self.statistics['settlement']['production']
+        key = str((time, cr.val['sum']))
+        if key in book:
+            st = book[key]
+        else:
+            return uniform(0,1)
+        statistic = Statistic(st['event'], st['win'])
+        for resource in Resource:
+            if resource is not Resource.DESSERT:
+                book = self.statistics['settlement'][r2s(resource)]
+                key = str((time, cr.val[resource]))
+                if key in book:
+                    st = book[key]
+                else:
+                    return uniform(0, 1)
+                statistic.merge(Statistic(st['event'], st['win']))
+        return statistic.win_ratio
 
 
 class Statistic:

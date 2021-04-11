@@ -86,6 +86,17 @@ def save_game(hands):
     with open('data.json', 'w') as outfile:
         json.dump(data, outfile)
     build_statistics()
+    with open('history.json') as json_file:
+        history = json.load(json_file)
+        history['sample_size'] += len(hands)
+        for hand in hands:
+            if hand.points > 9:
+                if hand.name is "Dork":
+                    history["dork"] += 1
+                else:
+                    history["alpha"] += 1
+    with open("history.json", 'w') as outfile:
+        json.dump(history, outfile)
 
 
 def build_statistics():

@@ -1,22 +1,23 @@
 from Board import Board
-import Dice
-import  math
+import math
 from Player import Player
-import DevStack
+from Player import Dork
+from random import randint
 
 
 class Game:
-    def buy_dev_card(self, player):
-        if player.buy_devops():
-            player.devCards.append(self.devStack.get())
 
     def __init__(self, players):
         self.round = 0
         self.turn = 0
         self.board = Board(players)
         self.players = []
+        r = randint(0, players)
         for i in range(players):
-            player = Player(i, self.board)
+            if i == r:
+                player = Dork(i, self.board)
+            else:
+                player = Player(i, self.board)
             self.players += [player]
 
     def start_game(self):
@@ -68,6 +69,9 @@ class Game:
     def play_game(self):
         self.start_game()
         while max(list(map(lambda x: x.points, self.board.hands))) < 10:
+            if self.round > 200:
+                print("to many rounds")
+                return
             self.play_round()
             print(self.round)
             for hand in self.board.hands:
@@ -77,7 +81,7 @@ class Game:
                             card.ok_to_use = True
         for hand in self.board.hands:
             if hand.points >= 10:
-                #TODO need to call Log.finish_game
+                # TODO need to call Log.finish_game
                 print("player number "+str(hand.index)+" is the winner")
                 self.board.end_game()
 
@@ -86,8 +90,9 @@ class Game:
 
 
 def main():
-    game = Game(3)
-    game.play_game()
+    for i in range(10):
+        game = Game(3)
+        game.play_game()
 
     # print_distance(game)
 
