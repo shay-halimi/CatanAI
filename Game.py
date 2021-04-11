@@ -66,28 +66,28 @@ class Game:
                 pass
 
     def play_game(self):
-        num_players = input("how many players are playing?")
-        game = Game(int(num_players))
-        game.start_game()
-        while max(list(map(lambda x: x.points, game.board.hands))) < 10:
-            game.play_round()
-            print(game.round)
+        self.start_game()
+        while max(list(map(lambda x: x.points, self.board.hands))) < 10:
+            self.play_round()
+            print(self.round)
             for hand in self.board.hands:
                 for typeCard in hand.cards.values():
                     if typeCard:
                         for card in typeCard:
                             card.ok_to_use = True
-        for hand in game.board.hands:
+        for hand in self.board.hands:
             if hand.points >= 10:
                 print("player number "+str(hand.index)+" is the winner")
+                print("player number "+str())
 
 
 # ---- main ---- #
 
 
 def main():
-    game = Game(3)
-    game.play_game()
+    for i in range(100):
+        game=Game(3)
+        game.play_game()
 
     # print_distance(game)
 

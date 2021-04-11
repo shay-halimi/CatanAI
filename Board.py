@@ -4,7 +4,7 @@ import random
 import Dice
 import API
 import Log
-import  math
+import math
 from Auxilary import r2s
 
 # ---- global variables ---- #
@@ -387,6 +387,7 @@ class Board:
 
     def get_max_points(self):
         max_points = max(self.hands)
+        return max_points
 
     # very convoluted function to link each road with its vertices crossroads and vice versa
     def add_neighbors_to_roads(self):
@@ -485,7 +486,7 @@ class Hand:
         # ---- achievements and stats ---- #
         self.longest_road, self.largest_army = 0, 0
         self.heuristic = 0
-        # these are values that we can maniplute according to succes
+        # these are values that we can manipulate according to success
         self.longest_road_value = 5
         self.biggest_army_value = 4.5
         self.production = {Resource.CLAY: 0, Resource.WOOD: 0, Resource.WHEAT: 0, Resource.IRON: 0,
@@ -497,16 +498,16 @@ class Hand:
     # ---- get information ---- #
 
     def get_resources_number(self):
-        sum = 0
+        resource_sum = 0
         for r in self.resources.values():
-            sum += r
-        return sum
+            resource_sum += r
+        return resource_sum
 
     def get_cards_number(self):
-        sum = 0
+        resource_sum = 0
         for c in self.cards:
-            sum += len(c)
-        return sum
+            resource_sum += len(c)
+        return resource_sum
 
     def get_lands(self):
         lands = []
@@ -554,7 +555,7 @@ class Hand:
 
     def buy_settlement(self, cr: Crossroad):
         old_production_variety = len(list(filter(lambda x: x.value != 0, self.production)))
-        old_production=self.production
+        old_production = self.production
         self.pay(SETTLEMENT_PRICE)
         self.create_settlement(cr)
         # prioritize having a variety of resource produce
@@ -635,7 +636,7 @@ class Hand:
                 self.points += 1
                 self.heuristic -= 100
                 if self.points >= 10:
-                    self.heauristic = math.inf
+                    self.heuristic += math.inf
                 return True
 
         return False
