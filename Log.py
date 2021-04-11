@@ -55,20 +55,19 @@ def add_trade(trade):
 
 
 def information_to_json(hands):
-    information = {'settlement': []}
+    information = {'settlement': [], 'settlements number': 0}
     for hand in hands:
         for index, settlement in enumerate(hand.settlements):
             settlement_info = {'time': index, 'points': hand.points, 'production': settlement.val['sum']}
             for resource in Resource:
-                settlement_info[r2s(resource)] = settlement.val[resource]
+                if resource is not Resource.DESSERT:
+                    settlement_info[r2s(resource)] = settlement.val[resource]
             information['settlement'] += [settlement_info]
+            information['settlements number'] += 1
     return information
 
 
 def save_game(hands):
-    print("im here")
-    with open("statistics.json", 'w') as outfile:
-        json.dump({'settlement': []}, outfile)
     with open("game.json", 'w') as outfile:
         json.dump(game, outfile)
     with open("actions.json", 'w') as outfile:
@@ -83,5 +82,7 @@ def save_game(hands):
         information = information_to_json(hands)
         statistics = json.load(json_file)
         statistics['settlement'] += information['settlement']
-        json.dump(statistics, json_file)
+        statistics['settlements number'] += information['settlements number']
+    with open('statistics.json', 'w') as outfile:
+        json.dump(statistics, outfile)
 
