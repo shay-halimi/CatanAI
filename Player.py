@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 from Resources import Resource
 from Board import Board
 from Board import Crossroad
@@ -73,7 +73,7 @@ class UseBuildRoads(Action):
 
 
 class UseVictoryPoint(Action):
-    def __init__(self, road1, road2):
+    def __init__(self):
         super().__init__()
         self.name = "use victory_point"
 
@@ -230,14 +230,14 @@ class Player:
     #########################################################################
     # AI player functions
     #########################################################################
-    def computer_1st_settlement(self, player):
-        legal_crossroads = self.board.get_legal_crossroads_start(player)
+    def computer_1st_settlement(self):
+        legal_crossroads = self.board.get_legal_crossroads_start()
         cr = Crossroad.greatest_crossroad(legal_crossroads)
         self.hand.create_settlement(cr)
         self.hand.create_road(cr.neighbors[0].road)
 
-    def computer_2nd_settlement(self, player):
-        legal_crossroads = self.board.get_legal_crossroads_start(player)
+    def computer_2nd_settlement(self):
+        legal_crossroads = self.board.get_legal_crossroads_start()
         cr = Crossroad.greatest_crossroad(legal_crossroads)
         self.hand.create_settlement(cr)
         cr.produce(self.index)

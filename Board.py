@@ -448,7 +448,7 @@ class Board:
                     legal += [cr]
         return legal
 
-    def get_legal_crossroads_start(self, player):
+    def get_legal_crossroads_start(self):
         legal = []
         for line in self.crossroads:
             for cr in line:
@@ -482,10 +482,13 @@ class Hand:
         # ---- board --- #
         self.board = board
         self.ports = set()
+        self.lands_log = []
+        self.settlements = []
+        self.cities = []
         # ---- achievements and stats ---- #
         self.longest_road, self.largest_army = 0, 0
         self.heuristic = 0
-        # these are values that we can maniplute according to succes
+        # ---- these are values that we can maniplute according to success ---- #
         self.longest_road_value = 5
         self.biggest_army_value = 4.5
         self.production = {Resource.CLAY: 0, Resource.WOOD: 0, Resource.WHEAT: 0, Resource.IRON: 0,
@@ -563,6 +566,7 @@ class Hand:
             self.heuristic += (self.production[resource] - old_production[resource]) * self.resource_value[resource]
 
         self.update_resource_values()
+        self.settlements += cr
 
     def buy_city(self, cr: Crossroad):
         old_production_variety = len(list(filter(lambda x: x.value != 0, self.production)))
@@ -574,6 +578,7 @@ class Hand:
             self.heuristic += (self.production[resource] - old_production[resource]) * self.resource_value[resource]
 
         self.update_resource_values()
+        self.cities += [cr]
 
     def buy_development_card(self, stack: DevStack):
         if self.can_buy_development_card() and stack.has_cards():
@@ -721,8 +726,7 @@ class Hand:
         self.points += 1
         for resource in Resource:
             if resource is not Resource.DESSERT:
-                pass
-
+                self.heuristic.production_all += cr.val[resource] / 36
         cr.build(self.index)
         self.set_distances()
         if cr.port is not None:
@@ -764,6 +768,7 @@ class Hand:
             self.resource_value = {Resource.CLAY: 1, Resource.WOOD: 1, Resource.WHEAT: 1, Resource.IRON: 1,
                                    Resource.SHEEP: 1}
             self.value = 0
+            self.resources_gained = 0
 
 
 # ---- test functions ---- #
