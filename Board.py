@@ -244,6 +244,9 @@ class Neighbor:
         return self.crossroad.ownership
 
 
+
+
+
 class Board:
     def __init__(self, players):
         self.players = players
@@ -383,6 +386,9 @@ class Board:
 
         # create the API
         API.start_api(self)
+
+    def end_game(self, rnd, win_player):
+        return Log.end_game(rnd, win_player, self.hands)
 
     def get_max_points(self):
         max_points = max(self.hands)
@@ -591,8 +597,12 @@ class Hand:
             print(stack.get().name)
             card = stack.get()
             if card is None:
+                # this is supposed to never happen in normal play time
+                print("no card in the deck")
+                assert False
                 return False
             self.cards[card.name] += [card]
+            self.heuristic +=0.5
             return True
         return False
 

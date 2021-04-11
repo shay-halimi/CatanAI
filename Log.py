@@ -10,13 +10,20 @@ games_stats = []
 
 
 def end_game(rnd, win_player, hands):
+    global games_stats
     global game_finish
     game_finish['round'] = rnd
     game_finish['winning player'] = win_player
+    print()
+    print(hands[win_player].production)
     game_finish['winning resource'] = max(hands[win_player].production, key=hands[win_player].production.get)
     for hand in hands:
         if hand.index != win_player:
+            print(hand.production)
             game_finish['losing resources'].append(max(hand.production, key=hand.production.get))
+    games_stats.append([game_finish])
+    print(game_finish)
+    return games_stats
 
 
 def next_turn(rnd, turn, hands):

@@ -78,7 +78,8 @@ class Game:
         for hand in self.board.hands:
             if hand.points >= 10:
                 #TODO need to call Log.finish_game
-                print("player number "+str(hand.index)+" is the winner")
+                win_player=hand.index
+                self.board.end_game(self.round, win_player)
                 self.board.end_game()
 
 
