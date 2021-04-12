@@ -131,10 +131,11 @@ class UseVictoryPoint(Action):
 
 class BuildSettlement(Action):
     def __init__(self, player, heuristic_method, crossroad, hand):
-        super().__init__(player, heuristic_method)
+        print("a")
         self.crossroad = crossroad
         self.name = 'build settlement'
         self.heuristic = StatisticsHeuristic().settlement_value(self.crossroad, len(player.hand.settlements))
+        super().__init__(player, heuristic_method)
 
     def do_action(self, player):
         super().do_action(player)
