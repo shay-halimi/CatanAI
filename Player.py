@@ -6,6 +6,7 @@ from random import randint
 import math
 from Heuristics import SimpleHeuristic
 from Heuristics import StatisticsHeuristic
+from Auxilary import r2s
 
 
 def after_action(player):
@@ -19,18 +20,24 @@ class Action(ABC):
         self.heuristic_method = heuristic_method
         self.name = 'action'
         self.heuristic = 0
+        self.log = self.player.log
 
     def do_action(self):
         self.player.hand.print_resources()
         print("player : " + self.player.name + " " + self.name)
+        self.log_action()
 
     def compute_heuristic(self):
         pass
+
+    def log_action(self):
+        return {'name': self.name}
 
 
 class DoNothing(Action):
     def __init__(self, player, heuristic_method):
         super().__init__(player, heuristic_method)
+        self.name = 'do nothing'
 
     def do_action(self):
         pass
@@ -69,10 +76,10 @@ class UseMonopole(Action):
 
     def compute_heuristic(self):
         selected_resource_quantity = 0
-        for hand in self.player.board.hands:
+        for hand in self.player.board.players:
             selected_resource_quantity += hand.resources[self.resource]
         return self.player.hand.heuristic + (
-                    self.player.hand.resource_value[self.resource] * selected_resource_quantity)
+                self.player.hand.resource_value[self.resource] * selected_resource_quantity)
 
 
 class UseYearOfPlenty(Action):
@@ -141,7 +148,8 @@ class BuildSettlement(Action):
         print("a")
         self.crossroad = crossroad
         self.name = 'build settlement'
-        self.heuristic = StatisticsHeuristic().settlement_value(self.crossroad, len(player.hand.settlements))
+        # todo : replace settlement log
+        self.heuristic = StatisticsHeuristic().settlement_value(self.crossroad, len(player.hand.settlements_log))
         super().__init__(player, heuristic_method)
 
     def do_action(self):
@@ -150,6 +158,13 @@ class BuildSettlement(Action):
 
     def compute_heuristic(self):
         return StatisticsHeuristic().settlement_value(self.crossroad, len(self.player.hand.settlements))
+
+    def log_action(self):
+        log = {
+            'name': self.name,
+            'location': self.crossroad.location_log()
+        }
+        self.log.action(log)
 
 
 class BuildCity(Action):
@@ -166,6 +181,13 @@ class BuildCity(Action):
     def compute_heuristic(self):
         pass
 
+    def log_action(self):
+        log = {
+            'name': self.name,
+            'location': self.crossroad.location_log()
+        }
+        self.log.action(log)
+
 
 class BuildRoad(Action):
     def __init__(self, player, heuristic_method, road):
@@ -180,6 +202,13 @@ class BuildRoad(Action):
     # todo
     def compute_heuristic(self):
         pass
+
+    def log_action(self):
+        log = {
+            'name': self.name,
+            'location': self.road.location_log()
+        }
+        self.log.action(log)
 
 
 class Trade(Action):
@@ -198,6 +227,16 @@ class Trade(Action):
     # todo
     def compute_heuristic(self):
         pass
+
+    def log_action(self):
+        log = {
+            'name': self.name,
+            'source': r2s(self.src),
+            'destination': r2s(self.dst),
+            'take': self.take,
+            'give': self.give
+        }
+        self.log.action(log)
 
 
 class BuyDevCard(Action):
@@ -226,6 +265,7 @@ class Player:
         self.hand = board.hands[index]
         self.hand.name = self.name
         self.simple_heuristic = SimpleHeuristic(self.index, self.board)
+        self.log = self.board.log
 
     def throw_my_cards(self, num_cards):
         while num_cards > 0:

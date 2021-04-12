@@ -147,14 +147,14 @@ def build_statistics():
 
 
 class Log:
-    def __init__(self, hands):
+    def __init__(self, players):
         self.round = 0
         self.turn = 0
-        self.hands = hands
+        self.players = players
         self.start_log = {'actions': []}
         self.turn_log = {'turn': 0, 'actions': []}
         self.round_log = {'round': 0, 'turns': []}
-        self.game_log = {'number of players': len(hands), 'rounds': []}
+        self.game_log = {'number of players': players, 'rounds': []}
         with open("saved_games/manager.json") as json_file:
             manager = json.load(json_file)
         self.game_log_name = "saved_games/game" + str(manager['games saved'] + 1) + ".json"
@@ -165,7 +165,7 @@ class Log:
     def end_turn(self):
         self.round_log['turns'] += [self.turn_log]
         self.turn_log = {'turn': self.turn, 'actions': []}
-        if self.turn == len(self.hands) - 1:
+        if self.turn == self.players - 1:
             self.turn = 0
             self.round += 1
             self.game_log['rounds'] += [self.round_log]
@@ -175,8 +175,6 @@ class Log:
 
     def dice(self, dice):
         self.turn_log['dice'] = dice
-        if 'dice' in self.turn_log:
-            return 4
 
     def action(self, action_log):
         self.turn_log['actions'] += [action_log]

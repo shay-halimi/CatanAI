@@ -11,7 +11,8 @@ class Game:
     def __init__(self, players):
         self.round = 0
         self.turn = 0
-        self.board = Board(players)
+        self.log = Log(players)
+        self.board = Board(players, self.log)
         self.players = []
         r = randint(0, players)
         for i in range(players):
@@ -20,7 +21,6 @@ class Game:
             else:
                 player = Player(i, self.board)
             self.players += [player]
-        self.log = Log(self.board.hands)
 
     def start_game(self):
         for i in range(len(self.players)):
