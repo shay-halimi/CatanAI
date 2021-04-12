@@ -273,6 +273,9 @@ class Neighbor:
         return self.crossroad.ownership
 
 
+
+
+
 class Board:
     def __init__(self, players):
         self.players = players
@@ -413,6 +416,9 @@ class Board:
         # create the API
         API.start_api(self)
 
+    def end_game(self, rnd, win_player):
+        return Log.end_game(rnd, win_player, self.hands)
+
     def get_max_points(self):
         max_points = max(self.hands)
         return max_points
@@ -462,6 +468,7 @@ class Board:
     def end_game(self):
         Log.save_game(self.hands)
 
+
     def update_longest_road(self, player):
         former = self.longest_road_owner
         if former is not None:
@@ -499,6 +506,7 @@ class Board:
         return legal
 
 
+
 class Hand:
     def __init__(self, index, board):
         self.index = index
@@ -519,16 +527,38 @@ class Hand:
         # ---- achievements and stats ---- #
         self.longest_road, self.largest_army = 0, 0
         self.heuristic = 0
-        # ---- these are values that we can maniplute according to success ---- #
-        self.longest_road_value = 5
-        self.biggest_army_value = 4.5
         self.production = {Resource.CLAY: 0, Resource.WOOD: 0, Resource.WHEAT: 0, Resource.IRON: 0,
                            Resource.SHEEP: 0}
         self.production_all = 0
+        # ---- these are values that we can manipulate according to success ---- #
+        self.longest_road_value = 5
+        self.biggest_army_value = 4.5
+        self.road_value = 0.2
         self.resource_value = {Resource.CLAY: 1, Resource.WOOD: 1, Resource.WHEAT: 1, Resource.IRON: 1,
                                Resource.SHEEP: 1}
+        self.dev_card_value = 0.5
 
     # ---- get information ---- #
+
+    def compute_2_roads_heuristic(self, road1, road2):
+        heuristic_increment=0
+        old_road_length=self.longest_road_value
+        if  self.board.longest_road_owner != self.index:
+            self.tmp_buy_road(road1)
+            self.tmp_buy_road(road2)
+            heuristic_increment += (self.board.longest_road_owner == self.index)*5
+        else:
+            self.tmp_buy_road(road1)
+            self.tmp_buy_road(road2)
+        heuristic_increment += (self.longest_road_value-old_road_length)*self.road_value
+        self.undo_buy_road(road2)
+        self.undo_buy_road(road1)
+        return heuristic_increment
+
+
+
+
+
 
     def get_resources_number(self):
         resource_sum = 0
@@ -622,6 +652,9 @@ class Hand:
             print(stack.get().name)
             card = stack.get()
             if card is None:
+                # this is supposed to never happen in normal play time
+                print("no card in the deck")
+                assert False
                 return False
             self.cards[card.name] += [card]
             return True
@@ -640,6 +673,7 @@ class Hand:
         for card in self.cards["road building"]:
             if card.is_valid():
                 if road1.is_legal() and road2.is_legal():
+                    self.heuristic += self.compute_2_roads_heuristic(road1,road2)
                     road1.build(self.index)
                     road2.build(self.index)
                     self.cards["road building"].remove(card)
@@ -687,6 +721,16 @@ class Hand:
                     self.cards["knight"].remove(knight)
                     return self.steal(dst)
         return False
+
+    # todo test it
+    def undo_use_knight(self,resource: Resource, terrain: Terrain,dst):
+        assert terrain is not None
+        terrain.put_bandit()
+        if resource is not None:
+            self.resources[resource] -= 1
+            dst.resources[resource] += 1
+
+
 
     # ---- take a temporary action ---- #
 
