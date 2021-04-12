@@ -504,6 +504,7 @@ class Hand:
         # ---- these are values that we can manipulate according to success ---- #
         self.longest_road_value = 5
         self.biggest_army_value = 4.5
+        self.road_value = 0.2
         self.resource_value = {Resource.CLAY: 1, Resource.WOOD: 1, Resource.WHEAT: 1, Resource.IRON: 1,
                                Resource.SHEEP: 1}
         self.dev_card_value = 0.5
@@ -520,10 +521,11 @@ class Hand:
         else:
             self.tmp_buy_road(road1)
             self.tmp_buy_road(road2)
-        heuristic_increment += self.longest_road_value-old_road_length
+        heuristic_increment += (self.longest_road_value-old_road_length)*self.road_value
         self.undo_buy_road(road2)
         self.undo_buy_road(road1)
         return heuristic_increment
+
 
 
 
@@ -624,7 +626,6 @@ class Hand:
                 assert False
                 return False
             self.cards[card.name] += [card]
-            self.heuristic +=0.5
             return True
         return False
 
@@ -641,7 +642,7 @@ class Hand:
         for card in self.cards["road building"]:
             if card.is_valid():
                 if road1.is_legal() and road2.is_legal():
-                    compute_2_roads_heuristic(self,road1,road2)
+                    self.heuristic += self.compute_2_roads_heuristic(road1,road2)
                     road1.build(self.index)
                     road2.build(self.index)
                     self.cards["road building"].remove(card)
@@ -689,6 +690,16 @@ class Hand:
                     self.cards["knight"].remove(knight)
                     return self.steal(dst)
         return False
+
+    # todo test it
+    def undo_use_knight(self,resource: Resource, terrain: Terrain,dst):
+        assert terrain is not None
+        terrain.put_bandit()
+        if resource is not None:
+            self.resources[resource] -= 1
+            dst.resources[resource] += 1
+
+
 
     # ---- take a temporary action ---- #
 
