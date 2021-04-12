@@ -89,7 +89,7 @@ class BuildSettlement(Action):
         super().__init__()
         self.crossroad = crossroad
         self.name = 'build settlement'
-        self.heuristic = StatisticsHeuristic().settlement_value(self.crossroad, len(hand.settlements))
+        self.heuristic = StatisticsHeuristic().settlement_value(self.crossroad, len(hand.settlements_log))
 
     def do_action(self, player):
         super().do_action(player)
@@ -117,7 +117,7 @@ class BuildRoad(Action):
 
     def do_action(self, player):
         super().do_action(player)
-        player.hand.buy_road(self.road)
+        player.hand.buy_road(self)
         after_action(player)
 
 
@@ -219,14 +219,18 @@ class Player:
         legal_crossroads = self.board.get_legal_crossroads_start()
         cr = Crossroad.greatest_crossroad(legal_crossroads)
         self.hand.create_settlement(cr)
-        self.hand.create_road(cr.neighbors[0].road)
+        road = cr.neighbors[0].road
+        self.hand.create_road(road)
+        return cr, road
 
     def computer_2nd_settlement(self):
         legal_crossroads = self.board.get_legal_crossroads_start()
         cr = Crossroad.greatest_crossroad(legal_crossroads)
         self.hand.create_settlement(cr)
         cr.produce(self.index)
-        self.hand.create_road(cr.neighbors[0].road)
+        road = cr.neighbors[0].road
+        self.hand.create_road(road)
+        return cr, road
 
     def computer_random_action(self):
         legal_moves = self.get_legal_moves()
@@ -274,7 +278,9 @@ class Dork(Player):
             if self.statistics.settlement_value(best_crossroad, 0) < self.statistics.settlement_value(cr, 0):
                 best_crossroad = cr
         self.hand.create_settlement(best_crossroad)
-        self.hand.create_road(best_crossroad.neighbors[0].road)
+        road = best_crossroad.neighbors[0].road
+        self.hand.create_road(road)
+        return best_crossroad, road
 
     def computer_2nd_settlement(self):
         legal_crossroads = self.board.get_legal_crossroads_start()
@@ -285,7 +291,9 @@ class Dork(Player):
                 best_crossroad = cr
         self.hand.create_settlement(best_crossroad)
         best_crossroad.produce(self.index)
-        self.hand.create_road(best_crossroad.neighbors[0].road)
+        road = best_crossroad.neighbors[0].road
+        self.hand.create_road(road)
+        return best_crossroad, road
 
     def simple_choice(self):
         actions = self.get_legal_moves()
