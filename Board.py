@@ -113,7 +113,7 @@ class Crossroad:
         self.neighbors += [Neighbor(crossroad, road)]
 
     def trade_specific(self, num, r_type):
-        hand = self.board.hands[self.ownership]
+        hand = self.board.players[self.ownership]
         if hand.resources[self.port] >= 2 * num:
             hand.resources[r_type] += num
             hand.resources[self.port] -= 2 * num
@@ -121,7 +121,7 @@ class Crossroad:
         return False
 
     def trade_general(self, num, r_type):
-        hand = self.board.hands[self.ownership]
+        hand = self.board.players[self.ownership]
         if hand.resources[r_type["give"]] >= 3 * num:
             hand.resources[r_type["take"]] += num
             hand.resources[r_type["give"]] -= 3 * num
@@ -147,7 +147,7 @@ class Crossroad:
         log = {
             "owner": self.ownership,
             "points": 0,
-            "time": len(self.board.hands[self.ownership].settlement_log),
+            "time": len(self.board.players[self.ownership].settlement_log),
             "production": self.val['sum'],
             "wheat": self.val[Resource.WHEAT],
             "sheep": self.val[Resource.SHEEP],
@@ -273,11 +273,9 @@ class Neighbor:
         return self.crossroad.ownership
 
 
-
-
-
 class Board:
-    def __init__(self, players):
+    def __init__(self, players, log):
+        self.log = log
         self.players = players
         self.devStack = DevStack()
         self.dice = Dice.Dice()
@@ -297,26 +295,6 @@ class Board:
                 cr.location = (i, j)
                 line.append(cr)
             self.crossroads.append(line)
-
-        """
-        # add crossroad neighbors to each crossroad
-        for i, line in enumerate(self.crossroads):
-            for j, cr in enumerate(line):
-                if i % 2 == 0:
-                    self.add_neighbor_cr(cr, i - 1, j)
-                    self.add_neighbor_cr(cr, i + 1, j)
-                    if i < 6:
-                        self.add_neighbor_cr(cr, i + 1, j + 1)
-                    else:
-                        self.add_neighbor_cr(cr, i + 1, j - 1)
-                else:
-                    if i < 6:
-                        self.add_neighbor_cr(cr, i - 1, j - 1)
-                    else:
-                        self.add_neighbor_cr(cr, i - 1, j + 1)
-                    self.add_neighbor_cr(cr, i - 1, j)
-                    self.add_neighbor_cr(cr, i + 1, j)
-        """
 
         # build ports
         self.crossroads[0][0].port = Resource.WOOD
@@ -416,9 +394,6 @@ class Board:
         # create the API
         API.start_api(self)
 
-    def end_game(self, rnd, win_player):
-        return Log.end_game(rnd, win_player, self.hands)
-
     def get_max_points(self):
         max_points = max(self.hands)
         return max_points
@@ -468,7 +443,6 @@ class Board:
     def end_game(self):
         Log.save_game(self.hands)
 
-
     def update_longest_road(self, player):
         former = self.longest_road_owner
         if former is not None:
@@ -506,7 +480,6 @@ class Board:
         return legal
 
 
-
 class Hand:
     def __init__(self, index, board):
         self.index = index
@@ -541,24 +514,19 @@ class Hand:
     # ---- get information ---- #
 
     def compute_2_roads_heuristic(self, road1, road2):
-        heuristic_increment=0
-        old_road_length=self.longest_road_value
-        if  self.board.longest_road_owner != self.index:
+        heuristic_increment = 0
+        old_road_length = self.longest_road_value
+        if self.board.longest_road_owner != self.index:
             self.tmp_buy_road(road1)
             self.tmp_buy_road(road2)
-            heuristic_increment += (self.board.longest_road_owner == self.index)*5
+            heuristic_increment += (self.board.longest_road_owner == self.index) * 5
         else:
             self.tmp_buy_road(road1)
             self.tmp_buy_road(road2)
-        heuristic_increment += (self.longest_road_value-old_road_length)*self.road_value
+        heuristic_increment += (self.longest_road_value - old_road_length) * self.road_value
         self.undo_buy_road(road2)
         self.undo_buy_road(road1)
         return heuristic_increment
-
-
-
-
-
 
     def get_resources_number(self):
         resource_sum = 0
@@ -644,21 +612,13 @@ class Hand:
         self.cities += [cr]
 
     def buy_development_card(self, stack: DevStack):
-        if self.can_buy_development_card() and stack.has_cards():
-            self.resources[Resource.IRON] -= 1
-            self.resources[Resource.WHEAT] -= 1
-            self.resources[Resource.SHEEP] -= 1
-            print(self.cards)
-            print(stack.get().name)
-            card = stack.get()
-            if card is None:
-                # this is supposed to never happen in normal play time
-                print("no card in the deck")
-                assert False
-                return False
-            self.cards[card.name] += [card]
-            return True
-        return False
+        self.resources[Resource.IRON] -= 1
+        self.resources[Resource.WHEAT] -= 1
+        self.resources[Resource.SHEEP] -= 1
+        print(self.cards)
+        print(stack.get().name)
+        card = stack.get()
+        self.cards[card.name] += [card]
 
     # ---- ---- trade ---- ---- #
 
@@ -673,7 +633,7 @@ class Hand:
         for card in self.cards["road building"]:
             if card.is_valid():
                 if road1.is_legal() and road2.is_legal():
-                    self.heuristic += self.compute_2_roads_heuristic(road1,road2)
+                    self.heuristic += self.compute_2_roads_heuristic(road1, road2)
                     road1.build(self.index)
                     road2.build(self.index)
                     self.cards["road building"].remove(card)
@@ -694,7 +654,7 @@ class Hand:
         for card in self.cards["monopole"]:
             if card.is_valid():
                 if resource != Resource.DESSERT:
-                    for hand in self.board.hands:
+                    for hand in self.board.players:
                         if hand.index != self.index:
                             self.resources[resource] += hand.resources[resource]
                             hand.resources[resource] = 0
@@ -723,14 +683,12 @@ class Hand:
         return False
 
     # todo test it
-    def undo_use_knight(self,resource: Resource, terrain: Terrain,dst):
+    def undo_use_knight(self, resource: Resource, terrain: Terrain, dst):
         assert terrain is not None
         terrain.put_bandit()
         if resource is not None:
             self.resources[resource] -= 1
             dst.resources[resource] += 1
-
-
 
     # ---- take a temporary action ---- #
 
