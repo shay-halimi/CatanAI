@@ -28,6 +28,18 @@ class Action(ABC):
         pass
 
 
+    class DoNothing(Action):
+        def __init__(self, player, heuristic_method):
+            super().__init__(player, heuristic_method)
+
+        def do_action(self):
+            pass
+
+        def compute_heuristic(self):
+            return  self.player.hand.heuristic
+
+
+
 class UseKnight(Action):
     def __init__(self, player, heuristic_method, terrain, dst):
         super().__init__(player, heuristic_method)
@@ -232,6 +244,7 @@ class Player:
 
     def get_legal_moves(self):
         legal_moves = []
+        legal_moves +=[nothing(self)]
         # finding legal moves from devCards
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["knight"]))) > 0:
             # need to check if the cards
