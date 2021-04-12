@@ -3,6 +3,7 @@ import math
 from Player import Player
 from Player import Dork
 from random import randint
+from Log import Log
 
 
 class Game:
@@ -19,17 +20,22 @@ class Game:
             else:
                 player = Player(i, self.board)
             self.players += [player]
+        self.log = Log(self.board.hands)
 
     def start_game(self):
         for i in range(len(self.players)):
             if self.players[i].is_computer:
-                self.players[i].computer_1st_settlement()
+                cr, road = self.players[i].computer_1st_settlement()
+                cr_location = cr.location_log()
+                road_location = road.location_log()
+                self.log.start_game(i, cr_location, road_location)
             else:
                 pass
             self.next_turn()
         for i in range(len(self.players) - 1, -1, -1):
             if self.players[i].is_computer:
-                self.players[i].computer_2nd_settlement()
+                cr, road = self.players[i].computer_2nd_settlement()
+                self.log.start_game(i, cr.location_log(), road.location_log())
             else:
                 pass
             self.next_turn()
@@ -37,6 +43,7 @@ class Game:
     def throw_dice(self):
         for i, j in self.board.dice.throw():
             self.board.map[i][j].produce()
+            self.log.dice(self.board.dice.sum)
         if self.board.dice.sum == 7:
             self.throw_cards()
 
@@ -47,6 +54,7 @@ class Game:
                 player.throw_my_cards(math.floor(num_cards/2))
 
     def next_turn(self):
+        self.log.end_turn()
         self.turn += 1
         if self.turn == len(self.players):
             self.turn = 0
@@ -83,6 +91,7 @@ class Game:
             if hand.points >= 10:
                 # TODO need to call Log.finish_game
                 print("player number "+str(hand.index)+" is the winner")
+                self.log.end_game()
                 self.board.end_game()
 
 
@@ -90,11 +99,8 @@ class Game:
 
 
 def main():
-    for i in range(10):
-        game = Game(3)
-        game.play_game()
-
-    # print_distance(game)
+    game = Game(3)
+    game.play_game()
 
 
 print("Hello Game")

@@ -20,9 +20,9 @@ class Action(ABC):
         self.name = 'action'
         self.heuristic = 0
 
-    def do_action(self, player):
-        player.hand.print_resources()
-        print("player : " + player.name + " " + self.name)
+    def do_action(self):
+        self.player.hand.print_resources()
+        print("player : " + self.player.name + " " + self.name)
 
     def compute_heuristic(self):
         pass
@@ -36,8 +36,7 @@ class DoNothing(Action):
         pass
 
     def compute_heuristic(self):
-        return  self.player.hand.heuristic
-
+        return self.player.hand.heuristic
 
 
 class UseKnight(Action):
@@ -47,10 +46,9 @@ class UseKnight(Action):
         self.dst = dst
         self.name = 'use knight'
 
-    def do_action(self, player):
-        super().do_action(player)
-        player.hand.use_knight(self.terrain, self.dst)
-        after_action(player)
+    def do_action(self):
+        super().do_action()
+        self.player.hand.use_knight(self.terrain, self.dst)
 
     def compute_heuristic(self):
         resource = self.player.hand.use_knight(self.terrain, self.dst)
@@ -65,16 +63,16 @@ class UseMonopole(Action):
         self.resource = resource
         self.name = 'use monopole'
 
-    def do_action(self, player):
-        super().do_action(player)
-        player.hand.use_monopole(self.resource)
-        after_action(player)
+    def do_action(self):
+        super().do_action()
+        self.player.hand.use_monopole(self.resource)
 
-    def compute_heuristic(self, player):
+    def compute_heuristic(self):
         selected_resource_quantity = 0
-        for hand in player.board.hands:
+        for hand in self.player.board.hands:
             selected_resource_quantity += hand.resources[self.resource]
-        return player.hand.heuristic + (player.hand.resource_value[self.resource] * selected_resource_quantity)
+        return self.player.hand.heuristic + (
+                    self.player.hand.resource_value[self.resource] * selected_resource_quantity)
 
 
 class UseYearOfPlenty(Action):
@@ -84,13 +82,12 @@ class UseYearOfPlenty(Action):
         self.resource2 = resource2
         self.name = 'use year of plenty'
 
-    def do_action(self, player):
-        super().do_action(player)
-        player.hand.use_year_of_plenty(self.resource1, self.resource2)
-        after_action(player)
+    def do_action(self):
+        super().do_action()
+        self.player.hand.use_year_of_plenty(self.resource1, self.resource2)
 
     def compute_heuristic(self):
-        player=self.player
+        player = self.player
         return player.hand.resource_value[self.resource1] + player.hand.resource_value[self.resource1]
 
 
@@ -101,14 +98,13 @@ class UseBuildRoads(Action):
         self.road2 = road2
         self.name = 'use build roads'
 
-    def do_action(self, player):
-        super().do_action(player)
-        player.hand.build_2_roads(self.road1, self.road2)
-        after_action(player)
+    def do_action(self):
+        super().do_action()
+        self.player.hand.build_2_roads(self.road1, self.road2)
 
     def compute_heuristic(self):
         heuristic_increment = 0
-        player=self.player
+        player = self.player
         old_road_length = player.longest_road_value
         if player.board.longest_road_owner != player.index:
             player.tmp_buy_road(self.road1)
@@ -128,13 +124,12 @@ class UseVictoryPoint(Action):
         super().__init__(player, heuristic_method)
         self.name = "use victory_point"
 
-    def do_action(self, player):
-        super().do_action(player)
-        player.hand.use_victory_point()
-        after_action(player)
+    def do_action(self):
+        super().do_action()
+        self.player.hand.use_victory_point()
 
     def compute_heuristic(self):
-        player=self.player
+        player = self.player
         if len(list(filter(lambda x: x.ok_to_use, player.hand.cards["victory points"]))) + player.hand.points >= 10:
             return math.inf
         else:
@@ -142,17 +137,16 @@ class UseVictoryPoint(Action):
 
 
 class BuildSettlement(Action):
-    def __init__(self, player, heuristic_method, crossroad, hand):
+    def __init__(self, player, heuristic_method, crossroad):
         print("a")
         self.crossroad = crossroad
         self.name = 'build settlement'
         self.heuristic = StatisticsHeuristic().settlement_value(self.crossroad, len(player.hand.settlements))
         super().__init__(player, heuristic_method)
 
-    def do_action(self, player):
-        super().do_action(player)
-        player.hand.buy_settlement(self.crossroad)
-        after_action(player)
+    def do_action(self):
+        super().do_action()
+        self.player.hand.buy_settlement(self.crossroad)
 
     def compute_heuristic(self):
         return StatisticsHeuristic().settlement_value(self.crossroad, len(self.player.hand.settlements))
@@ -164,25 +158,25 @@ class BuildCity(Action):
         self.crossroad = crossroad
         self.name = 'build city'
 
-    def do_action(self, player):
-        super().do_action(player)
-        player.hand.buy_city(self.crossroad)
-        after_action(player)
+    def do_action(self):
+        super().do_action()
+        self.player.hand.buy_city(self.crossroad)
+
     # todo
     def compute_heuristic(self):
         pass
 
 
 class BuildRoad(Action):
-    def __init__(self,player,heuristic_method, road):
-        super().__init__(player,heuristic_method)
+    def __init__(self, player, heuristic_method, road):
+        super().__init__(player, heuristic_method)
         self.road = road
         self.name = 'build road'
 
-    def do_action(self, player):
-        super().do_action(player)
-        player.hand.buy_road(self.road)
-        after_action(player)
+    def do_action(self):
+        super().do_action()
+        self.player.hand.buy_road(self)
+
     # todo
     def compute_heuristic(self):
         pass
@@ -190,33 +184,33 @@ class BuildRoad(Action):
 
 class Trade(Action):
     def __init__(self, player, heuristic_method, src, exchange_rate, dst, take):
-        super().__init__(player,heuristic_method)
+        super().__init__(player, heuristic_method)
         self.src = src
         self.dst = dst
         self.take = take
         self.give = take * exchange_rate
         self.name = 'trade'
 
-    def do_action(self, player):
-        super().do_action(player)
-        player.hand.trade(self)
-        after_action(player)
+    def do_action(self):
+        super().do_action()
+        self.player.hand.trade(self)
+
     # todo
     def compute_heuristic(self):
         pass
+
 
 class BuyDevCard(Action):
     def __init__(self, player, heuristic_method):
         super().__init__(player, heuristic_method)
         self.name = 'buy devCard'
 
-    def do_action(self, player):
-        super().do_action(player)
-        player.hand.buy_development_card(player.board.devStack)
-        after_action(player)
+    def do_action(self):
+        super().do_action()
+        self.player.hand.buy_development_card(self.player.board.devStack)
 
     def compute_heuristic(self):
-        player=self.player
+        player = self.player
         return player.hand.heuristic + player.hand.dev_card_value
 
 
@@ -244,7 +238,7 @@ class Player:
 
     def get_legal_moves(self):
         legal_moves = []
-        legal_moves +=[DoNothing(self,None)]
+        legal_moves += [DoNothing(self,None)]
         # finding legal moves from devCards
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["knight"]))) > 0:
             # need to check if the cards
@@ -254,24 +248,24 @@ class Player:
                         continue
                     for p in range(self.board.players):
                         if p is not self.index:
-                            legal_moves += [UseKnight(self,None,terrain, p)]
+                            legal_moves += [UseKnight(self, None, terrain, p)]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["monopole"]))) > 0:
             for i in range(1, 6):
-                legal_moves += [UseMonopole(self,None,Resource[i])]
+                legal_moves += [UseMonopole(self, None, Resource[i])]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["road builder"]))) > 0:
             for [road1, road2] in self.board.get_two_legal_roads(self.index):
-                legal_moves += [UseBuildRoads(self,None,road1, road2)]
+                legal_moves += [UseBuildRoads(self, None, road1, road2)]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["year of prosper"]))) > 0:
             # need to check if the cards
             for i in range(1, 6):
                 for j in range(1, 6):
-                    legal_moves += [UseYearOfPlenty(self,None,Resource[i], Resource[j])]
+                    legal_moves += [UseYearOfPlenty(self, None, Resource[i], Resource[j])]
         if self.board.hands[self.index].can_buy_road():
             for road in self.board.get_legal_roads(self.index):
-                legal_moves += [BuildRoad(self,None, road)]
+                legal_moves += [BuildRoad(self, None, road)]
         if self.board.hands[self.index].can_buy_settlement():
             for crossword in self.board.get_lands(self.index):
-                legal_moves += [BuildSettlement(self, None, crossword, self.hand)]
+                legal_moves += [BuildSettlement(self, None, crossword)]
         if self.board.hands[self.index].can_buy_city():
             for settlement in self.board.get_settlements(self.index):
                 legal_moves += [BuildCity(self, None, settlement)]
@@ -283,7 +277,7 @@ class Player:
                 if can_trade:
                     for dst in Resource:
                         if resource is not Resource.DESSERT:
-                            legal_moves += [Trade(self,None,resource, exchange_rate, dst, 1)]
+                            legal_moves += [Trade(self, None, resource, exchange_rate, dst, 1)]
         return legal_moves
 
     #########################################################################
@@ -293,14 +287,18 @@ class Player:
         legal_crossroads = self.board.get_legal_crossroads_start()
         cr = Crossroad.greatest_crossroad(legal_crossroads)
         self.hand.create_settlement(cr)
-        self.hand.create_road(cr.neighbors[0].road)
+        road = cr.neighbors[0].road
+        self.hand.create_road(road)
+        return cr, road
 
     def computer_2nd_settlement(self):
         legal_crossroads = self.board.get_legal_crossroads_start()
         cr = Crossroad.greatest_crossroad(legal_crossroads)
         self.hand.create_settlement(cr)
         cr.produce(self.index)
-        self.hand.create_road(cr.neighbors[0].road)
+        road = cr.neighbors[0].road
+        self.hand.create_road(road)
+        return cr, road
 
     def computer_random_action(self):
         legal_moves = self.get_legal_moves()
@@ -313,21 +311,21 @@ class Player:
         actions = self.get_legal_moves()
         for a in actions:
             if isinstance(a, BuildSettlement):
-                a.do_action(self)
+                a.do_action()
                 return True
         for a in actions:
             if isinstance(a, BuildCity):
-                a.do_action(self)
+                a.do_action()
                 return True
         if not self.hand.get_lands() and self.hand.settlement_pieces:
             for a in actions:
                 if isinstance(a, BuildRoad):
-                    a.do_action(self)
+                    a.do_action()
                     return True
         for a in actions:
             if isinstance(a, Trade):
                 if self.simple_heuristic.accept_trade(a):
-                    a.do_action(self)
+                    a.do_action()
                     return True
         return False
 
@@ -348,7 +346,9 @@ class Dork(Player):
             if self.statistics.settlement_value(best_crossroad, 0) < self.statistics.settlement_value(cr, 0):
                 best_crossroad = cr
         self.hand.create_settlement(best_crossroad)
-        self.hand.create_road(best_crossroad.neighbors[0].road)
+        road = best_crossroad.neighbors[0].road
+        self.hand.create_road(road)
+        return best_crossroad, road
 
     def computer_2nd_settlement(self):
         legal_crossroads = self.board.get_legal_crossroads_start()
@@ -359,7 +359,9 @@ class Dork(Player):
                 best_crossroad = cr
         self.hand.create_settlement(best_crossroad)
         best_crossroad.produce(self.index)
-        self.hand.create_road(best_crossroad.neighbors[0].road)
+        road = best_crossroad.neighbors[0].road
+        self.hand.create_road(road)
+        return best_crossroad, road
 
     def simple_choice(self):
         actions = self.get_legal_moves()
@@ -371,21 +373,21 @@ class Dork(Player):
                 elif a.heuristic > best_action.heuristic:
                     best_action = a
         if best_action is not None:
-            best_action.do_action(self)
+            best_action.do_action()
             return True
         for a in actions:
             if isinstance(a, BuildCity):
-                a.do_action(self)
+                a.do_action()
                 return True
         if not self.hand.get_lands() and self.hand.settlement_pieces:
             for a in actions:
                 if isinstance(a, BuildRoad):
-                    a.do_action(self)
+                    a.do_action()
                     return True
         for a in actions:
             if isinstance(a, Trade):
                 if self.simple_heuristic.accept_trade(a):
-                    a.do_action(self)
+                    a.do_action()
                     return True
         return False
 

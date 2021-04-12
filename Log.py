@@ -49,7 +49,7 @@ def next_turn(rnd, turn, hands):
             'knight': len(h.cards["knight"]),
             'monopole': len(h.cards["monopole"]),
             'road builder': len(h.cards["road builder"]),
-            'year of prosper': len(h.cards["year of prosper"])
+            'year of prosper': len(h.cards["year of prosper"]),
         })
     rounds.append(this_turn)
 
@@ -61,10 +61,16 @@ def add_trade(trade):
     this_turn['actions'].append(action)
 
 
+def build_road(road):
+    action = {'name': road.name, 'location': road.road.api_location}
+    global this_turn
+    this_turn['actions'].append(action)
+
+
 def information_to_json(hands):
     information = {'settlement': [], 'settlements number': 0}
     for hand in hands:
-        for index, settlement in enumerate(hand.settlements):
+        for index, settlement in enumerate(hand.settlements_log):
             settlement_info = {'time': index, 'points': hand.points, 'production': settlement.val['sum']}
             for resource in Resource:
                 if resource is not Resource.DESSERT:
@@ -77,22 +83,11 @@ def information_to_json(hands):
 def save_game(hands):
     with open("game.json", 'w') as outfile:
         json.dump(game, outfile)
-    with open("actions.json", 'w') as outfile:
-        actions = []
-        for rnd in game['round']:
-            for turn in rnd:
-                for action in turn['actions']:
-                    zip = {'round': turn['round'], 'turn': turn['turn'], 'action': action}
-                    actions += [zip]
-        json.dump(actions, outfile)
-    with open('data.json') as json_file:
-        information = information_to_json(hands)
-        data = json.load(json_file)
-        data['settlement'] += information['settlement']
-        data['settlements number'] += information['settlements number']
-    with open('data.json', 'w') as outfile:
-        json.dump(data, outfile)
-    build_statistics()
+
+    # build_statistics()
+
+
+def update_history(hands):
     with open('history.json') as json_file:
         history = json.load(json_file)
         history['sample_size'] += len(hands)
@@ -106,31 +101,90 @@ def save_game(hands):
         json.dump(history, outfile)
 
 
+def build_data(hands):
+    with open('data.json') as json_file:
+        information = information_to_json(hands)
+        data = json.load(json_file)
+        data['settlement'] += information['settlement']
+        data['settlements number'] += information['settlements number']
+    with open('data.json', 'w') as outfile:
+        json.dump(data, outfile)
+
+
+def aux_build_statistics(data):
+    st = dict()
+    st['production'] = {}
+    for resource in Resource:
+        if resource is not Resource.DESSERT:
+            st[r2s(resource)] = {}
+    for settlement in data:
+        t = settlement['time']
+        production = settlement['production']
+        win = 1 if settlement['points'] > 9 else 0
+        if str((t, production)) in st['production']:
+            st['production'][str((t, production))]['win'] += win
+            st['production'][str((t, production))]['event'] += 1
+        else:
+            st['production'][str((t, production))] = {'win': win, 'event': 1}
+        for resource in Resource:
+            if resource is not Resource.DESSERT:
+                if str((t, settlement[r2s(resource)])) in st[r2s(resource)]:
+                    st[r2s(resource)][str((t, settlement[r2s(resource)]))]['win'] += win
+                    st[r2s(resource)][str((t, settlement[r2s(resource)]))]['event'] += 1
+                else:
+                    st[r2s(resource)][str((t, settlement[r2s(resource)]))] = {'event': 1, 'win': win}
+    return st
+
+
 def build_statistics():
     with open('data.json') as json_file:
         data = json.load(json_file)
-        statistics = {'settlement': {}}
-        st = dict()
-        st['production'] = {}
-        for resource in Resource:
-            if resource is not Resource.DESSERT:
-                st[r2s(resource)] = {}
-        for settlement in data['settlement']:
-            t = settlement['time']
-            production = settlement['production']
-            win = 1 if settlement['points'] > 9 else 0
-            if str((t, production)) in st['production']:
-                st['production'][str((t, production))]['win'] += win
-                st['production'][str((t, production))]['event'] += 1
-            else:
-                st['production'][str((t, production))] = {'win': win, 'event': 1}
-            for resource in Resource:
-                if resource is not Resource.DESSERT:
-                    if str((t, settlement[r2s(resource)])) in st[r2s(resource)]:
-                        st[r2s(resource)][str((t, settlement[r2s(resource)]))]['win'] += win
-                        st[r2s(resource)][str((t, settlement[r2s(resource)]))]['event'] += 1
-                    else:
-                        st[r2s(resource)][str((t, settlement[r2s(resource)]))] = {'event': 1, 'win': win}
-        statistics['settlement'] = st
+        statistics = {'settlement': aux_build_statistics(data['settlement']),
+                      'city': aux_build_statistics(data['city'])}
+
     with open('statistics.json', 'w') as outfile:
         json.dump(statistics, outfile)
+
+
+class Log:
+    def __init__(self, hands):
+        self.round = 0
+        self.turn = 0
+        self.hands = hands
+        self.start_log = {'actions': []}
+        self.turn_log = {'turn': 0, 'actions': []}
+        self.round_log = {'round': 0, 'turns': []}
+        self.game_log = {'number of players': len(hands), 'rounds': []}
+        with open("saved_games/manager.json") as json_file:
+            manager = json.load(json_file)
+        self.game_log_name = "saved_games/game" + str(manager['games saved'] + 1) + ".json"
+        manager['games saved'] += 1
+        with open("saved_games/manager.json", 'w') as outfile:
+            json.dump(manager, outfile)
+
+    def end_turn(self):
+        self.round_log['turns'] += [self.turn_log]
+        self.turn_log = {'turn': self.turn, 'actions': []}
+        if self.turn == len(self.hands) - 1:
+            self.turn = 0
+            self.round += 1
+            self.game_log['rounds'] += [self.round_log]
+            self.round_log = {'round': self.round, 'turns': []}
+        else:
+            self.turn += 1
+
+    def dice(self, dice):
+        self.turn_log['dice'] = dice
+        if 'dice' in self.turn_log:
+            return 4
+
+    def action(self, action_log):
+        self.turn_log['actions'] += [action_log]
+
+    def end_game(self):
+        self.game_log['start'] = self.start_log
+        with open(self.game_log_name, 'w') as outfile:
+            json.dump(self.game_log, outfile)
+
+    def start_game(self, index, crossroad_log, road_log):
+        self.start_log['actions'] += [{'index': index, 'crossroad': crossroad_log, 'road': road_log}]

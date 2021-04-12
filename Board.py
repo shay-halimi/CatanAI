@@ -143,6 +143,28 @@ class Crossroad:
                 self.val["sum"] += heu_val
                 self.val[t.resource] += heu_val
 
+    def statistic_log(self):
+        log = {
+            "owner": self.ownership,
+            "points": 0,
+            "time": len(self.board.hands[self.ownership].settlement_log),
+            "production": self.val['sum'],
+            "wheat": self.val[Resource.WHEAT],
+            "sheep": self.val[Resource.SHEEP],
+            "clay": self.val[Resource.CLAY],
+            "wood": self.val[Resource.WOOD],
+            "iron": self.val[Resource.IRON],
+            "port": None if self.port is None else r2s(self.port)
+        }
+        return log
+
+    def location_log(self):
+        log = {
+            "location x": self.location[0],
+            "location y": self.location[1]
+        }
+        return log
+
     @staticmethod
     def greatest_crossroad(crossroads):
         max_cr = {"cr": None, "sum": 0}
@@ -227,6 +249,13 @@ class Road:
 
     def get_location(self):
         return str(self.neighbors[0].location) + " " + str(self.neighbors[1].location)
+
+    def location_log(self):
+        log = {
+            "u": self.neighbors[0].location_log(),
+            "v": self.neighbors[1].location_log()
+        }
+        return log
 
 
 class Neighbor:
@@ -493,7 +522,7 @@ class Hand:
         self.board = board
         self.ports = set()
         self.lands_log = []
-        self.settlements = []
+        self.settlements_log = []
         self.cities = []
         # ---- achievements and stats ---- #
         self.longest_road, self.largest_army = 0, 0
@@ -576,11 +605,13 @@ class Hand:
 
     # ---- ---- buy ---- ---- #
 
-    def buy_road(self, road):
+    def buy_road(self, build_road):
+        self.pay(ROAD_PRICE)
+        self.create_road(build_road.road)
+        Log.build_road(build_road)
+
         was_longest_road = self.index == self.board.longest_road_owner
         former_longest_road_owner = self.board.longest_road_owner
-        self.pay(ROAD_PRICE)
-        self.create_road(road)
         if former_longest_road_owner is None:
             self.heuristic += int(self.board.longest_road_owner == self.index)
             return
@@ -598,7 +629,7 @@ class Hand:
             self.heuristic += (self.production[resource] - old_production[resource]) * self.resource_value[resource]
 
         self.update_resource_values()
-        self.settlements += [cr]
+        self.settlements_log += [cr]
 
     def buy_city(self, cr: Crossroad):
         old_production_variety = len(list(filter(lambda x: x.value != 0, self.production)))
