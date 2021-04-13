@@ -25,17 +25,13 @@ class Game:
     def start_game(self):
         for i in range(len(self.players)):
             if self.players[i].is_computer:
-                cr, road = self.players[i].computer_1st_settlement()
-                cr_location = cr.location_log()
-                road_location = road.location_log()
-                self.log.start_game(i, cr_location, road_location)
+                self.players[i].computer_1st_settlement()
             else:
                 pass
             self.next_turn()
         for i in range(len(self.players) - 1, -1, -1):
             if self.players[i].is_computer:
-                cr, road = self.players[i].computer_2nd_settlement()
-                self.log.start_game(i, cr.location_log(), road.location_log())
+                self.players[i].computer_2nd_settlement()
             else:
                 pass
             self.next_turn()

@@ -151,7 +151,6 @@ class Log:
         self.round = 0
         self.turn = 0
         self.players = players
-        self.start_log = {'actions': []}
         self.turn_log = {'turn': 0, 'actions': []}
         self.round_log = {'round': 0, 'turns': []}
         self.game_log = {'number of players': players, 'rounds': []}
@@ -180,9 +179,8 @@ class Log:
         self.turn_log['actions'] += [action_log]
 
     def end_game(self):
-        self.game_log['start'] = self.start_log
         with open(self.game_log_name, 'w') as outfile:
             json.dump(self.game_log, outfile)
 
-    def start_game(self, index, crossroad_log, road_log):
-        self.start_log['actions'] += [{'index': index, 'crossroad': crossroad_log, 'road': road_log}]
+    def board(self, board_log):
+        self.game_log['board'] = board_log

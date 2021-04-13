@@ -70,6 +70,13 @@ class Terrain:
                     steal_stack += [cr.ownership]
             return steal_stack
 
+    def get_log(self):
+        log = {
+            'resource': r2s(self.resource),
+            'number': self.num
+        }
+        return log
+
 
 class Crossroad:
     def __init__(self, board):
@@ -342,6 +349,9 @@ class Board:
                 j += 1
             i += 1
 
+        # log the board
+        self.log_board()
+
         # link the terrains to their crossroads
         for line in self.map:
             for t in line:
@@ -394,10 +404,6 @@ class Board:
         # create the API
         API.start_api(self)
 
-    def get_max_points(self):
-        max_points = max(self.hands)
-        return max_points
-
     # very convoluted function to link each road with its vertices crossroads and vice versa
     def add_neighbors_to_roads(self):
         i = 0
@@ -424,24 +430,19 @@ class Board:
                         up += 1
             i += 1
 
-    def get_two_legal_roads(self, player):
-        legal = []
-        for line1 in self.roads:
-            for road1 in line1:
-                if road1.is_legal(player):
-                    road1.temp_build(player)
-                    for line2 in self.roads:
-                        for road2 in line2:
-                            if road2.is_legal(player):
-                                legal += [(road1, road2)]
-        return legal
+    def log_board(self):
+        log = []
+        for i, line in enumerate(self.map):
+            for j, t in enumerate(line):
+                t_log = t.get_log()
+                t_log['i'] = i
+                t_log['j'] = j
+                log += [t_log]
+        self.log.board(log)
 
-    def next_turn(self, turn, rnd):
-        API.next_turn(self, turn, rnd, self.hands)
-        Log.next_turn(rnd, turn, self.hands)
-
-    def end_game(self):
-        Log.save_game(self.hands)
+    def get_max_points(self):
+        max_points = max(self.hands)
+        return max_points
 
     def update_longest_road(self, player):
         former = self.longest_road_owner
@@ -449,6 +450,15 @@ class Board:
             self.hands[former].points -= 2
         self.hands[player].points += 2
         self.longest_road_size += 1
+
+    # ---- game development ---- #
+
+    def next_turn(self, turn, rnd):
+        API.next_turn(self, turn, rnd, self.hands)
+        Log.next_turn(rnd, turn, self.hands)
+
+    def end_game(self):
+        Log.save_game(self.hands)
 
     # ---- get legal moves ---- #
 
@@ -477,6 +487,18 @@ class Board:
             for road in line:
                 if road.is_legal(player):
                     legal += [road]
+        return legal
+
+    def get_two_legal_roads(self, player):
+        legal = []
+        for line1 in self.roads:
+            for road1 in line1:
+                if road1.is_legal(player):
+                    road1.temp_build(player)
+                    for line2 in self.roads:
+                        for road2 in line2:
+                            if road2.is_legal(player):
+                                legal += [(road1, road2)]
         return legal
 
 

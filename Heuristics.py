@@ -44,9 +44,11 @@ class StatisticsHeuristic:
     with open('statistics.json') as json_file:
         statistics = json.load(json_file)
 
-    def settlement_value(self, cr: Crossroad, time):
+    def settlement_value(self, build_settlement):
         book = self.statistics['settlement']['production']
-        key = str((time, cr.val['sum']))
+        time = len(build_settlement.player.hand.settlements_log)
+        production = build_settlement.crossroad.val['sum']
+        key = str((time, production))
         if key in book:
             st = book[key]
         else:
@@ -55,7 +57,8 @@ class StatisticsHeuristic:
         for resource in Resource:
             if resource is not Resource.DESSERT:
                 book = self.statistics['settlement'][r2s(resource)]
-                key = str((time, cr.val[resource]))
+                production =  build_settlement.crossroad.val[resource]
+                key = str((time, production))
                 if key in book:
                     st = book[key]
                 else:
