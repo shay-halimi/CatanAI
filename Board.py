@@ -6,6 +6,7 @@ import API
 import Log
 import math
 from Auxilary import r2s
+from Auxilary import s2r
 
 # ---- global variables ---- #
 
@@ -293,6 +294,8 @@ class Board:
                     [Terrain(8), Terrain(3), Terrain(4), Terrain(5)],
                     [Terrain(5), Terrain(6), Terrain(11)]]
 
+        self.bandit_location = None
+
         # create 2d array of crossroads
         self.crossroads = []
         for i in range(12):
@@ -323,45 +326,21 @@ class Board:
         self.crossroads[10][2].port = Resource.DESSERT
         self.crossroads[11][1].port = Resource.DESSERT
 
-        # shuffle the terrain on the board and link the crossroads to them
-        resource_stack = [Resource.DESSERT] + [Resource.IRON] * 3 + [Resource.CLAY] * 3 + [Resource.WOOD] * 4 + [
-            Resource.WHEAT] * 4 + [Resource.SHEEP] * 4
-        i = 0
-        for line in self.map:
-            j = 0
-            for terrain in line:
+        # log the board
+        self.log_board()
+
+        # link the terrains to their crossroads and vice versa and give them link to board
+        for i, line in enumerate(self.map):
+            for j, terrain in enumerate(line):
                 terrain.board = self
-                index = random.randrange(0, len(resource_stack))
-                resource = resource_stack.pop(index)
-                if resource == Resource.DESSERT:
-                    self.map[2][2].num = terrain.num
-                    terrain.num = 7
-                    terrain.has_bandit = True
-                    self.bandit_location = terrain
-                self.dice.number_to_terrain[terrain.num].append((i, j))
-                terrain.set_resource(resource)
                 terrain.crossroads += [self.crossroads[2 * i][j]]
                 terrain.crossroads += [self.crossroads[2 * i + 1][j]]
                 terrain.crossroads += [self.crossroads[2 * i + 1][j + 1]]
                 terrain.crossroads += [self.crossroads[2 * i + 2][j]]
                 terrain.crossroads += [self.crossroads[2 * i + 2][j + 1]]
                 terrain.crossroads += [self.crossroads[2 * i + 3][j]]
-                j += 1
-            i += 1
-
-        # log the board
-        self.log_board()
-
-        # link the terrains to their crossroads
-        for line in self.map:
-            for t in line:
-                for cr in t.crossroads:
-                    cr.terrains += [t]
-
-        # set the heuristic values of the crossroads
-        for line in self.crossroads:
-            for cr in line:
-                cr.set_heuristic_value()
+                for cr in terrain.crossroads:
+                    cr.terrains += [terrain]
 
         # create the roads
         self.roads = []
@@ -401,8 +380,41 @@ class Board:
         self.largest_army_size = 2
         self.largest_army_owner = None
 
-        # create the API
-        API.start_api(self)
+    def shuffle_map(self):
+        # shuffle the terrain on the board and link the crossroads to them
+        resource_stack = [Resource.DESSERT] + [Resource.IRON] * 3 + [Resource.CLAY] * 3 + [Resource.WOOD] * 4 + [
+            Resource.WHEAT] * 4 + [Resource.SHEEP] * 4
+        for i, line in enumerate(self.map):
+            for j, terrain in enumerate(line):
+                index = random.randrange(0, len(resource_stack))
+                resource = resource_stack.pop(index)
+                if resource == Resource.DESSERT:
+                    self.map[2][2].num = terrain.num
+                    terrain.num = 7
+                    terrain.has_bandit = True
+                    self.bandit_location = terrain
+                self.dice.number_to_terrain[terrain.num].append((i, j))
+                terrain.set_resource(resource)
+        # set the heuristic values of the crossroads
+        for line in self.crossroads:
+            for cr in line:
+                cr.set_heuristic_value()
+
+    def load_map(self, board_log):
+        while board_log:
+            terrain = board_log.pop()
+            i, j = terrain['i'], terrain['j']
+            number = terrain['number']
+            resource = s2r(terrain['resource'])
+            self.map[i][j].num = number
+            self.map[i][j].set_resource(resource)
+            if resource == Resource.DESSERT:
+                self.map[i][j].has_bandit = True
+                self.bandit_location = self.map[i][j]
+        # set the heuristic values of the crossroads
+        for line in self.crossroads:
+            for cr in line:
+                cr.set_heuristic_value()
 
     # very convoluted function to link each road with its vertices crossroads and vice versa
     def add_neighbors_to_roads(self):

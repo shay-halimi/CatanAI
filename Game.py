@@ -4,15 +4,24 @@ from Player import Player
 from Player import Dork
 from random import randint
 from Log import Log
+import API
+from Player import LogToAction
+import json
 
 
 class Game:
 
-    def __init__(self, players):
+    def __init__(self, players, board_log=None):
         self.round = 0
         self.turn = 0
         self.log = Log(players)
         self.board = Board(players, self.log)
+        if board_log:
+            self.board.load_map(board_log)
+        else:
+            self.board.shuffle_map()
+        # create the API
+        API.start_api(self.board)
         self.players = []
         r = randint(0, players)
         for i in range(players):
@@ -43,11 +52,18 @@ class Game:
         if self.board.dice.sum == 7:
             self.throw_cards()
 
+    def load_dice(self, num):
+        for i, j in self.board.dice.load(num):
+            self.board.map[i][j].produce()
+            self.log.dice(self.board.dice.sum)
+        if self.board.dice.sum == 7:
+            self.throw_cards()
+
     def throw_cards(self):
         for player in self.players:
             num_cards = sum(player.hand.resources.values())
             if num_cards > 7:
-                player.throw_my_cards(math.floor(num_cards/2))
+                player.throw_my_cards(math.floor(num_cards / 2))
 
     def next_turn(self):
         self.log.end_turn()
@@ -86,17 +102,44 @@ class Game:
         for hand in self.board.hands:
             if hand.points >= 10:
                 # TODO need to call Log.finish_game
-                print("player number "+str(hand.index)+" is the winner")
+                print("player number " + str(hand.index) + " is the winner")
                 self.log.end_game()
                 self.board.end_game()
+
+    def load_game(self, rounds):
+        for r, round in enumerate(rounds):
+            for t, turn in enumerate(round['turns']):
+                if 'dice' in turn:
+                    self.load_dice(turn['dice'])
+                for i, action in enumerate(turn['actions']):
+                    a = LogToAction(self.board, self.players[t], action)
+                    b = a.get_action()
+                    if not b.is_legal():
+                        print("name : " + b.name + " | round : " + str(r) + " | turn : " + str(i))
+                        return
+                    b.do_action()
 
 
 # ---- main ---- #
 
 
+def load_game(path):
+    with open(path) as json_file:
+        game = json.load(json_file)
+        board = game['board']
+        rounds = game['rounds']
+    game = Game(3, board)
+    game.load_game(rounds)
+
+
+def play_game(num):
+    for i in num:
+        game = Game(3)
+        game.play_game()
+
+
 def main():
-    game = Game(3)
-    game.play_game()
+    load_game("saved_games/game27.json")
 
 
 print("Hello Game")
