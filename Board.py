@@ -464,10 +464,6 @@ class Board:
 
     def next_turn(self, turn, rnd):
         API.next_turn(self, turn, rnd, self.hands)
-        Log.next_turn(rnd, turn, self.hands)
-
-    def end_game(self):
-        Log.save_game(self.hands)
 
     # ---- get legal moves ---- #
 
@@ -607,7 +603,6 @@ class Hand:
     def buy_road(self, build_road):
         self.pay(ROAD_PRICE)
         self.create_road(build_road.road)
-        Log.build_road(build_road)
 
         was_longest_road = self.index == self.board.longest_road_owner
         former_longest_road_owner = self.board.longest_road_owner
@@ -656,7 +651,6 @@ class Hand:
     def trade(self, trade):
         self.resources[trade.src] -= trade.give
         self.resources[trade.dst] += trade.take
-        Log.add_trade(trade)
 
     # ---- ---- use a development card ---- ---- #
 

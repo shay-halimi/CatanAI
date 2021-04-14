@@ -106,7 +106,6 @@ class Game:
                 # TODO need to call Log.finish_game
                 print("player number " + str(hand.index) + " is the winner")
                 self.log.end_game()
-                self.board.end_game()
 
     def load_game(self, rounds):
         for r, round in enumerate(rounds):
@@ -152,8 +151,8 @@ def play_game(num):
 
 
 def main():
-    # play_game(1)
-    load_game("saved_games/game90.json")
+    play_game(1)
+    # load_game("saved_games/game90.json")
 
 
 print("Hello Game")
