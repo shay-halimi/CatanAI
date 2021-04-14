@@ -98,7 +98,6 @@ class Log:
 
     def end_turn(self):
         self.round_log['turns'] += [self.turn_log]
-        self.turn_log = {'turn': self.turn, 'actions': []}
         if self.turn == self.players - 1:
             self.turn = 0
             self.round += 1
@@ -106,6 +105,7 @@ class Log:
             self.round_log = {'round': self.round, 'turns': []}
         else:
             self.turn += 1
+        self.turn_log = {'turn': self.turn, 'actions': []}
 
     def dice(self, dice):
         self.turn_log['dice'] = dice

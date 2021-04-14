@@ -7,6 +7,7 @@ from Log import Log
 import API
 from Player import LogToAction
 import json
+from Resources import Resource
 
 
 class Game:
@@ -35,12 +36,22 @@ class Game:
 
     def start_game(self):
         for i in range(len(self.players)):
+            self.log.turn_log['resources'] = {'wood': self.players[i].hand.resources[Resource.WOOD],
+                                              'clay': self.players[i].hand.resources[Resource.CLAY],
+                                              'sheep': self.players[i].hand.resources[Resource.SHEEP],
+                                              'wheat': self.players[i].hand.resources[Resource.WHEAT],
+                                              'iron': self.players[i].hand.resources[Resource.IRON]}
             if self.players[i].is_computer:
                 self.players[i].computer_1st_settlement()
             else:
                 pass
             self.next_turn()
         for i in range(len(self.players) - 1, -1, -1):
+            self.log.turn_log['resources'] = {'wood': self.players[i].hand.resources[Resource.WOOD],
+                                              'clay': self.players[i].hand.resources[Resource.CLAY],
+                                              'sheep': self.players[i].hand.resources[Resource.SHEEP],
+                                              'wheat': self.players[i].hand.resources[Resource.WHEAT],
+                                              'iron': self.players[i].hand.resources[Resource.IRON]}
             if self.players[i].is_computer:
                 self.players[i].computer_2nd_settlement()
             else:
@@ -83,6 +94,11 @@ class Game:
             self.next_turn()
 
     def play_turn(self, player):
+        self.log.turn_log['resources'] = {'wood': player.hand.resources[Resource.WOOD],
+                                          'clay': player.hand.resources[Resource.CLAY],
+                                          'sheep': player.hand.resources[Resource.SHEEP],
+                                          'wheat': player.hand.resources[Resource.WHEAT],
+                                          'iron': player.hand.resources[Resource.IRON]}
         self.throw_dice()
         if self.players[player.index].is_computer:
             while player.compute_turn():
@@ -117,7 +133,8 @@ class Game:
                 print("resources : " + str(self.players[t].hand.resources))
                 for i, action in enumerate(turn['actions']):
                     print(action)
-                    a = LogToAction(self.board, self.players[t], action)
+                    player = self.players[action['player']]
+                    a = LogToAction(self.board, player, action)
                     b = a.get_action()
                     if not b.is_legal():
                         print("name : " + b.name + " | round : " + str(r) + " | turn : " + str(i))
@@ -151,8 +168,8 @@ def play_game(num):
 
 
 def main():
-    play_game(1)
-    # load_game("saved_games/game90.json")
+    # play_game(1)
+    load_game("saved_games/game124.json")
 
 
 print("Hello Game")

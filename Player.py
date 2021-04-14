@@ -2,7 +2,7 @@ from abc import ABC
 from Resources import Resource
 from Board import SETTLEMENT_PRICE
 from Board import ROAD_PRICE
-from Board import  CITY_PRICE
+from Board import CITY_PRICE
 from Board import Board
 from Board import Crossroad
 from random import randint
@@ -78,7 +78,7 @@ class Action(ABC):
         pass
 
     def log_action(self):
-        return {'name': self.name}
+        return {'name': self.name, 'player': self.player.index}
 
 
 class DoNothing(Action):
@@ -193,8 +193,8 @@ class UseVictoryPoint(Action):
 class BuildSettlement(Action):
     def __init__(self, player, heuristic_method, crossroad):
         self.crossroad = crossroad
-        self.name = 'build settlement'
         super().__init__(player, heuristic_method)
+        self.name = 'build settlement'
 
     def do_action(self):
         super().do_action()
@@ -203,6 +203,7 @@ class BuildSettlement(Action):
     def log_action(self):
         log = {
             'name': self.name,
+            'player': self.player.index,
             'location': self.crossroad.location_log()
         }
         self.log.action(log)
@@ -245,8 +246,10 @@ class BuildCity(Action):
         self.name = 'build city'
 
     def do_action(self):
-        super().do_action()
+        self.player.hand.print_resources()
+        print("player : " + self.player.name + " supposed to be city here : " + self.name)
         self.player.hand.buy_city(self.crossroad)
+        self.log_action()
 
     # todo
     def compute_heuristic(self):
@@ -255,6 +258,7 @@ class BuildCity(Action):
     def log_action(self):
         log = {
             'name': self.name,
+            'player': self.player.index,
             'location': self.crossroad.location_log()
         }
         self.log.action(log)
@@ -280,12 +284,16 @@ class BuildRoad(Action):
     def log_action(self):
         log = {
             'name': self.name,
+            'player': self.player.index,
             'location': self.road.location_log()
         }
         self.log.action(log)
 
     def is_legal(self):
-        return self.player.hand.can_pay(ROAD_PRICE)
+        if self.player.hand.can_pay(ROAD_PRICE):
+            return True
+        else:
+            return False
 
 
 class BuildFreeRoad(BuildRoad):
@@ -321,6 +329,7 @@ class Trade(Action):
     def log_action(self):
         log = {
             'name': self.name,
+            'player': self.player.index,
             'source': r2s(self.src),
             'destination': r2s(self.dst),
             'take': self.take,

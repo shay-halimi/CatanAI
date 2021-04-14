@@ -408,6 +408,7 @@ class Board:
             if resource == Resource.DESSERT:
                 self.map[i][j].has_bandit = True
                 self.bandit_location = self.map[i][j]
+            self.dice.number_to_terrain[self.map[i][j].num].append((i, j))
         # set the heuristic values of the crossroads
         for line in self.crossroads:
             for cr in line:
