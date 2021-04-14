@@ -218,6 +218,7 @@ class BuildFirstSettlement(BuildSettlement):
 
     def do_action(self):
         self.player.hand.create_settlement(self.crossroad)
+        self.log_action()
 
     def is_legal(self):
         return True
@@ -231,6 +232,7 @@ class BuildSecondSettlement(BuildSettlement):
     def do_action(self):
         self.player.hand.create_settlement(self.crossroad)
         self.crossroad.produce(self.player.index)
+        self.log_action()
 
     def is_legal(self):
         return True
@@ -293,6 +295,7 @@ class BuildFreeRoad(BuildRoad):
 
     def do_action(self):
         self.player.hand.create_road(self.road)
+        self.log_action()
 
     def is_legal(self):
         return True

@@ -20,6 +20,8 @@ class Game:
             self.board.load_map(board_log)
         else:
             self.board.shuffle_map()
+        # log the board
+        self.board.log_board()
         # create the API
         API.start_api(self.board)
         self.players = []
@@ -109,15 +111,20 @@ class Game:
     def load_game(self, rounds):
         for r, round in enumerate(rounds):
             for t, turn in enumerate(round['turns']):
+                print("\n\n\n round : " + str(round['round']) + " | turn : " + str(turn['turn']))
                 if 'dice' in turn:
+                    print("dice : " + str(turn['dice']))
                     self.load_dice(turn['dice'])
+                print("resources : " + str(self.players[t].hand.resources))
                 for i, action in enumerate(turn['actions']):
+                    print(action)
                     a = LogToAction(self.board, self.players[t], action)
                     b = a.get_action()
                     if not b.is_legal():
                         print("name : " + b.name + " | round : " + str(r) + " | turn : " + str(i))
                         return
                     b.do_action()
+                self.board.next_turn(t, r)
 
 
 # ---- main ---- #
@@ -128,18 +135,25 @@ def load_game(path):
         game = json.load(json_file)
         board = game['board']
         rounds = game['rounds']
+    turn_off = False
+    if API.api_off:
+        turn_off = True
+        API.turn_api_on()
     game = Game(3, board)
     game.load_game(rounds)
+    if turn_off:
+        API.turn_api_off()
 
 
 def play_game(num):
-    for i in num:
+    for i in range(num):
         game = Game(3)
         game.play_game()
 
 
 def main():
-    load_game("saved_games/game27.json")
+    # play_game(1)
+    load_game("saved_games/game90.json")
 
 
 print("Hello Game")

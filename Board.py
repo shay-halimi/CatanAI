@@ -326,9 +326,6 @@ class Board:
         self.crossroads[10][2].port = Resource.DESSERT
         self.crossroads[11][1].port = Resource.DESSERT
 
-        # log the board
-        self.log_board()
-
         # link the terrains to their crossroads and vice versa and give them link to board
         for i, line in enumerate(self.map):
             for j, terrain in enumerate(line):

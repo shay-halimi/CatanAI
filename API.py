@@ -96,11 +96,20 @@ players = {1: {"background": yellow, "str": "yellow", "color": (255, 242, 0), "n
            3: {"background": green, "str": "green", "color": (35, 177, 77), "name": "none"},
            4: {"background": blue, "str": "blue", "color": (0, 162, 232)}, "name": "none"}
 
-
 # ---- start of the game functions ---- #
 
 
 api_off = True
+
+
+def turn_api_off():
+    global api_off
+    api_off = True
+
+
+def turn_api_on():
+    global api_off
+    api_off = False
 
 
 # creating the API
@@ -214,6 +223,7 @@ def resize_road(percent, location):
 def print_road(road):
     if api_off:
         return
+    print("road : {(1) : " + str(road.neighbors[0].location) + " (2) : " + str(road.neighbors[1].location) + "}")
     curr_img = Image.open("images/temp/background.jpg")
     if road.owner is not None:
         draw = ImageDraw.Draw(curr_img)
