@@ -1,5 +1,8 @@
 from abc import ABC
 from Resources import Resource
+from Board import SETTLEMENT_PRICE
+from Board import ROAD_PRICE
+from Board import CITY_PRICE
 from Board import Board
 from Board import Crossroad
 from random import randint
@@ -7,6 +10,55 @@ import math
 from Heuristics import SimpleHeuristic
 from Heuristics import StatisticsHeuristic
 from Auxilary import r2s
+from random import uniform
+from Auxilary import s2r
+
+
+class LogToAction:
+    def __init__(self, board, player, action_log):
+        self.player = player
+        self.name = action_log['name']
+        self.crossroads = board.crossroads
+        if self.name == 'trade':
+            self.src = s2r(action_log['source'])
+            self.dst = s2r(action_log['destination'])
+            self.take = action_log['take']
+            self.exchange_rate = action_log['give'] / self.take
+        elif self.name == 'build free road' or self.name == 'build road':
+            self.road = self.get_road(action_log['location'])
+        else:
+            self.crossroad = self.get_crossroad(action_log['location'])
+
+    def get_action(self):
+        if self.name == 'trade':
+            return Trade(self.player, None, self.src, self.exchange_rate, self.dst, self.take)
+        elif self.name == 'build free road':
+            return BuildFreeRoad(self.player, None, self.road)
+        elif self.name == 'build road':
+            return BuildRoad(self.player, None, self.road)
+        elif self.name == 'build settlement':
+            return BuildSettlement(self.player, None, self.crossroad)
+        elif self.name == 'build first settlement':
+            return BuildFirstSettlement(self.player, None, self.crossroad)
+        elif self.name == 'build second settlement':
+            return BuildSecondSettlement(self.player, None, self.crossroad)
+        elif self.name == 'build city':
+            return BuildCity(self.player, None, self.crossroad)
+
+    def get_crossroad(self, crossroad_log):
+        x = crossroad_log['location x']
+        y = crossroad_log['location y']
+        return self.crossroads[x][y]
+
+    def get_road(self, road_log):
+        u = self.get_crossroad(road_log['u'])
+        v = self.get_crossroad(road_log['v'])
+        for n in u.neighbors:
+            if v is n.crossroad:
+                return n.road
+
+    def is_legal(self):
+        return True
 
 
 def after_action(player):
@@ -18,9 +70,9 @@ class Action(ABC):
     def __init__(self, player, heuristic_method):
         self.player = player
         self.heuristic_method = heuristic_method
-        self.name = 'action'
-        self.heuristic = 0
+        self.heuristic = uniform(0, 1) if self.heuristic_method is None else self.heuristic_method(self)
         self.log = self.player.log
+        self.name = 'action'
 
     def do_action(self):
         self.player.hand.print_resources()
@@ -31,7 +83,7 @@ class Action(ABC):
         pass
 
     def log_action(self):
-        return {'name': self.name}
+        return {'name': self.name, 'player': self.player.index}
 
 
 class DoNothing(Action):
@@ -145,26 +197,51 @@ class UseVictoryPoint(Action):
 
 class BuildSettlement(Action):
     def __init__(self, player, heuristic_method, crossroad):
-        print("a")
         self.crossroad = crossroad
-        self.name = 'build settlement'
-        # todo : replace settlement log
-        self.heuristic = StatisticsHeuristic().settlement_value(self.crossroad, len(player.hand.settlements_log))
         super().__init__(player, heuristic_method)
+        self.name = 'build settlement'
 
     def do_action(self):
         super().do_action()
         self.player.hand.buy_settlement(self.crossroad)
 
-    def compute_heuristic(self):
-        return StatisticsHeuristic().settlement_value(self.crossroad, len(self.player.hand.settlements))
-
     def log_action(self):
         log = {
             'name': self.name,
+            'player': self.player.index,
             'location': self.crossroad.location_log()
         }
         self.log.action(log)
+
+    def is_legal(self):
+        return self.player.hand.can_pay(SETTLEMENT_PRICE)
+
+
+class BuildFirstSettlement(BuildSettlement):
+    def __init__(self, player, heuristic_method, crossroad):
+        super().__init__(player, heuristic_method, crossroad)
+        self.name = 'build first settlement'
+
+    def do_action(self):
+        self.player.hand.create_settlement(self.crossroad)
+        self.log_action()
+
+    def is_legal(self):
+        return True
+
+
+class BuildSecondSettlement(BuildSettlement):
+    def __init__(self, player, heuristic_method, crossroad):
+        super().__init__(player, heuristic_method, crossroad)
+        self.name = 'build second settlement'
+
+    def do_action(self):
+        self.player.hand.create_settlement(self.crossroad)
+        self.crossroad.produce(self.player.index)
+        self.log_action()
+
+    def is_legal(self):
+        return True
 
 
 class BuildCity(Action):
@@ -174,8 +251,10 @@ class BuildCity(Action):
         self.name = 'build city'
 
     def do_action(self):
-        super().do_action()
+        self.player.hand.print_resources()
+        print("player : " + self.player.name + " supposed to be city here : " + self.name)
         self.player.hand.buy_city(self.crossroad)
+        self.log_action()
 
     # todo
     def compute_heuristic(self):
@@ -184,9 +263,13 @@ class BuildCity(Action):
     def log_action(self):
         log = {
             'name': self.name,
+            'player': self.player.index,
             'location': self.crossroad.location_log()
         }
         self.log.action(log)
+
+    def is_legal(self):
+        return self.player.hand.can_pay(CITY_PRICE)
 
 
 class BuildRoad(Action):
@@ -206,9 +289,29 @@ class BuildRoad(Action):
     def log_action(self):
         log = {
             'name': self.name,
+            'player': self.player.index,
             'location': self.road.location_log()
         }
         self.log.action(log)
+
+    def is_legal(self):
+        if self.player.hand.can_pay(ROAD_PRICE):
+            return True
+        else:
+            return False
+
+
+class BuildFreeRoad(BuildRoad):
+    def __init__(self, player, heuristic_method, road):
+        super().__init__(player, heuristic_method, road)
+        self.name = 'build free road'
+
+    def do_action(self):
+        self.player.hand.create_road(self.road)
+        self.log_action()
+
+    def is_legal(self):
+        return True
 
 
 class Trade(Action):
@@ -231,12 +334,16 @@ class Trade(Action):
     def log_action(self):
         log = {
             'name': self.name,
+            'player': self.player.index,
             'source': r2s(self.src),
             'destination': r2s(self.dst),
             'take': self.take,
             'give': self.give
         }
         self.log.action(log)
+
+    def is_legal(self):
+        return self.player.hand.can_pay({self.src: self.give})
 
 
 class BuyDevCard(Action):
@@ -251,6 +358,18 @@ class BuyDevCard(Action):
     def compute_heuristic(self):
         player = self.player
         return player.hand.heuristic + player.hand.dev_card_value
+
+
+def take_best_action(actions):
+    if actions:
+        best_action = actions.pop()
+        for a in actions:
+            if a.heuristic > best_action.heuristic:
+                best_action = a
+        best_action.do_action()
+        return best_action
+    else:
+        return None
 
 
 class Player:
@@ -287,7 +406,7 @@ class Player:
                     if terrain == self.board.bandit_location:
                         continue
                     for p in range(self.board.players):
-                        if p is not self.index:
+                        if p != self.index:
                             legal_moves += [UseKnight(self, None, terrain, p)]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["monopole"]))) > 0:
             for i in range(1, 6):
@@ -326,18 +445,17 @@ class Player:
     def computer_1st_settlement(self):
         legal_crossroads = self.board.get_legal_crossroads_start()
         cr = Crossroad.greatest_crossroad(legal_crossroads)
-        self.hand.create_settlement(cr)
+        BuildFirstSettlement(self, None, cr).do_action()
         road = cr.neighbors[0].road
-        self.hand.create_road(road)
+        BuildFreeRoad(self, None, road).do_action()
         return cr, road
 
     def computer_2nd_settlement(self):
         legal_crossroads = self.board.get_legal_crossroads_start()
         cr = Crossroad.greatest_crossroad(legal_crossroads)
-        self.hand.create_settlement(cr)
-        cr.produce(self.index)
+        BuildSecondSettlement(self, None, cr).do_action()
         road = cr.neighbors[0].road
-        self.hand.create_road(road)
+        BuildFreeRoad(self, None, road).do_action()
         return cr, road
 
     def computer_random_action(self):
@@ -380,28 +498,29 @@ class Dork(Player):
 
     def computer_1st_settlement(self):
         legal_crossroads = self.board.get_legal_crossroads_start()
-        best_crossroad = legal_crossroads.pop()
-        while legal_crossroads:
-            cr = legal_crossroads.pop()
-            if self.statistics.settlement_value(best_crossroad, 0) < self.statistics.settlement_value(cr, 0):
-                best_crossroad = cr
-        self.hand.create_settlement(best_crossroad)
-        road = best_crossroad.neighbors[0].road
-        self.hand.create_road(road)
-        return best_crossroad, road
+        actions = []
+        heuristic = self.statistics.settlement_value
+        for cr in legal_crossroads:
+            actions += [BuildFirstSettlement(self, heuristic, cr)]
+        best_action = take_best_action(actions)
+        actions = []
+        cr = best_action.crossroad
+        for n in cr.neighbors:
+            actions += [BuildFreeRoad(self, None, n.road)]
+        take_best_action(actions)
 
     def computer_2nd_settlement(self):
         legal_crossroads = self.board.get_legal_crossroads_start()
-        best_crossroad = legal_crossroads.pop()
-        while legal_crossroads:
-            cr = legal_crossroads.pop()
-            if self.statistics.settlement_value(best_crossroad, 0) < self.statistics.settlement_value(cr, 0):
-                best_crossroad = cr
-        self.hand.create_settlement(best_crossroad)
-        best_crossroad.produce(self.index)
-        road = best_crossroad.neighbors[0].road
-        self.hand.create_road(road)
-        return best_crossroad, road
+        actions = []
+        heuristic = self.statistics.settlement_value
+        for cr in legal_crossroads:
+            actions += [BuildSecondSettlement(self, heuristic, cr)]
+        best_action = take_best_action(actions)
+        actions = []
+        cr = best_action.crossroad
+        for n in cr.neighbors:
+            actions += [BuildFreeRoad(self, None, n.road)]
+        take_best_action(actions)
 
     def simple_choice(self):
         actions = self.get_legal_moves()

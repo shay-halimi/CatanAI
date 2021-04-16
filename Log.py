@@ -9,64 +9,6 @@ game_finish = {'round': None, 'winning player': None, 'winning resource': None, 
 games_stats = []
 
 
-def end_game(rnd, win_player, hands):
-    global games_stats
-    global game_finish
-    game_finish['round'] = rnd
-    game_finish['winning player'] = win_player
-    print()
-    print(hands[win_player].production)
-    game_finish['winning resource'] = max(hands[win_player].production, key=hands[win_player].production.get)
-    for hand in hands:
-        if hand.index != win_player:
-            print(hand.production)
-            game_finish['losing resources'].append(max(hand.production, key=hand.production.get))
-    games_stats.append([game_finish])
-    print(game_finish)
-    return games_stats
-
-
-def next_turn(rnd, turn, hands):
-    global rounds
-    if turn == 0:
-        game['round'].append(rounds)
-        rounds = []
-    global this_turn
-    this_turn = {'round': rnd, 'turn': turn, 'stats': [], 'actions': []}
-    for h in hands:
-        this_turn['stats'].append({
-            'name': h.name,
-            'points': h.points,
-            'total number of resources': h.get_resources_number(),
-            'wood': h.resources[Resource.WOOD],
-            'clay': h.resources[Resource.CLAY],
-            'wheat': h.resources[Resource.WHEAT],
-            'sheep': h.resources[Resource.SHEEP],
-            'iron': h.resources[Resource.IRON],
-            'largest army': h.largest_army,
-            'longest road': h.longest_road,
-            'victory points': len(h.cards["victory points"]),
-            'knight': len(h.cards["knight"]),
-            'monopole': len(h.cards["monopole"]),
-            'road builder': len(h.cards["road builder"]),
-            'year of prosper': len(h.cards["year of prosper"]),
-        })
-    rounds.append(this_turn)
-
-
-def add_trade(trade):
-    action = {'name': trade.name, 'source type': r2s(trade.src), 'give': trade.give, 'destination type': r2s(trade.dst),
-              'take': trade.take}
-    global this_turn
-    this_turn['actions'].append(action)
-
-
-def build_road(road):
-    action = {'name': road.name, 'location': road.road.api_location}
-    global this_turn
-    this_turn['actions'].append(action)
-
-
 def information_to_json(hands):
     information = {'settlement': [], 'settlements number': 0}
     for hand in hands:
@@ -78,13 +20,6 @@ def information_to_json(hands):
             information['settlement'] += [settlement_info]
             information['settlements number'] += 1
     return information
-
-
-def save_game(hands):
-    with open("game.json", 'w') as outfile:
-        json.dump(game, outfile)
-
-    # build_statistics()
 
 
 def update_history(hands):
@@ -151,7 +86,6 @@ class Log:
         self.round = 0
         self.turn = 0
         self.players = players
-        self.start_log = {'actions': []}
         self.turn_log = {'turn': 0, 'actions': []}
         self.round_log = {'round': 0, 'turns': []}
         self.game_log = {'number of players': players, 'rounds': []}
@@ -164,7 +98,6 @@ class Log:
 
     def end_turn(self):
         self.round_log['turns'] += [self.turn_log]
-        self.turn_log = {'turn': self.turn, 'actions': []}
         if self.turn == self.players - 1:
             self.turn = 0
             self.round += 1
@@ -172,6 +105,7 @@ class Log:
             self.round_log = {'round': self.round, 'turns': []}
         else:
             self.turn += 1
+        self.turn_log = {'turn': self.turn, 'actions': []}
 
     def dice(self, dice):
         self.turn_log['dice'] = dice
@@ -180,9 +114,8 @@ class Log:
         self.turn_log['actions'] += [action_log]
 
     def end_game(self):
-        self.game_log['start'] = self.start_log
         with open(self.game_log_name, 'w') as outfile:
             json.dump(self.game_log, outfile)
 
-    def start_game(self, index, crossroad_log, road_log):
-        self.start_log['actions'] += [{'index': index, 'crossroad': crossroad_log, 'road': road_log}]
+    def board(self, board_log):
+        self.game_log['board'] = board_log

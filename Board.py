@@ -6,6 +6,7 @@ import API
 import Log
 import math
 from Auxilary import r2s
+from Auxilary import s2r
 
 # ---- global variables ---- #
 
@@ -69,6 +70,13 @@ class Terrain:
                 if cr.ownership is not None:
                     steal_stack += [cr.ownership]
             return steal_stack
+
+    def get_log(self):
+        log = {
+            'resource': r2s(self.resource),
+            'number': self.num
+        }
+        return log
 
 
 class Crossroad:
@@ -286,6 +294,8 @@ class Board:
                     [Terrain(8), Terrain(3), Terrain(4), Terrain(5)],
                     [Terrain(5), Terrain(6), Terrain(11)]]
 
+        self.bandit_location = None
+
         # create 2d array of crossroads
         self.crossroads = []
         for i in range(12):
@@ -316,42 +326,18 @@ class Board:
         self.crossroads[10][2].port = Resource.DESSERT
         self.crossroads[11][1].port = Resource.DESSERT
 
-        # shuffle the terrain on the board and link the crossroads to them
-        resource_stack = [Resource.DESSERT] + [Resource.IRON] * 3 + [Resource.CLAY] * 3 + [Resource.WOOD] * 4 + [
-            Resource.WHEAT] * 4 + [Resource.SHEEP] * 4
-        i = 0
-        for line in self.map:
-            j = 0
-            for terrain in line:
+        # link the terrains to their crossroads and vice versa and give them link to board
+        for i, line in enumerate(self.map):
+            for j, terrain in enumerate(line):
                 terrain.board = self
-                index = random.randrange(0, len(resource_stack))
-                resource = resource_stack.pop(index)
-                if resource == Resource.DESSERT:
-                    self.map[2][2].num = terrain.num
-                    terrain.num = 7
-                    terrain.has_bandit = True
-                    self.bandit_location = terrain
-                self.dice.number_to_terrain[terrain.num].append((i, j))
-                terrain.set_resource(resource)
                 terrain.crossroads += [self.crossroads[2 * i][j]]
                 terrain.crossroads += [self.crossroads[2 * i + 1][j]]
                 terrain.crossroads += [self.crossroads[2 * i + 1][j + 1]]
                 terrain.crossroads += [self.crossroads[2 * i + 2][j]]
                 terrain.crossroads += [self.crossroads[2 * i + 2][j + 1]]
                 terrain.crossroads += [self.crossroads[2 * i + 3][j]]
-                j += 1
-            i += 1
-
-        # link the terrains to their crossroads
-        for line in self.map:
-            for t in line:
-                for cr in t.crossroads:
-                    cr.terrains += [t]
-
-        # set the heuristic values of the crossroads
-        for line in self.crossroads:
-            for cr in line:
-                cr.set_heuristic_value()
+                for cr in terrain.crossroads:
+                    cr.terrains += [terrain]
 
         # create the roads
         self.roads = []
@@ -391,12 +377,42 @@ class Board:
         self.largest_army_size = 2
         self.largest_army_owner = None
 
-        # create the API
-        API.start_api(self)
+    def shuffle_map(self):
+        # shuffle the terrain on the board and link the crossroads to them
+        resource_stack = [Resource.DESSERT] + [Resource.IRON] * 3 + [Resource.CLAY] * 3 + [Resource.WOOD] * 4 + [
+            Resource.WHEAT] * 4 + [Resource.SHEEP] * 4
+        for i, line in enumerate(self.map):
+            for j, terrain in enumerate(line):
+                index = random.randrange(0, len(resource_stack))
+                resource = resource_stack.pop(index)
+                if resource == Resource.DESSERT:
+                    self.map[2][2].num = terrain.num
+                    terrain.num = 7
+                    terrain.has_bandit = True
+                    self.bandit_location = terrain
+                self.dice.number_to_terrain[terrain.num].append((i, j))
+                terrain.set_resource(resource)
+        # set the heuristic values of the crossroads
+        for line in self.crossroads:
+            for cr in line:
+                cr.set_heuristic_value()
 
-    def get_max_points(self):
-        max_points = max(self.hands)
-        return max_points
+    def load_map(self, board_log):
+        while board_log:
+            terrain = board_log.pop()
+            i, j = terrain['i'], terrain['j']
+            number = terrain['number']
+            resource = s2r(terrain['resource'])
+            self.map[i][j].num = number
+            self.map[i][j].set_resource(resource)
+            if resource == Resource.DESSERT:
+                self.map[i][j].has_bandit = True
+                self.bandit_location = self.map[i][j]
+            self.dice.number_to_terrain[self.map[i][j].num].append((i, j))
+        # set the heuristic values of the crossroads
+        for line in self.crossroads:
+            for cr in line:
+                cr.set_heuristic_value()
 
     # very convoluted function to link each road with its vertices crossroads and vice versa
     def add_neighbors_to_roads(self):
@@ -424,24 +440,19 @@ class Board:
                         up += 1
             i += 1
 
-    def get_two_legal_roads(self, player):
-        legal = []
-        for line1 in self.roads:
-            for road1 in line1:
-                if road1.is_legal(player):
-                    road1.temp_build(player)
-                    for line2 in self.roads:
-                        for road2 in line2:
-                            if road2.is_legal(player):
-                                legal += [(road1, road2)]
-        return legal
+    def log_board(self):
+        log = []
+        for i, line in enumerate(self.map):
+            for j, t in enumerate(line):
+                t_log = t.get_log()
+                t_log['i'] = i
+                t_log['j'] = j
+                log += [t_log]
+        self.log.board(log)
 
-    def next_turn(self, turn, rnd):
-        API.next_turn(self, turn, rnd, self.hands)
-        Log.next_turn(rnd, turn, self.hands)
-
-    def end_game(self):
-        Log.save_game(self.hands)
+    def get_max_points(self):
+        max_points = max(self.hands)
+        return max_points
 
     def update_longest_road(self, player):
         former = self.longest_road_owner
@@ -449,6 +460,11 @@ class Board:
             self.hands[former].points -= 2
         self.hands[player].points += 2
         self.longest_road_size += 1
+
+    # ---- game development ---- #
+
+    def next_turn(self, turn, rnd):
+        API.next_turn(self, turn, rnd, self.hands)
 
     # ---- get legal moves ---- #
 
@@ -477,6 +493,18 @@ class Board:
             for road in line:
                 if road.is_legal(player):
                     legal += [road]
+        return legal
+
+    def get_two_legal_roads(self, player):
+        legal = []
+        for line1 in self.roads:
+            for road1 in line1:
+                if road1.is_legal(player):
+                    road1.temp_build(player)
+                    for line2 in self.roads:
+                        for road2 in line2:
+                            if road2.is_legal(player):
+                                legal += [(road1, road2)]
         return legal
 
 
@@ -576,7 +604,6 @@ class Hand:
     def buy_road(self, build_road):
         self.pay(ROAD_PRICE)
         self.create_road(build_road.road)
-        Log.build_road(build_road)
 
         was_longest_road = self.index == self.board.longest_road_owner
         former_longest_road_owner = self.board.longest_road_owner
@@ -625,7 +652,6 @@ class Hand:
     def trade(self, trade):
         self.resources[trade.src] -= trade.give
         self.resources[trade.dst] += trade.take
-        Log.add_trade(trade)
 
     # ---- ---- use a development card ---- ---- #
 
