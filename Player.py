@@ -1,3 +1,7 @@
+from Heuristics import SimpleHeuristic
+from Heuristics import StatisticsHeuristic
+from Heuristics import best_action
+from Heuristics import greatest_crossroad
 from Actions import Trade
 from Actions import BuildFreeRoad
 from Actions import BuildRoad
@@ -11,11 +15,8 @@ from Actions import UseMonopole
 from Actions import UseBuildRoads
 from Actions import UseYearOfPlenty
 from Actions import BuyDevCard
-from Heuristics import SimpleHeuristic
-from Heuristics import StatisticsHeuristic
-from Heuristics import best_action
-from Heuristics import greatest_crossroad
 from Board import Board
+from Hand import Hand
 from Resources import Resource
 from Auxilary import s2r
 from random import randint
@@ -23,7 +24,8 @@ from random import randint
 
 class LogToAction:
     def __init__(self, board, player, action_log):
-        self.player = player
+        self.player = player # type: Player
+        self.hand = player.hand # type: Hand
         self.name = action_log['name']
         self.crossroads = board.crossroads
         if self.name == 'trade':
@@ -38,19 +40,19 @@ class LogToAction:
 
     def get_action(self):
         if self.name == 'trade':
-            return Trade(self.player, None, self.src, self.exchange_rate, self.dst, self.take)
+            return Trade(self.hand, None, self.src, self.exchange_rate, self.dst, self.take)
         elif self.name == 'build free road':
-            return BuildFreeRoad(self.player, None, self.road)
+            return BuildFreeRoad(self.hand, None, self.road)
         elif self.name == 'build road':
-            return BuildRoad(self.player, None, self.road)
+            return BuildRoad(self.hand, None, self.road)
         elif self.name == 'build settlement':
-            return BuildSettlement(self.player, None, self.crossroad)
+            return BuildSettlement(self.hand, None, self.crossroad)
         elif self.name == 'build first settlement':
-            return BuildFirstSettlement(self.player, None, self.crossroad)
+            return BuildFirstSettlement(self.hand, None, self.crossroad)
         elif self.name == 'build second settlement':
-            return BuildSecondSettlement(self.player, None, self.crossroad)
+            return BuildSecondSettlement(self.hand, None, self.crossroad)
         elif self.name == 'build city':
-            return BuildCity(self.player, None, self.crossroad)
+            return BuildCity(self.hand, None, self.crossroad)
 
     def get_crossroad(self, crossroad_log):
         x = crossroad_log['location x']
