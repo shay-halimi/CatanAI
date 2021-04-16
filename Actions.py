@@ -34,7 +34,7 @@ class Action(ABC):
     def log_action(self):
         return {'name': self.name, 'player': self.hand.index}
 
-    def temp_do(self):
+    def tmp_do(self):
         pass
 
     def undo(self):
@@ -173,17 +173,17 @@ class UseBuildRoads(Action):
     def compute_heuristic(self):
         heuristic_increment = 0
         old_road_length = self.hand.longest_road_value
+        build_road1 = BuildRoad(self.hand, self.heuristic_method, self.road1)
+        build_road2 = BuildRoad(self.hand, self.heuristic_method, self.road2)
+        build_road1.tmp_do()
+        build_road2.tmp_do()
         if self.hand.board.longest_road_owner != self.hand.index:
-            self.hand.tmp_buy_road(self.road1)
-            self.hand.tmp_buy_road(self.road2)
             heuristic_increment += (self.hand.board.longest_road_owner == self.hand.index) * 5
-        else:
-            self.hand.tmp_buy_road(self.road1)
-            self.hand.tmp_buy_road(self.road2)
         heuristic_increment += self.hand.longest_road_value - old_road_length
-        self.hand.undo_buy_road(self.road2)
-        self.hand.undo_buy_road(self.road1)
-        return heuristic_increment + self.hand.heuristic
+        hand_heuristic = self.hand.heuristic
+        build_road1.undo()
+        build_road2.undo()
+        return heuristic_increment + hand_heuristic
 
     def build_2_roads(self):
         hand = self.hand  # type: Hand
@@ -396,10 +396,10 @@ class BuildRoad(Action):
 
     # ---- take a temporary action ---- #
 
-    def tmp_do(self, road):
-        if self.hand.can_buy_road() and road.is_legal():
+    def tmp_do(self):
+        if self.hand.can_buy_road() and self.road.is_legal():
             self.hand.pay(ROAD_PRICE)
-            road.temp_build()
+            self.road.temp_build()
 
     # ---- undo an action ---- #
 
