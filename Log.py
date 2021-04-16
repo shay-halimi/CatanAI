@@ -86,15 +86,11 @@ class Log:
         self.round = 0
         self.turn = 0
         self.players = players
+
         self.turn_log = {'turn': 0, 'actions': []}
         self.round_log = {'round': 0, 'turns': []}
         self.game_log = {'number of players': players, 'rounds': []}
-        with open("saved_games/manager.json") as json_file:
-            manager = json.load(json_file)
-        self.game_log_name = "saved_games/game" + str(manager['games saved'] + 1) + ".json"
-        manager['games saved'] += 1
-        with open("saved_games/manager.json", 'w') as outfile:
-            json.dump(manager, outfile)
+        self.game_log_name = self.create_file_name()
 
     def end_turn(self):
         self.round_log['turns'] += [self.turn_log]
@@ -119,3 +115,13 @@ class Log:
 
     def board(self, board_log):
         self.game_log['board'] = board_log
+
+    @staticmethod
+    def create_file_name():
+        with open("saved_games/manager.json") as json_file:
+            manager = json.load(json_file)
+        name = "saved_games/game" + str(manager['games saved'] + 1) + ".json"
+        manager['games saved'] += 1
+        with open("saved_games/manager.json", 'w') as outfile:
+            json.dump(manager, outfile)
+        return name
