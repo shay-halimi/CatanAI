@@ -1,5 +1,3 @@
-from Board import Terrain
-from DevStack import DevStack
 from Resources import Resource
 from Resources import ROAD_PRICE
 from Resources import SETTLEMENT_PRICE
@@ -98,18 +96,6 @@ class Hand:
             return self.resources[src] >= amount * 3, 3
         return self.resources[src] >= amount * 4, 4
 
-    # ---- take an action ---- #
-
-    # ---- ---- use a development card ---- ---- #
-
-    # todo test it
-    def undo_use_knight(self, resource: Resource, terrain: Terrain, dst):
-        assert terrain is not None
-        terrain.put_bandit()
-        if resource is not None:
-            self.resources[resource] -= 1
-            dst.resources[resource] += 1
-
     # ---- take a temporary action ---- #
 
     def tmp_buy_road(self, road):
@@ -177,13 +163,3 @@ class Hand:
 
     def update_resource_values(self):
         pass
-
-    class Heuristic:
-        def __init__(self):
-            self.production = {Resource.CLAY: 0, Resource.WOOD: 0, Resource.WHEAT: 0, Resource.IRON: 0,
-                               Resource.SHEEP: 0}
-            self.production_all = 0
-            self.resource_value = {Resource.CLAY: 1, Resource.WOOD: 1, Resource.WHEAT: 1, Resource.IRON: 1,
-                                   Resource.SHEEP: 1}
-            self.value = 0
-            self.resources_gained = 0

@@ -1,3 +1,4 @@
+from Hand import Hand
 from Resources import Resource
 from DevStack import DevStack
 import random

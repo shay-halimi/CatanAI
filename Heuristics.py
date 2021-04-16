@@ -46,7 +46,7 @@ class StatisticsHeuristic:
 
     def settlement_value(self, build_settlement):
         book = self.statistics['settlement']['production']
-        time = len(build_settlement.player.hand.settlements_log)
+        time = len(build_settlement.hand.settlements_log)
         production = build_settlement.crossroad.val['sum']
         key = str((time, production))
         if key in book:

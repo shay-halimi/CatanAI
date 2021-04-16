@@ -1,5 +1,6 @@
 from Board import Road
 from Board import Crossroad
+from Board import Terrain
 from Hand import Hand
 from Log import Log
 from Resources import SETTLEMENT_PRICE
@@ -60,7 +61,7 @@ class UseKnight(Action):
     def compute_heuristic(self):
         resource = self.use_knight()
         new_heuristic = self.hand.heuristic
-        self.hand.undo_use_knight(resource, self.terrain, self.dst)
+        self.undo_use_knight(resource, self.terrain)
         return new_heuristic
 
     # terrain = where to put the bandit
@@ -74,6 +75,14 @@ class UseKnight(Action):
                     hand.cards["knight"].remove(knight)
                     return self.steal()
         return None
+
+    # todo test it
+    def undo_use_knight(self, resource: Resource, terrain: Terrain):
+        assert terrain is not None
+        terrain.put_bandit()
+        if resource is not None:
+            self.hand.resources[resource] -= 1
+            self.dst.resources[resource] += 1
 
     def steal(self):
         dst = self.dst

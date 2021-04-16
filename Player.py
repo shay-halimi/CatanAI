@@ -117,36 +117,36 @@ class Player:
                         continue
                     for p in range(self.board.players):
                         if p != self.index:
-                            legal_moves += [UseKnight(self, None, terrain, p)]
+                            legal_moves += [UseKnight(self.hand, None, terrain, p)]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["monopole"]))) > 0:
             for i in range(1, 6):
                 legal_moves += [UseMonopole(self, None, Resource[i])]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["road builder"]))) > 0:
             for [road1, road2] in self.board.get_two_legal_roads(self.index):
-                legal_moves += [UseBuildRoads(self, None, road1, road2)]
+                legal_moves += [UseBuildRoads(self.hand, None, road1, road2)]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["year of prosper"]))) > 0:
             # need to check if the cards
             for i in range(1, 6):
                 for j in range(1, 6):
-                    legal_moves += [UseYearOfPlenty(self, None, Resource[i], Resource[j])]
+                    legal_moves += [UseYearOfPlenty(self.hand, None, Resource[i], Resource[j])]
         if self.board.hands[self.index].can_buy_road():
             for road in self.board.get_legal_roads(self.index):
-                legal_moves += [BuildRoad(self, None, road)]
+                legal_moves += [BuildRoad(self.hand, None, road)]
         if self.board.hands[self.index].can_buy_settlement():
             for crossword in self.board.get_lands(self.index):
-                legal_moves += [BuildSettlement(self, None, crossword)]
+                legal_moves += [BuildSettlement(self.hand, None, crossword)]
         if self.board.hands[self.index].can_buy_city():
             for settlement in self.board.get_settlements(self.index):
-                legal_moves += [BuildCity(self, None, settlement)]
+                legal_moves += [BuildCity(self.hand, None, settlement)]
         if self.board.hands[self.index].can_buy_development_card():
-            legal_moves += [BuyDevCard(self, None)]
+            legal_moves += [BuyDevCard(self.hand, None)]
         for resource in Resource:
             if resource is not Resource.DESSERT:
                 can_trade, exchange_rate = self.hand.can_trade(resource, 1)
                 if can_trade:
                     for dst in Resource:
                         if dst is not Resource.DESSERT:
-                            legal_moves += [Trade(self, None, resource, exchange_rate, dst, 1)]
+                            legal_moves += [Trade(self.hand, None, resource, exchange_rate, dst, 1)]
         return legal_moves
 
     #########################################################################
@@ -155,17 +155,17 @@ class Player:
     def computer_1st_settlement(self):
         legal_crossroads = self.board.get_legal_crossroads_start()
         cr = greatest_crossroad(legal_crossroads)
-        BuildFirstSettlement(self, None, cr).do_action()
+        BuildFirstSettlement(self.hand, None, cr).do_action()
         road = cr.neighbors[0].road
-        BuildFreeRoad(self, None, road).do_action()
+        BuildFreeRoad(self.hand, None, road).do_action()
         return cr, road
 
     def computer_2nd_settlement(self):
         legal_crossroads = self.board.get_legal_crossroads_start()
         cr = greatest_crossroad(legal_crossroads)
-        BuildSecondSettlement(self, None, cr).do_action()
+        BuildSecondSettlement(self.hand, None, cr).do_action()
         road = cr.neighbors[0].road
-        BuildFreeRoad(self, None, road).do_action()
+        BuildFreeRoad(self.hand, None, road).do_action()
         return cr, road
 
     def simple_choice(self):
@@ -210,12 +210,12 @@ class Dork(Player):
         actions = []
         heuristic = self.statistics.settlement_value
         for cr in legal_crossroads:
-            actions += [BuildFirstSettlement(self, heuristic, cr)]
+            actions += [BuildFirstSettlement(self.hand, heuristic, cr)]
         best_action = take_best_action(actions)
         actions = []
         cr = best_action.crossroad
         for n in cr.neighbors:
-            actions += [BuildFreeRoad(self, None, n.road)]
+            actions += [BuildFreeRoad(self.hand, None, n.road)]
         take_best_action(actions)
 
     def computer_2nd_settlement(self):
@@ -223,12 +223,12 @@ class Dork(Player):
         actions = []
         heuristic = self.statistics.settlement_value
         for cr in legal_crossroads:
-            actions += [BuildSecondSettlement(self, heuristic, cr)]
+            actions += [BuildSecondSettlement(self.hand, heuristic, cr)]
         best_action = take_best_action(actions)
         actions = []
         cr = best_action.crossroad
         for n in cr.neighbors:
-            actions += [BuildFreeRoad(self, None, n.road)]
+            actions += [BuildFreeRoad(self.hand, None, n.road)]
         take_best_action(actions)
 
     def simple_choice(self):
