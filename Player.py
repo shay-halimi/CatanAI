@@ -14,7 +14,6 @@ from random import uniform
 import math
 
 
-
 class LogToAction:
     def __init__(self, board, player, action_log):
         self.player = player
@@ -398,7 +397,7 @@ class Player:
 
     def get_legal_moves(self):
         legal_moves = []
-        legal_moves += [DoNothing(self,None)]
+        legal_moves += [DoNothing(self, None)]
         # finding legal moves from devCards
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["knight"]))) > 0:
             # need to check if the cards
