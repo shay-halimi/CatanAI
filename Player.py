@@ -143,7 +143,7 @@ class Player:
                 can_trade, exchange_rate = self.hand.can_trade(resource, 1)
                 if can_trade:
                     for dst in Resource:
-                        if resource is not Resource.DESSERT:
+                        if dst is not Resource.DESSERT:
                             legal_moves += [Trade(self, None, resource, exchange_rate, dst, 1)]
         return legal_moves
 

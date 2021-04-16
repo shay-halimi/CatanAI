@@ -16,10 +16,10 @@ class Game:
     def __init__(self, players, board_log=None):
         self.round = 0
         self.turn = 0
+        self.log = Log(players)
+        self.board = self.create_board(players, board_log)
         self.players = self.create_players(players)
         self.players_num = players
-        self.board = self.create_board(players, board_log)
-        self.log = Log(players)
         # create the API
         API.start_api(self.board)
 
@@ -119,11 +119,11 @@ class Game:
     def create_board(self, players, board_log=None):
         board = Board(players, self.log)
         if board_log:
-            self.board.load_map(board_log)
+            board.load_map(board_log)
         else:
-            self.board.shuffle_map()
+            board.shuffle_map()
         # log the board
-        self.board.log_board()
+        board.log_board()
         return board
 
     def create_players(self, num):
@@ -134,7 +134,7 @@ class Game:
                 player = Dork(i, self.board)
             else:
                 player = Player(i, self.board)
-            self.players += [player]
+            players += [player]
         return players
 
 
@@ -163,8 +163,8 @@ def play_game(num):
 
 
 def main():
-    # play_game(1)
-    load_game("saved_games/game124.json")
+    play_game(1)
+    # load_game("saved_games/game124.json")
 
 
 print("Hello Game")

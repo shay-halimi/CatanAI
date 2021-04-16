@@ -2,6 +2,7 @@ from Board import SETTLEMENT_PRICE
 from Board import ROAD_PRICE
 from Board import CITY_PRICE
 from Auxilary import r2s
+from Resources import Resource
 from abc import ABC
 from random import uniform
 import math
