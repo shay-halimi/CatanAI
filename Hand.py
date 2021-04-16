@@ -1,6 +1,4 @@
-from Board import Crossroad
 from Board import Terrain
-from Board import Road
 from DevStack import DevStack
 from Resources import Resource
 from Resources import ROAD_PRICE
@@ -9,7 +7,6 @@ from Resources import CITY_PRICE
 from Resources import DEV_PRICE
 from Auxilary import r2s
 import math
-import random
 
 
 class Hand:
@@ -103,66 +100,7 @@ class Hand:
 
     # ---- take an action ---- #
 
-    # ---- ---- buy ---- ---- #
-
-    def buy_development_card(self, stack: DevStack):
-        self.resources[Resource.IRON] -= 1
-        self.resources[Resource.WHEAT] -= 1
-        self.resources[Resource.SHEEP] -= 1
-        print(self.cards)
-        print(stack.get().name)
-        card = stack.get()
-        self.cards[card.name] += [card]
-
-    # ---- ---- trade ---- ---- #
-
-    def trade(self, trade):
-        self.resources[trade.src] -= trade.give
-        self.resources[trade.dst] += trade.take
-
     # ---- ---- use a development card ---- ---- #
-
-    def use_year_of_plenty(self, resource1, resource2):
-        for card in self.cards["year of plenty"]:
-            if card.is_valid():
-                if resource1 != Resource.DESSERT and resource2 != Resource.DESSERT:
-                    self.resources[resource1] += 1
-                    self.resources[resource2] += 1
-                    self.cards["year of plenty"].remove(card)
-                    return True
-        return False
-
-    def use_monopole(self, resource):
-        for card in self.cards["monopole"]:
-            if card.is_valid():
-                if resource != Resource.DESSERT:
-                    for hand in self.board.players:
-                        if hand.index != self.index:
-                            self.resources[resource] += hand.resources[resource]
-                            hand.resources[resource] = 0
-                    return True
-        return False
-
-    def use_victory_point(self):
-        for card in self.cards["victory point"]:
-            if card.is_valid():
-                self.points += 1
-                self.heuristic -= 100
-                if self.points >= 10:
-                    self.heuristic += math.inf
-                return True
-
-        return False
-
-    # terrain = where to put the bandit
-    # dst = from who to steal
-    def use_knight(self, terrain: Terrain, dst):
-        for knight in self.cards["knight"]:
-            if knight.is_valid():
-                if terrain.put_bandit():
-                    self.cards["knight"].remove(knight)
-                    return self.steal(dst)
-        return False
 
     # todo test it
     def undo_use_knight(self, resource: Resource, terrain: Terrain, dst):
@@ -190,19 +128,6 @@ class Hand:
         road.undo_build(self.index)
 
     # ---- auxiliary functions ---- #
-
-    def steal(self, dst):
-        if dst.resources_num == 0:
-            return False
-        index = random.randrange(len(dst.resources_num))
-        for resource in dst.resources.keys():
-            if dst[resource] >= index:
-                self.resources[resource] += 1
-                dst[resource] -= 1
-                return resource
-            else:
-                index -= dst[resource]
-        return True
 
     def set_distances(self):
         stack = []
