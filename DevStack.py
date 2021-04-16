@@ -12,6 +12,7 @@ class DevCard:
     def is_valid(self):
         return self.ok_to_use
 
+
 class KnightCard(DevCard):
     name = "knight"
 
@@ -39,7 +40,7 @@ class DevStack:
         for i in range(14):
             self.deck += [KnightCard()]
         for i in range(5):
-            self.deck+= [VictoryPointCard()]
+            self.deck += [VictoryPointCard()]
         for i in range(2):
             self.deck += [Monopole()]
         for i in range(2):

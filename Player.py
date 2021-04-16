@@ -1,17 +1,17 @@
-from abc import ABC
-from Resources import Resource
+from Heuristics import SimpleHeuristic
+from Heuristics import StatisticsHeuristic
 from Board import SETTLEMENT_PRICE
 from Board import ROAD_PRICE
 from Board import CITY_PRICE
 from Board import Board
 from Board import Crossroad
-from random import randint
-import math
-from Heuristics import SimpleHeuristic
-from Heuristics import StatisticsHeuristic
+from Resources import Resource
 from Auxilary import r2s
-from random import uniform
 from Auxilary import s2r
+from abc import ABC
+from random import randint
+from random import uniform
+import math
 
 
 class LogToAction:
