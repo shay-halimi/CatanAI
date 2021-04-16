@@ -105,43 +105,6 @@ class Hand:
 
     # ---- ---- buy ---- ---- #
 
-    def buy_road(self, build_road):
-        self.pay(ROAD_PRICE)
-        self.create_road(build_road.road)
-
-        was_longest_road = self.index == self.board.longest_road_owner
-        former_longest_road_owner = self.board.longest_road_owner
-        if former_longest_road_owner is None:
-            self.heuristic += int(self.board.longest_road_owner == self.index)
-            return
-        self.heuristic += self.index == (self.board.longest_road_owner ^ was_longest_road) * self.longest_road_value
-        return
-
-    def buy_settlement(self, cr: Crossroad):
-        old_production_variety = len(list(filter(lambda x: x.value != 0, self.production)))
-        old_production = self.production
-        self.pay(SETTLEMENT_PRICE)
-        self.create_settlement(cr)
-        # prioritize having a variety of resource produce
-        self.heuristic += len(list(filter(lambda x: x.value != 0, self.production))) - old_production_variety
-        for resource in self.production:
-            self.heuristic += (self.production[resource] - old_production[resource]) * self.resource_value[resource]
-
-        self.update_resource_values()
-        self.settlements_log += [cr]
-
-    def buy_city(self, cr: Crossroad):
-        old_production_variety = len(list(filter(lambda x: x.value != 0, self.production)))
-        old_production = self.production
-        self.pay(CITY_PRICE)
-        self.create_city(cr)
-        self.heuristic += len(list(filter(lambda x: x.value != 0, self.production))) - old_production_variety
-        for resource in self.production:
-            self.heuristic += (self.production[resource] - old_production[resource]) * self.resource_value[resource]
-
-        self.update_resource_values()
-        self.cities += [cr]
-
     def buy_development_card(self, stack: DevStack):
         self.resources[Resource.IRON] -= 1
         self.resources[Resource.WHEAT] -= 1
@@ -158,17 +121,6 @@ class Hand:
         self.resources[trade.dst] += trade.take
 
     # ---- ---- use a development card ---- ---- #
-
-    def build_2_roads(self, road1, road2):
-        for card in self.cards["road building"]:
-            if card.is_valid():
-                if road1.is_legal() and road2.is_legal():
-                    self.heuristic += self.compute_2_roads_heuristic(road1, road2)
-                    road1.build(self.index)
-                    road2.build(self.index)
-                    self.cards["road building"].remove(card)
-                    return True
-        return False
 
     def use_year_of_plenty(self, resource1, resource2):
         for card in self.cards["year of plenty"]:
@@ -279,25 +231,6 @@ class Hand:
                 if cr.fertility_dist > ncr.fertility_dist + 1:
                     cr.fertility_dist = ncr.fertility_dist + 1
                     stack_fert.extend(x.crossroad for x in cr.neighbors if x.crossroad not in stack)
-
-    def create_settlement(self, cr: Crossroad):
-        cr.connected[self.index] = True
-        self.settlement_pieces -= 1
-        self.points += 1
-        for resource in Resource:
-            if resource is not Resource.DESSERT:
-                self.production_all += cr.val[resource] / 36
-        cr.build(self.index)
-        self.set_distances()
-        if cr.port is not None:
-            self.ports.add(cr.port)
-
-    def create_city(self, cr: Crossroad):
-        self.settlement_pieces += 1
-        self.city_pieces -= 1
-        self.points += 1
-        cr.build(self.index)
-        self.set_distances()
 
     def can_pay(self, price):
         for resource in price:

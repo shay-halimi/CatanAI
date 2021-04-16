@@ -1,9 +1,11 @@
 from Board import Road
+from Board import Crossroad
 from Hand import Hand
 from Log import Log
 from Resources import SETTLEMENT_PRICE
 from Resources import ROAD_PRICE
 from Resources import CITY_PRICE
+from Resources import DEV_PRICE
 from Auxilary import r2s
 from Resources import Resource
 from abc import ABC
@@ -95,7 +97,7 @@ class UseYearOfPlenty(Action):
 
 
 class UseBuildRoads(Action):
-    def __init__(self, hand, heuristic_method, road1, road2):
+    def __init__(self, hand, heuristic_method, road1: Road, road2: Road):
         super().__init__(hand, heuristic_method)
         self.road1 = road1
         self.road2 = road2
@@ -103,7 +105,7 @@ class UseBuildRoads(Action):
 
     def do_action(self):
         super().do_action()
-        self.hand.build_2_roads(self.road1, self.road2)
+        self.build_2_roads()
 
     def compute_heuristic(self):
         heuristic_increment = 0
@@ -119,6 +121,21 @@ class UseBuildRoads(Action):
         self.hand.undo_buy_road(self.road2)
         self.hand.undo_buy_road(self.road1)
         return heuristic_increment + self.hand.heuristic
+
+    def build_2_roads(self):
+        hand = self.hand
+        road1 = self.road1
+        road2 = self.road2
+        player = hand.index
+        for card in hand.cards["road building"]:
+            if card.is_valid():
+                if road1.is_legal(player) and road2.is_legal(player):
+                    self.heuristic += hand.compute_2_roads_heuristic(road1, road2)
+                    road1.build(hand.index)
+                    road2.build(hand.index)
+                    hand.cards["road building"].remove(card)
+                    return True
+        return False
 
 
 class UseVictoryPoint(Action):
@@ -145,7 +162,7 @@ class BuildSettlement(Action):
 
     def do_action(self):
         super().do_action()
-        self.hand.buy_settlement(self.crossroad)
+        self.buy_settlement()
 
     def log_action(self):
         log = {
@@ -158,6 +175,33 @@ class BuildSettlement(Action):
     def is_legal(self):
         return self.hand.can_pay(SETTLEMENT_PRICE)
 
+    def buy_settlement(self):
+        hand = self.hand
+        old_production_variety = len(list(filter(lambda x: x.value != 0, hand.production)))
+        old_production = hand.production
+        hand.pay(SETTLEMENT_PRICE)
+        self.create_settlement()
+        # prioritize having a variety of resource produce
+        hand.heuristic += len(list(filter(lambda x: x.value != 0, hand.production))) - old_production_variety
+        for resource in hand.production:
+            hand.heuristic += (hand.production[resource] - old_production[resource]) * hand.resource_value[resource]
+
+        hand.update_resource_values()
+        hand.settlements_log += [self.crossroad]
+
+    def create_settlement(self):
+        hand = self.hand
+        self.crossroad.connected[hand.index] = True
+        hand.settlement_pieces -= 1
+        hand.points += 1
+        for resource in Resource:
+            if resource is not Resource.DESSERT:
+                hand.production_all += self.crossroad.val[resource] / 36
+        self.crossroad.build(hand.index)
+        hand.set_distances()
+        if self.crossroad.port is not None:
+            hand.ports.add(self.crossroad.port)
+
 
 class BuildFirstSettlement(BuildSettlement):
     def __init__(self, hand, heuristic_method, crossroad):
@@ -165,7 +209,7 @@ class BuildFirstSettlement(BuildSettlement):
         self.name = 'build first settlement'
 
     def do_action(self):
-        self.hand.create_settlement(self.crossroad)
+        self.create_settlement()
         self.log_action()
 
     def is_legal(self):
@@ -178,7 +222,7 @@ class BuildSecondSettlement(BuildSettlement):
         self.name = 'build second settlement'
 
     def do_action(self):
-        self.hand.create_settlement(self.crossroad)
+        self.create_settlement()
         self.crossroad.produce(self.hand.index)
         self.log_action()
 
@@ -187,7 +231,7 @@ class BuildSecondSettlement(BuildSettlement):
 
 
 class BuildCity(Action):
-    def __init__(self, hand, heuristic_method, crossroad):
+    def __init__(self, hand, heuristic_method, crossroad: Crossroad):
         super().__init__(hand, heuristic_method)
         self.crossroad = crossroad
         self.name = 'build city'
@@ -195,7 +239,7 @@ class BuildCity(Action):
     def do_action(self):
         self.hand.print_resources()
         print("player : " + self.name + " supposed to be city here : " + self.name)
-        self.hand.buy_city(self.crossroad)
+        self.buy_city()
         self.log_action()
 
     # todo
@@ -213,6 +257,27 @@ class BuildCity(Action):
     def is_legal(self):
         return self.hand.can_pay(CITY_PRICE)
 
+    def buy_city(self):
+        hand = self.hand
+        old_production_variety = len(list(filter(lambda x: x.value != 0, hand.production)))
+        old_production = hand.production
+        hand.pay(CITY_PRICE)
+        self.create_city()
+        self.heuristic += len(list(filter(lambda x: x.value != 0, hand.production))) - old_production_variety
+        for resource in hand.production:
+            self.heuristic += (hand.production[resource] - old_production[resource]) * hand.resource_value[resource]
+
+        hand.update_resource_values()
+        hand.cities += [self.crossroad]
+
+    def create_city(self):
+        hand = self.hand
+        hand.settlement_pieces += 1
+        hand.city_pieces -= 1
+        hand.points += 1
+        self.crossroad.build(hand.index)
+        hand.set_distances()
+
 
 class BuildRoad(Action):
     def __init__(self, hand, heuristic_method, road):
@@ -222,7 +287,7 @@ class BuildRoad(Action):
 
     def do_action(self):
         super().do_action()
-        buy_road(self)
+        self.buy_road()
 
     # todo
     def compute_heuristic(self):
@@ -242,6 +307,24 @@ class BuildRoad(Action):
         else:
             return False
 
+    def buy_road(self):
+        hand = self.hand
+        hand.pay(ROAD_PRICE)
+        self.create_road()
+
+        was_longest_road = hand.index == hand.board.longest_road_owner
+        former_longest_road_owner = hand.board.longest_road_owner
+        if former_longest_road_owner is None:
+            hand.heuristic += int(hand.board.longest_road_owner == hand.index)
+            return
+        hand.heuristic += hand.index == (hand.board.longest_road_owner ^ was_longest_road) * hand.longest_road_value
+        return
+
+    def create_road(self):
+        self.hand.road_pieces -= 1
+        self.road.build(self.hand.index)
+        self.hand.set_distances()
+
 
 class BuildFreeRoad(BuildRoad):
     def __init__(self, player, heuristic_method, road):
@@ -249,7 +332,7 @@ class BuildFreeRoad(BuildRoad):
         self.name = 'build free road'
 
     def do_action(self):
-        self.hand.create_road(self.road)
+        self.create_road()
         self.log_action()
 
     def is_legal(self):
@@ -295,64 +378,14 @@ class BuyDevCard(Action):
 
     def do_action(self):
         super().do_action()
-        self.hand.buy_development_card(self.hand.board.devStack)
+        self.buy_development_card()
 
     def compute_heuristic(self):
         return self.hand.heuristic + self.hand.dev_card_value
 
-
-def buy_road(action: BuildRoad):
-    hand = action.hand
-    hand.pay(ROAD_PRICE)
-    create_road(action.hand, action.road)
-
-    was_longest_road = hand.index == hand.board.longest_road_owner
-    former_longest_road_owner = hand.board.longest_road_owner
-    if former_longest_road_owner is None:
-        hand.heuristic += int(hand.board.longest_road_owner == hand.index)
-        return
-    hand.heuristic += hand.index == (hand.board.longest_road_owner ^ was_longest_road) * hand.longest_road_value
-    return
-
-
-def create_road(hand: Hand, road: Road):
-    hand.road_pieces -= 1
-    road.build(hand.index)
-    hand.set_distances()
-
-
-def buy_settlement(self, cr: Crossroad):
-    old_production_variety = len(list(filter(lambda x: x.value != 0, self.production)))
-    old_production = self.production
-    self.pay(SETTLEMENT_PRICE)
-    self.create_settlement(cr)
-    # prioritize having a variety of resource produce
-    self.heuristic += len(list(filter(lambda x: x.value != 0, self.production))) - old_production_variety
-    for resource in self.production:
-        self.heuristic += (self.production[resource] - old_production[resource]) * self.resource_value[resource]
-
-    self.update_resource_values()
-    self.settlements_log += [cr]
-
-
-def buy_city(self, cr: Crossroad):
-    old_production_variety = len(list(filter(lambda x: x.value != 0, self.production)))
-    old_production = self.production
-    self.pay(CITY_PRICE)
-    self.create_city(cr)
-    self.heuristic += len(list(filter(lambda x: x.value != 0, self.production))) - old_production_variety
-    for resource in self.production:
-        self.heuristic += (self.production[resource] - old_production[resource]) * self.resource_value[resource]
-
-    self.update_resource_values()
-    self.cities += [cr]
-
-
-def buy_development_card(self, stack: DevStack):
-    self.resources[Resource.IRON] -= 1
-    self.resources[Resource.WHEAT] -= 1
-    self.resources[Resource.SHEEP] -= 1
-    print(self.cards)
-    print(stack.get().name)
-    card = stack.get()
-    self.cards[card.name] += [card]
+    def buy_development_card(self):
+        hand = self.hand
+        stack = self.hand.board.devStack
+        hand.pay(DEV_PRICE)
+        card = stack.get()
+        hand.cards[card.name] += [card]
