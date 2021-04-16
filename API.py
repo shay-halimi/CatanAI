@@ -99,7 +99,7 @@ players = {1: {"background": yellow, "str": "yellow", "color": (255, 242, 0), "n
 # ---- start of the game functions ---- #
 
 
-api_off = True
+api_off = False
 
 
 def turn_api_off():

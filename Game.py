@@ -73,7 +73,7 @@ class Game:
                 pass
 
     def next_turn(self):
-        next_turn(self.players_num, self.round, self.turn)
+        self.round, self.turn = next_turn(self.players_num, self.round, self.turn)
         self.log.next_turn()
         self.board.next_turn(self.turn, self.round)
 

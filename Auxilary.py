@@ -39,11 +39,11 @@ def resource_log(hand):
             'iron': hand.resources[Resource.IRON]}
 
 
-def next_turn(players, round, turn) -> bool:
+def next_turn(players, round, turn) -> (int, int):
     if turn == players - 1:
         turn = 0
         round += 1
-        return True
+        return round, turn
     else:
         turn += 1
-        return False
+        return round, turn
