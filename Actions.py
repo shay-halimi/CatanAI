@@ -34,6 +34,12 @@ class Action(ABC):
     def log_action(self):
         return {'name': self.name, 'player': self.hand.index}
 
+    def temp_do(self):
+        pass
+
+    def undo(self):
+        pass
+
 
 class DoNothing(Action):
     def __init__(self, hand, heuristic_method):
@@ -387,6 +393,19 @@ class BuildRoad(Action):
             return
         hand.heuristic += hand.index == (hand.board.longest_road_owner ^ was_longest_road) * hand.longest_road_value
         return
+
+    # ---- take a temporary action ---- #
+
+    def tmp_do(self, road):
+        if self.hand.can_buy_road() and road.is_legal():
+            self.hand.pay(ROAD_PRICE)
+            road.temp_build()
+
+    # ---- undo an action ---- #
+
+    def undo(self):
+        self.hand.receive(ROAD_PRICE)
+        self.road.undo_build(self.hand.index)
 
     def create_road(self):
         self.hand.road_pieces -= 1

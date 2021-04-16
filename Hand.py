@@ -96,23 +96,6 @@ class Hand:
             return self.resources[src] >= amount * 3, 3
         return self.resources[src] >= amount * 4, 4
 
-    # ---- take a temporary action ---- #
-
-    def tmp_buy_road(self, road):
-        if self.can_buy_road() and road.is_legal():
-            self.resources[Resource.WOOD] -= 1
-            self.resources[Resource.CLAY] -= 1
-            road.temp_build(self.index)
-            return True
-        return False
-
-    # ---- undo an action ---- #
-
-    def undo_buy_road(self, road):
-        self.resources[Resource.WOOD] += 1
-        self.resources[Resource.CLAY] += 1
-        road.undo_build(self.index)
-
     # ---- auxiliary functions ---- #
 
     def set_distances(self):
@@ -152,6 +135,10 @@ class Hand:
     def pay(self, price):
         for resource in price:
             self.resources[resource] -= price[resource]
+
+    def receive(self, price):
+        for resource in price:
+            self.resources[resource] += price[resource]
 
     # ---- test functions ---- #
 
