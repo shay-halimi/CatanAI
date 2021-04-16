@@ -4,7 +4,8 @@ from Player import LogToAction
 from Board import Board
 from Log import Log
 import API
-from Resources import Resource
+from Auxilary import resource_log
+from Auxilary import next_turn
 import math
 from random import randint
 import json
@@ -16,6 +17,7 @@ class Game:
         self.round = 0
         self.turn = 0
         self.players = self.create_players(players)
+        self.players_num = players
         self.board = self.create_board(players, board_log)
         self.log = Log(players)
         # create the API
@@ -23,22 +25,14 @@ class Game:
 
     def start_game(self):
         for i in range(len(self.players)):
-            self.log.turn_log['resources'] = {'wood': self.players[i].hand.resources[Resource.WOOD],
-                                              'clay': self.players[i].hand.resources[Resource.CLAY],
-                                              'sheep': self.players[i].hand.resources[Resource.SHEEP],
-                                              'wheat': self.players[i].hand.resources[Resource.WHEAT],
-                                              'iron': self.players[i].hand.resources[Resource.IRON]}
+            self.log.turn_log['resources'] = resource_log(self.players[i].hand)
             if self.players[i].is_computer:
                 self.players[i].computer_1st_settlement()
             else:
                 pass
             self.next_turn()
         for i in range(len(self.players) - 1, -1, -1):
-            self.log.turn_log['resources'] = {'wood': self.players[i].hand.resources[Resource.WOOD],
-                                              'clay': self.players[i].hand.resources[Resource.CLAY],
-                                              'sheep': self.players[i].hand.resources[Resource.SHEEP],
-                                              'wheat': self.players[i].hand.resources[Resource.WHEAT],
-                                              'iron': self.players[i].hand.resources[Resource.IRON]}
+            self.log.turn_log['resources'] = resource_log(self.players[i].hand)
             if self.players[i].is_computer:
                 self.players[i].computer_2nd_settlement()
             else:
@@ -72,22 +66,15 @@ class Game:
             self.next_turn()
 
     def play_turn(self, player):
-        self.log.turn_log['resources'] = {'wood': player.hand.resources[Resource.WOOD],
-                                          'clay': player.hand.resources[Resource.CLAY],
-                                          'sheep': player.hand.resources[Resource.SHEEP],
-                                          'wheat': player.hand.resources[Resource.WHEAT],
-                                          'iron': player.hand.resources[Resource.IRON]}
+        self.log.turn_log['resources'] = resource_log(player.hand)
         self.throw_dice()
         if self.players[player.index].is_computer:
             while player.compute_turn():
                 pass
 
     def next_turn(self):
-        self.log.end_turn()
-        self.turn += 1
-        if self.turn == len(self.players):
-            self.turn = 0
-            self.round += 1
+        next_turn(self.players_num, self.round, self.turn)
+        self.log.next_turn()
         self.board.next_turn(self.turn, self.round)
 
     def throw_dice(self):

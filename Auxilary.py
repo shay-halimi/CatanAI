@@ -29,3 +29,21 @@ def s2r(str):
         return Resource.IRON
     else:
         return Resource.DESSERT
+
+
+def resource_log(hand):
+    return {'wood': hand.resources[Resource.WOOD],
+            'clay': hand.resources[Resource.CLAY],
+            'sheep': hand.resources[Resource.SHEEP],
+            'wheat': hand.resources[Resource.WHEAT],
+            'iron': hand.resources[Resource.IRON]}
+
+
+def next_turn(players, round, turn) -> bool:
+    if turn == players - 1:
+        turn = 0
+        round += 1
+        return True
+    else:
+        turn += 1
+        return False

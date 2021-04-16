@@ -13,8 +13,9 @@ from Actions import UseYearOfPlenty
 from Actions import BuyDevCard
 from Heuristics import SimpleHeuristic
 from Heuristics import StatisticsHeuristic
+from Heuristics import best_action
+from Heuristics import greatest_crossroad
 from Board import Board
-from Board import Crossroad
 from Resources import Resource
 from Auxilary import s2r
 from random import randint
@@ -65,11 +66,6 @@ class LogToAction:
 
     def is_legal(self):
         return True
-
-
-def after_action(player):
-    player.hand.print_resources()
-    print("\n# ----   ---- #\n")
 
 
 def take_best_action(actions):
@@ -156,7 +152,7 @@ class Player:
     #########################################################################
     def computer_1st_settlement(self):
         legal_crossroads = self.board.get_legal_crossroads_start()
-        cr = Crossroad.greatest_crossroad(legal_crossroads)
+        cr = greatest_crossroad(legal_crossroads)
         BuildFirstSettlement(self, None, cr).do_action()
         road = cr.neighbors[0].road
         BuildFreeRoad(self, None, road).do_action()
@@ -164,43 +160,42 @@ class Player:
 
     def computer_2nd_settlement(self):
         legal_crossroads = self.board.get_legal_crossroads_start()
-        cr = Crossroad.greatest_crossroad(legal_crossroads)
+        cr = greatest_crossroad(legal_crossroads)
         BuildSecondSettlement(self, None, cr).do_action()
         road = cr.neighbors[0].road
         BuildFreeRoad(self, None, road).do_action()
         return cr, road
 
-    def computer_random_action(self):
-        legal_moves = self.get_legal_moves()
-        if legal_moves:
-            random_index = randint(0, len(legal_moves) - 1)
-            legal_moves[random_index].do_action(self)
-        return
-
     def simple_choice(self):
         actions = self.get_legal_moves()
+        settlements = []
+        cities = []
+        roads = []
+        trades = []
         for a in actions:
             if isinstance(a, BuildSettlement):
-                a.do_action()
-                return True
-        for a in actions:
-            if isinstance(a, BuildCity):
-                a.do_action()
-                return True
-        if not self.hand.get_lands() and self.hand.settlement_pieces:
-            for a in actions:
-                if isinstance(a, BuildRoad):
-                    a.do_action()
-                    return True
-        for a in actions:
-            if isinstance(a, Trade):
-                if self.simple_heuristic.accept_trade(a):
-                    a.do_action()
-                    return True
-        return False
+                settlements += [a]
+            elif isinstance(a, BuildCity):
+                cities += [a]
+            elif isinstance(a, BuildRoad):
+                roads += [a]
+            elif isinstance(a, Trade):
+                trades += [a]
+        a = None
+        if settlements:
+            a = best_action(settlements)
+        elif cities:
+            a = best_action(cities)
+        elif roads:
+            a = best_action(roads)
+        elif trades:
+            a = best_action(trades)
+        if a:
+            a.do_action()
+        return a
 
     def compute_turn(self):
-        self.simple_choice()
+        return self.simple_choice()
 
 
 class Dork(Player):

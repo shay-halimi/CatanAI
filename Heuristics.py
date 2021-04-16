@@ -1,9 +1,9 @@
+from Actions import Action
 from Board import Board
 from Board import Terrain
-from Board import Crossroad
 from Resources import Resource
-import json
 from Auxilary import r2s
+import json
 from random import uniform
 
 
@@ -52,12 +52,12 @@ class StatisticsHeuristic:
         if key in book:
             st = book[key]
         else:
-            return uniform(0,1)
+            return uniform(0, 1)
         statistic = Statistic(st['event'], st['win'])
         for resource in Resource:
             if resource is not Resource.DESSERT:
                 book = self.statistics['settlement'][r2s(resource)]
-                production =  build_settlement.crossroad.val[resource]
+                production = build_settlement.crossroad.val[resource]
                 key = str((time, production))
                 if key in book:
                     st = book[key]
@@ -87,3 +87,21 @@ class Statistic:
             self.size_ratio = 0
         else:
             self.size_ratio = self.event / self.sample_space
+
+
+def best_action(actions: list[Action]):
+    ba = actions.pop() if actions else None
+    while actions:
+        a = actions.pop()
+        if a.heuristic > ba.heuristic:
+            ba = a
+    return ba
+
+
+def greatest_crossroad(crossroads):
+    max_cr = {"cr": None, "sum": 0}
+    for cr in crossroads:
+        if cr.val["sum"] > max_cr["sum"]:
+            max_cr["sum"] = cr.val["sum"]
+            max_cr["cr"] = cr
+    return max_cr["cr"]

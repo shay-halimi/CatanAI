@@ -92,7 +92,7 @@ class Log:
         self.game_log = {'number of players': players, 'rounds': []}
         self.game_log_name = self.create_file_name()
 
-    def end_turn(self):
+    def next_turn(self):
         self.round_log['turns'] += [self.turn_log]
         if self.turn == self.players - 1:
             self.turn = 0
