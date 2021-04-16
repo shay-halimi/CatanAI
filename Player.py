@@ -14,6 +14,7 @@ from random import uniform
 import math
 
 
+
 class LogToAction:
     def __init__(self, board, player, action_log):
         self.player = player
@@ -59,6 +60,11 @@ class LogToAction:
 
     def is_legal(self):
         return True
+
+
+def after_action(player):
+    player.hand.print_resources()
+    print("\n# ----   ---- #\n")
 
 
 class Action(ABC):
@@ -123,7 +129,7 @@ class UseMonopole(Action):
 
     def compute_heuristic(self):
         selected_resource_quantity = 0
-        for hand in self.player.board.players:
+        for hand in self.player.board.hands:
             selected_resource_quantity += hand.resources[self.resource]
         return self.player.hand.heuristic + (
                 self.player.hand.resource_value[self.resource] * selected_resource_quantity)
@@ -279,7 +285,7 @@ class BuildRoad(Action):
 
     # todo
     def compute_heuristic(self):
-        pass
+        return 0.2
 
     def log_action(self):
         log = {
@@ -392,7 +398,7 @@ class Player:
 
     def get_legal_moves(self):
         legal_moves = []
-        legal_moves += [DoNothing(self, None)]
+        legal_moves += [DoNothing(self,None)]
         # finding legal moves from devCards
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["knight"]))) > 0:
             # need to check if the cards
