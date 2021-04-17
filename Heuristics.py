@@ -54,7 +54,11 @@ class StatisticsHeuristic:
             st = book[key]
         else:
             return uniform(0, 1)
-        statistic = Statistic(st['event'], st['win'])
+        settlement_log = self.statistics['settlement']
+        events = settlement_log['total events']
+        wins = settlement_log['total wins']
+        loses = events - wins
+        statistic = Statistic(st['event'], st['win'], wins, loses)
         for resource in Resource:
             if resource is not Resource.DESSERT:
                 book = self.statistics['settlement'][r2s(resource)]
@@ -64,30 +68,25 @@ class StatisticsHeuristic:
                     st = book[key]
                 else:
                     return uniform(0, 1)
-                statistic.merge(Statistic(st['event'], st['win']))
+                statistic.merge(Statistic(st['event'], st['win'], wins, loses))
         return statistic.win_ratio
 
 
 class Statistic:
-    sample_space = 0
-
-    def __init__(self, event, win):
+    def __init__(self, event, win, total_win, total_lose):
+        self.total_win = total_win
+        self.total_lose = total_lose
         self.event = event
         self.win = win
-        self.win_ratio = self.win / self.event
-        if self.sample_space == 0:
-            self.size_ratio = 0
-        else:
-            self.size_ratio = self.event / self.sample_space
+        self.lose = event - win
+        self.win_ratio = self.win / self.total_win
 
+    # Todo: check correctness with professor
     def merge(self, statistic):
-        self.event = self.event * (1 - statistic.size_ratio) + statistic.event
-        self.win += statistic.win * (1 - statistic.win_ratio) + statistic.win
+        self.win = self.win * statistic.win / self.total_win
+        self.lose = self.lose * statistic.lose / self.total_lose
+        self.event = self.win + self.lose
         self.win_ratio = self.win / self.event
-        if self.sample_space == 0:
-            self.size_ratio = 0
-        else:
-            self.size_ratio = self.event / self.sample_space
 
 
 def best_action(actions: List[Action]):
