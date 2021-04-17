@@ -107,17 +107,16 @@ class Player:
 
     def get_legal_moves(self):
         legal_moves = []
-        legal_moves += [DoNothing(self, None)]
+        legal_moves += [DoNothing(self.hand, None)]
         # finding legal moves from devCards
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["knight"]))) > 0:
             # need to check if the cards
             for terrain in self.board.map:
-                for player in self.board.players:
-                    if terrain == self.board.bandit_location:
-                        continue
-                    for p in range(self.board.players):
-                        if p != self.index:
-                            legal_moves += [UseKnight(self.hand, None, terrain, p)]
+                if terrain == self.board.bandit_location:
+                    continue
+                for p in range(self.board.players):
+                    if p != self.index:
+                        legal_moves += [UseKnight(self.hand, None, terrain, p)]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["monopole"]))) > 0:
             for i in range(1, 6):
                 legal_moves += [UseMonopole(self, None, Resource[i])]
@@ -146,6 +145,7 @@ class Player:
                     for dst in Resource:
                         if dst is not Resource.DESSERT:
                             legal_moves += [Trade(self.hand, None, resource, exchange_rate, dst, 1)]
+        # ToDo : Add trade between players
         return legal_moves
 
     #########################################################################

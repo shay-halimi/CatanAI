@@ -40,6 +40,7 @@ class Hand:
 
     # ---- get information ---- #
 
+    # Todo: Move to another place
     def compute_2_roads_heuristic(self, road1, road2):
         heuristic_increment = 0
         old_road_length = self.longest_road_value
