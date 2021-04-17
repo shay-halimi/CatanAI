@@ -477,8 +477,8 @@ class Board:
 
     # ---- game development ---- #
 
-    def next_turn(self, turn, rnd):
-        API.next_turn(self, turn, rnd, self.hands)
+    def next_turn(self, turn, rnd, dice=None):
+        API.next_turn(self, turn, rnd, self.hands, dice)
 
     # ---- get legal moves ---- #
 

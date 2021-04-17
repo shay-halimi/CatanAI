@@ -1,5 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont
 from Resources import Resource
+import Auxilary
 
 # ---- Images and Sizes---- #
 
@@ -96,9 +97,6 @@ players = {1: {"background": yellow, "str": "yellow", "color": (255, 242, 0), "n
            3: {"background": green, "str": "green", "color": (35, 177, 77), "name": "none"},
            4: {"background": blue, "str": "blue", "color": (0, 162, 232)}, "name": "none"}
 
-# ---- start of the game functions ---- #
-
-
 api_off = True
 
 
@@ -111,6 +109,8 @@ def turn_api_on():
     global api_off
     api_off = False
 
+
+# ---- start of the game functions ---- #
 
 # creating the API
 def start_api(board):
@@ -231,12 +231,12 @@ def print_road(road):
     curr_img.save("images/temp/background.jpg")
 
 
-def next_turn(board, turn, rnd, hands):
+def next_turn(board, turn, rnd, hands, dice=None):
     if api_off:
         return
     # before the dice have been rolled
     img = Image.open("images/temp/background.jpg")
-    img = print_log(board, img, rnd, hands[turn].name, False)
+    img = print_log(board, img, rnd, hands[turn].name, dice)
     img = print_stats(img, hands)
     img.save("images/dst/game1/round" + str(rnd) + "turn" + str(turn) + ".jpg")
 
@@ -279,22 +279,124 @@ def print_stats(img, hands):
     return img
 
 
-# ---- test functions --- #
+class API:
+    def __init__(self, names: list[str]):
+        self.names = names
+        self.round = 0
+        self.turn = 0
+        self.action = 0
+        self.num_of_players = len(names)
+        self.start = Image.open('images/source/start.jpg')
+        self.headline_y = 110
+        self.font_size = 48
+        self.font = ImageFont.truetype('Library/Fonts/Arial Bold.ttf', self.font_size)
+        self.draw = ImageDraw.Draw(self.start)
+        self.action_img = Image.open('images/source/action.JPG')
+        self.red_delete_large = Image.open('images/source/new_turn.JPG').resize((840, 610))
+        self.red_delete_small = Image.open('images/source/new_turn.JPG').resize((840, 370))
+        self.dice = []
+        for i in range(1, 7):
+            self.dice += [Image.open('images/source/die' + str(i) + '.jpg')]
+        self.print_names()
+        self.print_resources()
+        self.new_turn()
+
+    def write_headline(self, text):
+        w, h = self.draw.textsize(text, font=self.font)
+        self.draw.multiline_text(((3160 - w) / 2, self.headline_y), text, fill=(255, 255, 255), font=self.font)
+        self.headline_y += h * 1.5
+
+    def write_from_right(self, text, line, above):
+        w, h = self.draw.textsize(text, font=self.font)
+        self.draw.multiline_text((3247 - w, line - 50 * above), text, fill=(0, 0, 0), font=self.font)
+
+    def write_from_left(self, text, line, above):
+        w, h = self.draw.textsize(text, font=self.font)
+        self.draw.multiline_text((50, line - 50 * above), text, fill=(0, 0, 0), font=self.font)
+
+    def new_turn(self):
+        self.action = 0
+        self.headline_y = 110
+        self.delete_turn()
+        self.write_headline("Round " + str(self.round))
+        self.write_headline(self.names[self.turn])
+        self.save_file()
+
+    def show_dice(self, die1, die2):
+        d1, d2 = self.dice[die1 - 1], self.dice[die2 - 1]
+        w, h = d1.size
+        self.start.paste(d1, (int(3160 / 2 - w - 50), 300))
+        self.start.paste(d2, (int(3160 / 2 + 50), 300))
+        self.save_file()
+
+    def save_file(self):
+        name = "images/destination/round " + str(self.round) + "  turn " + \
+               str(self.turn) + "  action " + str(self.action) + ".jpg"
+        self.start.save(name)
+        self.action += 1
+
+    def delete_turn(self):
+        w, h = self.red_delete_large.size
+        self.start.paste(self.red_delete_large, (int((3160 - w) / 2), 0))
+
+    def delete_action(self):
+        w, h = self.red_delete_small.size
+        self.start.paste(self.red_delete_small, (int((3160 - w) / 2), 220))
+
+    def end_turn(self):
+        self.round, self.turn = Auxilary.next_turn(self.num_of_players, self.round, self.turn)
+
+    def print_names(self):
+        self.write_from_left(self.names[0], 1320, 1)
+        self.write_from_left(self.names[1], 1320, -1)
+        if self.num_of_players > 2:
+            self.write_from_right(self.names[2], 1320, 1)
+        if self.num_of_players > 3:
+            self.write_from_right(self.names[3], 1320, -1)
+
+    def print_resources(self):
+        resources = []
+        resources += [Image.open('images/source/mini clay.JPG')]
+        resources += [Image.open('images/source/mini wood.JPG')]
+        resources += [Image.open('images/source/mini sheep.JPG')]
+        resources += [Image.open('images/source/mini wheat.JPG')]
+        resources += [Image.open('images/source/mini iron.JPG')]
+        w, h = resources[0].size
+        line = 1221
+        for r in resources:
+            self.start.paste(r, (26, line - h))
+            line -= (h + 20)
+        line = 1221
+        if self.num_of_players > 2:
+            for r in resources:
+                self.start.paste(r, (3247 - w, line - h))
+                line -= (h + 20)
+        line = 1461
+        for r in resources:
+            self.start.paste(r, (26, line))
+            line += (h + 20)
+        line = 1461
+        if self.num_of_players > 3:
+            for r in resources:
+                self.start.paste(r, (3247 - w, line))
+                line += (h + 20)
+
+    def print_action(self, action_name: str):
+        w, h = self.action_img.size
+        draw = ImageDraw.Draw(self.action_img)
+        font = ImageFont.truetype('Library/Fonts/Arial Bold.ttf', 60)
+        w_t, h_t = self.draw.textsize(action_name, font=font)
+        draw.multiline_text(((w - w_t) / 2, 70), action_name, fill=(0, 0, 0), font=font)
+        self.start.paste(self.action_img, (int((3160 - w) / 2), 230))
+        self.save_file()
+        self.delete_action()
 
 
-def print_crossroads(crossroads):
-    for line in crossroads:
-        for cr in line:
-            print_crossroad(cr)
-
-
-def print_roads(roads):
-    for line in roads:
-        for road in line:
-            print_road(road)
-
-
-# ---- main ---- #
-
-
-print("hello API")
+api = API(["shay", "snow", "player1", "player2"])
+api.show_dice(1, 5)
+api.end_turn()
+api.new_turn()
+api.print_action("build free road")
+api.save_file()
+api.end_turn()
+api.new_turn()

@@ -164,8 +164,8 @@ def play_game(num):
 
 
 def main():
-    play_game(1)
-    # load_game("saved_games/game124.json")
+    # play_game(1)
+    load_game("saved_games/game182.json")
 
 
 print("Hello Game")
