@@ -385,13 +385,6 @@ class BuildRoad(Action):
         hand = self.hand
         hand.pay(ROAD_PRICE)
         self.create_road()
-
-        was_longest_road = hand.index == hand.board.longest_road_owner
-        former_longest_road_owner = hand.board.longest_road_owner
-        if former_longest_road_owner is None:
-            hand.heuristic += int(hand.board.longest_road_owner == hand.index)
-            return
-        hand.heuristic += hand.index == (hand.board.longest_road_owner ^ was_longest_road) * hand.longest_road_value
         return
 
     # ---- take a temporary action ---- #

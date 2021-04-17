@@ -125,7 +125,6 @@ class Player:
             for [road1, road2] in self.board.get_two_legal_roads(self.index):
                 legal_moves += [UseBuildRoads(self.hand, None, road1, road2)]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["year of prosper"]))) > 0:
-            # need to check if the cards
             for i in range(1, 6):
                 for j in range(1, 6):
                     legal_moves += [UseYearOfPlenty(self.hand, None, Resource[i], Resource[j])]
@@ -214,6 +213,7 @@ class Dork(Player):
         best_action = take_best_action(actions)
         actions = []
         cr = best_action.crossroad
+        # add heuristic for road
         for n in cr.neighbors:
             actions += [BuildFreeRoad(self.hand, None, n.road)]
         take_best_action(actions)
