@@ -4,6 +4,7 @@ from Board import Terrain
 from Resources import Resource
 from Auxilary import r2s
 import json
+from typing import List
 from random import uniform
 
 
@@ -88,7 +89,7 @@ class Statistic:
         self.win_ratio = self.win / self.event
 
 
-def best_action(actions: list[Action]):
+def best_action(actions: List[Action]):
     ba = actions.pop() if actions else None
     while actions:
         a = actions.pop()
