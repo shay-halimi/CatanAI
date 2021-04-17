@@ -106,6 +106,25 @@ class Crossroad:
             self.fertility_dist = INFINITY
             API.print_crossroad(self)
 
+    def tmp_build(self,player):
+        legals = []
+        if self.ownership is None:
+            self.ownership = player
+            for n in range(len(self.neighbors)):
+                legals.append([self.neighbors[n].crossroad.legal])
+                self.neighbors[n].crossroad.legal = False
+        if self.ownership == player and self.building < 2:
+            self.building += 1
+        return legals
+
+    def unbuild(self, player, legals):
+        assert self.ownership == player
+        if self.building == 1:
+            self.ownership = None
+            for n in range(len(self.neighbors)):
+                self.neighbors[n].crossroad.legal = legals[n]
+        self.building -= 1
+
     def produce(self, player):
         for t in self.terrains:
             if t.resource != Resource.DESSERT:

@@ -20,11 +20,12 @@ class Action(ABC):
     def __init__(self, hand : Hand, heuristic_method):
         self.hand = hand
         self.heuristic_method = heuristic_method
-        self.heuristic = uniform(0, 1) if self.heuristic_method is None else self.heuristic_method(self)
+        self.heuristic =hand.heuristic if self.heuristic_method is None else self.heuristic_method(self)
         self.log = self.hand.board.log  # type: Log
         self.name = 'action'
 
     def do_action(self):
+        self.hand.heuristic = self.heuristic
         self.hand.print_resources()
         print("player : " + self.name + " " + self.name)
         self.log_action()
@@ -59,7 +60,7 @@ class UseKnight(Action):
         self.terrain = terrain
         self.dst = dst
         self.name = 'use knight'
-
+        self.heuristic += self.compute_heuristic()
     def do_action(self):
         super().do_action()
         self.use_knight()
@@ -111,6 +112,7 @@ class UseMonopole(Action):
         super().__init__(player, heuristic_method)
         self.resource = resource
         self.name = 'use monopole'
+        self.heuristic += self.compute_heuristic()
 
     def do_action(self):
         super().do_action()
@@ -121,8 +123,7 @@ class UseMonopole(Action):
         selected_resource_quantity = 0
         for hand in self.hand.board.hands:
             selected_resource_quantity += hand.resources[self.resource]
-        return self.hand.heuristic + (
-                self.hand.parameters.resource_value[self.resource] * selected_resource_quantity)
+        return (self.hand.parameters.resource_value[self.resource] * selected_resource_quantity)
 
     def use_monopole(self):
         for card in self.hand.cards["monopole"]:
@@ -141,11 +142,13 @@ class UseYearOfPlenty(Action):
         super().__init__(hand, heuristic_method)
         self.resource1 = resource1
         self.resource2 = resource2
+        self.heuristic += self.compute_heuristic()
         self.name = 'use year of plenty'
 
     def do_action(self):
         super().do_action()
         self.use_year_of_plenty()
+        self.heuristic += self.compute_heuristic()
 
     def compute_heuristic(self):
         return self.hand.parameters.resource_value[self.resource1] + self.hand.parameters.resource_value[self.resource2]
@@ -167,7 +170,7 @@ class UseBuildRoads(Action):
         self.road1 = road1
         self.road2 = road2
         self.name = 'use build roads'
-
+        self.heuristic += self.compute_heuristic()
     def do_action(self):
         super().do_action()
         self.build_2_roads()
@@ -186,7 +189,7 @@ class UseBuildRoads(Action):
         hand_heuristic = self.hand.heuristic
         build_road1.undo()
         build_road2.undo()
-        return heuristic_increment + hand_heuristic
+        return heuristic_increment
 
     def build_2_roads(self):
         hand = self.hand  # type: Hand
@@ -208,6 +211,7 @@ class UseVictoryPoint(Action):
     def __init__(self, hand, heuristic_method):
         super().__init__(hand, heuristic_method)
         self.name = "use victory_point"
+        self.heuristic += self.compute_heuristic()
 
     def do_action(self):
         super().do_action()
@@ -217,7 +221,7 @@ class UseVictoryPoint(Action):
         if len(list(filter(lambda x: x.ok_to_use, self.hand.cards["victory points"]))) + self.hand.points >= 10:
             return math.inf
         else:
-            return -math.inf
+            return -100
 
     def use_victory_point(self):
         hand = self.hand
@@ -236,6 +240,7 @@ class BuildSettlement(Action):
         self.crossroad = crossroad
         super().__init__(hand, heuristic_method)
         self.name = 'build settlement'
+        self.heuristic +=self.compute_heuristic()
 
     def do_action(self):
         super().do_action()
@@ -259,12 +264,25 @@ class BuildSettlement(Action):
         hand.pay(SETTLEMENT_PRICE)
         self.create_settlement()
         # prioritize having a variety of resource produce
-        hand.heuristic += len(list(filter(lambda x: x.value != 0, hand.production))) - old_production_variety
+        self.heuristic += len(list(filter(lambda x: x.value != 0, hand.production))) - old_production_variety
         for resource in hand.production:
-            hand.heuristic += (hand.production[resource] - old_production[resource]) * hand.parameters.resource_value[resource]
+            self.heuristic += (hand.production[resource] - old_production[resource]) * hand.parameters.resource_value[resource]
 
         hand.update_resource_values()
         hand.settlements_log += [self.crossroad]
+
+    def compute_heuristic(self):
+        hand = self.hand
+        old_production_variety = len(list(filter(lambda x: x.value != 0, hand.production)))
+        old_production = hand.production
+        legals = self.crossroad.tmp_build(self.hand.index)
+        heuristic_increment = len(list(filter(lambda x: x.value != 0, hand.production))) - old_production_variety
+        for resource in hand.production:
+            heuristic_increment += (hand.production[resource] - old_production[resource]) * hand.parameters.resource_value[resource]
+        self.crossroad.unbuild(self.hand.index, legals)
+        return  heuristic_increment
+
+
 
     def create_settlement(self):
         hand = self.hand
