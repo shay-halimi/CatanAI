@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 # Todo: add resources (without) + lands (with dessert)
 class Resource(Enum):
     WHEAT = 1

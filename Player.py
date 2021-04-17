@@ -25,8 +25,8 @@ from random import randint
 
 class LogToAction:
     def __init__(self, board, player, action_log):
-        self.player = player # type: Player
-        self.hand = player.hand # type: Hand
+        self.player = player  # type: Player
+        self.hand = player.hand  # type: Hand
         self.name = action_log['name']
         self.crossroads = board.crossroads
         if self.name == 'trade':

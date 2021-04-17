@@ -110,6 +110,7 @@ class UseKnight(Action):
 
 class UseMonopole(Action):
     def __init__(self, player, heuristic_method, resource):
+        assert self.resource != Resource.DESSERT
         super().__init__(player, heuristic_method)
         self.resource = resource
         self.name = 'use monopole'
@@ -129,13 +130,10 @@ class UseMonopole(Action):
     def use_monopole(self):
         for card in self.hand.cards["monopole"]:
             if card.is_valid():
-                if self.resource != Resource.DESSERT:
-                    for hand in self.hand.board.players:
-                        if hand.index != self.hand.index:
-                            self.hand.resources[self.resource] += hand.resources[self.resource]
-                            hand.resources[self.resource] = 0
-                    return True
-        return False
+                for hand in self.hand.board.players:
+                    if hand.index != self.hand.index:
+                        self.hand.resources[self.resource] += hand.resources[self.resource]
+                        hand.resources[self.resource] = 0
 
 
 class UseYearOfPlenty(Action):
@@ -157,12 +155,9 @@ class UseYearOfPlenty(Action):
     def use_year_of_plenty(self):
         for card in self.hand.cards["year of plenty"]:
             if card.is_valid():
-                if self.resource1 != Resource.DESSERT and self.resource2 != Resource.DESSERT:
-                    self.hand.resources[self.resource1] += 1
-                    self.hand.resources[self.resource2] += 1
-                    self.hand.cards["year of plenty"].remove(card)
-                    return True
-        return False
+                self.hand.resources[self.resource1] += 1
+                self.hand.resources[self.resource2] += 1
+                self.hand.cards["year of plenty"].remove(card)
 
 
 class UseBuildRoads(Action):

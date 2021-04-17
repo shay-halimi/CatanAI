@@ -80,7 +80,7 @@ class Crossroad:
         self.location = None
         self.api_location = None
         self.board = board
-        self.terrains = []
+        self.terrains = []  # type: list[Terrain]
         self.neighbors = []
         # rules
         self.connected = [False] * self.board.players
