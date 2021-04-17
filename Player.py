@@ -112,12 +112,11 @@ class Player:
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["knight"]))) > 0:
             # need to check if the cards
             for terrain in self.board.map:
-                for player in self.board.players:
-                    if terrain == self.board.bandit_location:
-                        continue
-                    for p in range(self.board.players):
-                        if p != self.index:
-                            legal_moves += [UseKnight(self.hand, None, terrain, p)]
+                if terrain == self.board.bandit_location:
+                    continue
+                for p in range(self.board.players):
+                    if p != self.index:
+                        legal_moves += [UseKnight(self.hand, None, terrain, p)]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["monopole"]))) > 0:
             for i in range(1, 6):
                 legal_moves += [UseMonopole(self, None, Resource[i])]
