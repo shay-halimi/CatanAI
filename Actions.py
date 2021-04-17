@@ -172,16 +172,17 @@ class UseBuildRoads(Action):
         super().do_action()
         self.build_2_roads()
 
+    # ToDo: fix
     def compute_heuristic(self):
         heuristic_increment = 0
-        old_road_length = self.hand.longest_road_value
+        old_road_length = self.hand.parameters.longest_road_value
         build_road1 = BuildRoad(self.hand, self.heuristic_method, self.road1)
         build_road2 = BuildRoad(self.hand, self.heuristic_method, self.road2)
         build_road1.tmp_do()
         build_road2.tmp_do()
         if self.hand.board.longest_road_owner != self.hand.index:
             heuristic_increment += (self.hand.board.longest_road_owner == self.hand.index) * 5
-        heuristic_increment += self.hand.longest_road_value - old_road_length
+        heuristic_increment += self.hand.parameters.longest_road_value - old_road_length
         hand_heuristic = self.hand.heuristic
         build_road1.undo()
         build_road2.undo()
@@ -195,7 +196,7 @@ class UseBuildRoads(Action):
         for card in hand.cards["road building"]:
             if card.is_valid():
                 if road1.is_legal(player) and road2.is_legal(player):
-                    self.heuristic += hand.compute_2_roads_heuristic(road1, road2)
+                    self.heuristic += self.compute_heuristic()
                     road1.build(hand.index)
                     road2.build(hand.index)
                     hand.cards["road building"].remove(card)
@@ -469,13 +470,12 @@ class BuyDevCard(Action):
         hand.cards[card.name] += [card]
 
 
-# Todo: this
 class ThrowCards(Action):
-    def do_action(self, num_cards):
-        while num_cards > 0:
-            resource_index = randint(1, 5)
-            resource = Resource(resource_index)
-            if min(self.hand.resources[resource], num_cards) > 0:
-                cards_to_throw = randint(1, min(self.hand.resources[resource], num_cards))
-                self.hand.resources[resource] -= cards_to_throw
-                num_cards -= cards_to_throw
+    def __init__(self, hand: Hand, heuristic, cards):
+        self.cards = cards
+        super().__init__(hand, heuristic)
+        self.name = "throw cards"
+
+    def do_action(self):
+        for resource in self.cards:
+            self.hand.resources[resource] -= self.cards[resource]

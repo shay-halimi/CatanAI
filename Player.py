@@ -15,6 +15,7 @@ from Actions import UseMonopole
 from Actions import UseBuildRoads
 from Actions import UseYearOfPlenty
 from Actions import BuyDevCard
+from Actions import ThrowCards
 from Board import Board
 from Hand import Hand
 from Resources import Resource
@@ -97,13 +98,17 @@ class Player:
         self.log = self.board.log
 
     def throw_my_cards(self, num_cards):
+        cards = {}
         while num_cards > 0:
             resource_index = randint(1, 5)
             resource = Resource(resource_index)
+            if resource not in cards:
+                cards[resource] = 0
             if min(self.hand.resources[resource], num_cards) > 0:
                 cards_to_throw = randint(1, min(self.hand.resources[resource], num_cards))
-                self.hand.resources[resource] -= cards_to_throw
+                cards[resource] += cards_to_throw
                 num_cards -= cards_to_throw
+        ThrowCards(self.hand, None, cards)
 
     def get_legal_moves(self):
         legal_moves = []
