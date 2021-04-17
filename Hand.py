@@ -42,21 +42,22 @@ class Hand:
         self.parameters = Parameters()
     # ---- get information ---- #
 
-    # Todo: Move to another place
-    def compute_2_roads_heuristic(self, road1, road2):
-        heuristic_increment = 0
-        old_road_length = self.parameters.longest_road_value
-        if self.board.longest_road_owner != self.index:
-            self.tmp_buy_road(road1)
-            self.tmp_buy_road(road2)
-            heuristic_increment += (self.board.longest_road_owner == self.index) * 5
-        else:
-            self.tmp_buy_road(road1)
-            self.tmp_buy_road(road2)
-        heuristic_increment += (self.parameters.longest_road_value - old_road_length) * self.parameters.road_value
-        self.undo_buy_road(road2)
-        self.undo_buy_road(road1)
-        return heuristic_increment
+    # # Todo: Move to another place
+    # TODO this is not working
+    # def compute_2_roads_heuristic(self, road1, road2):
+    #     heuristic_increment = 0
+    #     old_road_length = self.parameters.longest_road_value
+    #     if self.board.longest_road_owner != self.index:
+    #         self.tmp_buy_road(road1)
+    #         self.tmp_buy_road(road2)
+    #         heuristic_increment += (self.board.longest_road_owner == self.index) * 5
+    #     else:
+    #         self.tmp_buy_road(road1)
+    #         self.tmp_buy_road(road2)
+    #     heuristic_increment += (self.parameters.longest_road_value - old_road_length) * self.parameters.road_value
+    #     self.undo_buy_road(road2)
+    #     self.undo_buy_road(road1)
+    #     return heuristic_increment
 
     def get_resources_number(self):
         resource_sum = 0
