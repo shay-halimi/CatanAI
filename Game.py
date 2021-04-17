@@ -43,7 +43,7 @@ class Game:
         self.start_game()
         while max(list(map(lambda x: x.points, self.board.hands))) < 10:
             if self.round > 200:
-                print("to many rounds")
+                print("too many rounds")
                 return
             self.play_round()
             print(self.round)
@@ -71,6 +71,7 @@ class Game:
             while player.compute_turn():
                 pass
         self.next_turn()
+    #     todo human player interface
 
     # Todo: check the order of functions
     def next_turn(self):
