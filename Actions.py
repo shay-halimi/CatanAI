@@ -119,7 +119,7 @@ class UseMonopole(Action):
         for hand in self.hand.board.hands:
             selected_resource_quantity += hand.resources[self.resource]
         return self.hand.heuristic + (
-                self.hand.resource_value[self.resource] * selected_resource_quantity)
+                self.hand.parameters.resource_value[self.resource] * selected_resource_quantity)
 
     def use_monopole(self):
         for card in self.hand.cards["monopole"]:
@@ -145,7 +145,7 @@ class UseYearOfPlenty(Action):
         self.use_year_of_plenty()
 
     def compute_heuristic(self):
-        return self.hand.resource_value[self.resource1] + self.hand.resource_value[self.resource1]
+        return self.hand.parameters.resource_value[self.resource1] + self.hand.parameters.resource_value[self.resource2]
 
     def use_year_of_plenty(self):
         for card in self.hand.cards["year of plenty"]:
@@ -257,7 +257,7 @@ class BuildSettlement(Action):
         # prioritize having a variety of resource produce
         hand.heuristic += len(list(filter(lambda x: x.value != 0, hand.production))) - old_production_variety
         for resource in hand.production:
-            hand.heuristic += (hand.production[resource] - old_production[resource]) * hand.resource_value[resource]
+            hand.heuristic += (hand.production[resource] - old_production[resource]) * hand.parameters.resource_value[resource]
 
         hand.update_resource_values()
         hand.settlements_log += [self.crossroad]
@@ -338,7 +338,7 @@ class BuildCity(Action):
         self.create_city()
         self.heuristic += len(list(filter(lambda x: x.value != 0, hand.production))) - old_production_variety
         for resource in hand.production:
-            self.heuristic += (hand.production[resource] - old_production[resource]) * hand.resource_value[resource]
+            self.heuristic += (hand.production[resource] - old_production[resource]) * hand.parameters.resource_value[resource]
 
         hand.update_resource_values()
         hand.cities += [self.crossroad]
@@ -460,7 +460,7 @@ class BuyDevCard(Action):
         self.buy_development_card()
 
     def compute_heuristic(self):
-        return self.hand.heuristic + self.hand.dev_card_value
+        return self.hand.heuristic + self.hand.parameters.dev_card_value
 
     def buy_development_card(self):
         hand = self.hand
