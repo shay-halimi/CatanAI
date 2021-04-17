@@ -326,6 +326,7 @@ class BuildCity(Action):
     def __init__(self, hand, heuristic_method, crossroad: Crossroad):
         super().__init__(hand, heuristic_method)
         self.crossroad = crossroad
+        self.heuristic += self.compute_heuristic()
         self.name = 'build city'
 
     def do_action(self):
@@ -366,6 +367,18 @@ class BuildCity(Action):
         hand.points += 1
         self.crossroad.build(hand.index)
         hand.set_distances()
+
+    def compute_heuristic(self):
+        hand = self.hand
+        old_production_variety = len(list(filter(lambda x: x.value != 0, hand.production)))
+        old_production = hand.production
+        legals = self.crossroad.tmp_build(self.hand.index)
+        heuristic_increment = len(list(filter(lambda x: x.value != 0, hand.production))) - old_production_variety
+        for resource in hand.production:
+            heuristic_increment += (hand.production[resource] - old_production[resource]) * \
+                                   hand.parameters.resource_value[resource]
+        self.crossroad.unbuild(self.hand.index, legals)
+        return heuristic_increment
 
 
 class BuildRoad(Action):
@@ -416,6 +429,17 @@ class BuildRoad(Action):
         self.road.build(self.hand.index)
         self.hand.set_distances()
 
+    def compute_heuristic(self):
+        heuristic_increment = 0
+        old_road_length = self.hand.parameters.longest_road_value
+        build_road = BuildRoad(self.hand, self.heuristic_method, self.road)
+        build_road.tmp_do()
+        if self.hand.board.longest_road_owner != self.hand.index:
+            heuristic_increment += (self.hand.board.longest_road_owner == self.hand.index)\
+            * self.hand.parameters.longest_road_value
+        heuristic_increment += self.hand.parameters.longest_road_value - old_road_length
+        build_road.undo()
+        return heuristic_increment
 
 class BuildFreeRoad(BuildRoad):
     def __init__(self, player, heuristic_method, road):
@@ -470,13 +494,14 @@ class BuyDevCard(Action):
     def __init__(self, hand, heuristic_method):
         super().__init__(hand, heuristic_method)
         self.name = 'buy devCard'
+        self.heuristic += self.compute_heuristic()
 
     def do_action(self):
         super().do_action()
         self.buy_development_card()
 
     def compute_heuristic(self):
-        return self.hand.heuristic + self.hand.parameters.dev_card_value
+        return self.hand.parameters.dev_card_value
 
     def buy_development_card(self):
         hand = self.hand
