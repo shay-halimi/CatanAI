@@ -48,6 +48,8 @@ def build_data(hands):
 
 def aux_build_statistics(data):
     st = dict()
+    st['total events'] = 0
+    st['total wins'] = 0
     st['production'] = {}
     for resource in Resource:
         if resource is not Resource.DESSERT:
@@ -56,6 +58,8 @@ def aux_build_statistics(data):
         t = settlement['time']
         production = settlement['production']
         win = 1 if settlement['points'] > 9 else 0
+        st['total events'] += 1
+        st['total wins'] += win
         if str((t, production)) in st['production']:
             st['production'][str((t, production))]['win'] += win
             st['production'][str((t, production))]['event'] += 1
@@ -74,8 +78,7 @@ def aux_build_statistics(data):
 def build_statistics():
     with open('data.json') as json_file:
         data = json.load(json_file)
-        statistics = {'settlement': aux_build_statistics(data['settlement']),
-                      'city': aux_build_statistics(data['city'])}
+        statistics = {'settlement': aux_build_statistics(data['settlement'])}
 
     with open('statistics.json', 'w') as outfile:
         json.dump(statistics, outfile)
@@ -83,6 +86,7 @@ def build_statistics():
 
 class Log:
     def __init__(self, players):
+        build_statistics()
         self.round = 0
         self.turn = 0
         self.players = players

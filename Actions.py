@@ -48,6 +48,7 @@ class DoNothing(Action):
     def do_action(self):
         pass
 
+    # Todo: move to heuristic
     def compute_heuristic(self):
         return self.hand.heuristic
 
@@ -63,6 +64,7 @@ class UseKnight(Action):
         super().do_action()
         self.use_knight()
 
+    # Todo: move to heuristic
     def compute_heuristic(self):
         resource = self.use_knight()
         new_heuristic = self.hand.heuristic
@@ -114,6 +116,7 @@ class UseMonopole(Action):
         super().do_action()
         self.use_monopole()
 
+    # Todo: move to heuristic
     def compute_heuristic(self):
         selected_resource_quantity = 0
         for hand in self.hand.board.hands:
@@ -314,10 +317,6 @@ class BuildCity(Action):
         print("player : " + self.name + " supposed to be city here : " + self.name)
         self.buy_city()
         self.log_action()
-
-    # todo
-    def compute_heuristic(self):
-        pass
 
     def log_action(self):
         log = {
