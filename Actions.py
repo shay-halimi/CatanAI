@@ -17,10 +17,10 @@ from random import randint
 
 
 class Action(ABC):
-    def __init__(self, hand : Hand, heuristic_method):
+    def __init__(self, hand: Hand, heuristic_method):
         self.hand = hand
         self.heuristic_method = heuristic_method
-        self.heuristic =hand.heuristic if self.heuristic_method is None else self.heuristic_method(self)
+        self.heuristic = hand.heuristic if self.heuristic_method is None else self.heuristic_method(self)
         self.log = self.hand.board.log  # type: Log
         self.name = 'action'
 
@@ -61,6 +61,7 @@ class UseKnight(Action):
         self.dst = dst
         self.name = 'use knight'
         self.heuristic += self.compute_heuristic()
+
     def do_action(self):
         super().do_action()
         self.use_knight()
@@ -171,6 +172,7 @@ class UseBuildRoads(Action):
         self.road2 = road2
         self.name = 'use build roads'
         self.heuristic += self.compute_heuristic()
+
     def do_action(self):
         super().do_action()
         self.build_2_roads()
@@ -240,7 +242,7 @@ class BuildSettlement(Action):
         self.crossroad = crossroad
         super().__init__(hand, heuristic_method)
         self.name = 'build settlement'
-        self.heuristic +=self.compute_heuristic()
+        self.heuristic += self.compute_heuristic()
 
     def do_action(self):
         super().do_action()
@@ -266,7 +268,8 @@ class BuildSettlement(Action):
         # prioritize having a variety of resource produce
         self.heuristic += len(list(filter(lambda x: x.value != 0, hand.production))) - old_production_variety
         for resource in hand.production:
-            self.heuristic += (hand.production[resource] - old_production[resource]) * hand.parameters.resource_value[resource]
+            self.heuristic += (hand.production[resource] - old_production[resource]) * hand.parameters.resource_value[
+                resource]
 
         hand.update_resource_values()
         hand.settlements_log += [self.crossroad]
@@ -278,11 +281,10 @@ class BuildSettlement(Action):
         legals = self.crossroad.tmp_build(self.hand.index)
         heuristic_increment = len(list(filter(lambda x: x.value != 0, hand.production))) - old_production_variety
         for resource in hand.production:
-            heuristic_increment += (hand.production[resource] - old_production[resource]) * hand.parameters.resource_value[resource]
+            heuristic_increment += (hand.production[resource] - old_production[resource]) * \
+                                   hand.parameters.resource_value[resource]
         self.crossroad.unbuild(self.hand.index, legals)
-        return  heuristic_increment
-
-
+        return heuristic_increment
 
     def create_settlement(self):
         hand = self.hand
@@ -356,7 +358,8 @@ class BuildCity(Action):
         self.create_city()
         self.heuristic += len(list(filter(lambda x: x.value != 0, hand.production))) - old_production_variety
         for resource in hand.production:
-            self.heuristic += (hand.production[resource] - old_production[resource]) * hand.parameters.resource_value[resource]
+            self.heuristic += (hand.production[resource] - old_production[resource]) * hand.parameters.resource_value[
+                resource]
 
         hand.update_resource_values()
         hand.cities += [self.crossroad]
