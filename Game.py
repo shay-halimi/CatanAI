@@ -63,15 +63,16 @@ class Game:
             self.play_turn(player)
             if max(list(map(lambda x: x.points, self.board.hands))) >= 10:
                 break
-            self.next_turn()
 
-    def play_turn(self, player):
+    def play_turn(self, player: Player):
         self.log.turn_log['resources'] = resource_log(player.hand)
         self.throw_dice()
         if self.players[player.index].is_computer:
             while player.compute_turn():
                 pass
+        self.next_turn()
 
+    # Todo: check the order of functions
     def next_turn(self):
         self.round, self.turn = next_turn(self.players_num, self.round, self.turn)
         self.log.next_turn()
@@ -90,6 +91,7 @@ class Game:
             if num_cards > 7:
                 player.throw_my_cards(math.floor(num_cards / 2))
 
+    # Todo: enable knight before dice
     def load_game(self, rounds):
         for r, round in enumerate(rounds):
             for t, turn in enumerate(round['turns']):
@@ -101,17 +103,15 @@ class Game:
                 for i, action in enumerate(turn['actions']):
                     print(action)
                     player = self.players[action['player']]
-                    a = LogToAction(self.board, player, action)
-                    b = a.get_action()
-                    if not b.is_legal():
-                        print("name : " + b.name + " | round : " + str(r) + " | turn : " + str(i))
-                        return
-                    b.do_action()
+                    a = LogToAction(self.board, player, action).get_action()
+                    assert a.is_legal()
+                    a.do_action()
                 self.board.next_turn(t, r)
 
     def load_dice(self, num):
         for i, j in self.board.dice.load(num):
             self.board.map[i][j].produce()
+            # Todo: delete save the game option in load mode
             self.log.dice(self.board.dice.sum)
         if self.board.dice.sum == 7:
             self.throw_cards()
