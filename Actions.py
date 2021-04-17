@@ -16,8 +16,8 @@ from random import randrange
 
 
 class Action(ABC):
-    def __init__(self, hand, heuristic_method):
-        self.hand = hand  # type: Hand
+    def __init__(self, hand : Hand, heuristic_method):
+        self.hand = hand
         self.heuristic_method = heuristic_method
         self.heuristic = uniform(0, 1) if self.heuristic_method is None else self.heuristic_method(self)
         self.log = self.hand.board.log  # type: Log
