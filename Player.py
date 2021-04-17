@@ -146,6 +146,7 @@ class Player:
                     for dst in Resource:
                         if dst is not Resource.DESSERT:
                             legal_moves += [Trade(self.hand, None, resource, exchange_rate, dst, 1)]
+        # ToDo : Add trade between players
         return legal_moves
 
     #########################################################################

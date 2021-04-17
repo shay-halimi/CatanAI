@@ -13,6 +13,7 @@ from abc import ABC
 from random import uniform
 import math
 from random import randrange
+from random import randint
 
 
 class Action(ABC):
@@ -27,9 +28,6 @@ class Action(ABC):
         self.hand.print_resources()
         print("player : " + self.name + " " + self.name)
         self.log_action()
-
-    def compute_heuristic(self):
-        pass
 
     def log_action(self):
         return {'name': self.name, 'player': self.hand.index}
@@ -46,6 +44,7 @@ class DoNothing(Action):
         super().__init__(hand, heuristic_method)
         self.name = 'do nothing'
 
+    # ToDo: check correctness
     def do_action(self):
         pass
 
@@ -363,10 +362,6 @@ class BuildRoad(Action):
         super().do_action()
         self.buy_road()
 
-    # todo
-    def compute_heuristic(self):
-        return 0.2
-
     def log_action(self):
         log = {
             'name': self.name,
@@ -480,3 +475,15 @@ class BuyDevCard(Action):
         hand.pay(DEV_PRICE)
         card = stack.get()
         hand.cards[card.name] += [card]
+
+
+# Todo: this
+class ThrowCards(Action):
+    def do_action(self, num_cards):
+        while num_cards > 0:
+            resource_index = randint(1, 5)
+            resource = Resource(resource_index)
+            if min(self.hand.resources[resource], num_cards) > 0:
+                cards_to_throw = randint(1, min(self.hand.resources[resource], num_cards))
+                self.hand.resources[resource] -= cards_to_throw
+                num_cards -= cards_to_throw
