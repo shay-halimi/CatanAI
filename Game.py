@@ -3,7 +3,7 @@ from Player import Dork
 from Player import LogToAction
 from Board import Board
 from Log import Log
-import API
+from API import API
 from Auxilary import resource_log
 from Auxilary import next_turn
 import math
@@ -21,7 +21,8 @@ class Game:
         self.players = self.create_players(players)
         self.players_num = players
         # create the API
-        API.start_api(self.board)
+        # ToDo: delete comment
+        # start_api(self.board)
 
     def start_game(self):
         for i in range(len(self.players)):
@@ -136,6 +137,7 @@ class Game:
             else:
                 player = Player(i, self.board)
             players += [player]
+        self.board.api = API(self.board.get_names())
         return players
 
 
@@ -147,14 +149,19 @@ def load_game(path):
         game = json.load(json_file)
         board = game['board']
         rounds = game['rounds']
+    # Todo: delete comment
+    """
     turn_off = False
-    if API.api_off:
+    if api_off:
         turn_off = True
-        API.turn_api_on()
+        turn_api_on()
+    """
     game = Game(3, board)
     game.load_game(rounds)
+    """
     if turn_off:
-        API.turn_api_off()
+        turn_api_off()
+    """
 
 
 def play_game(num):
@@ -164,8 +171,8 @@ def play_game(num):
 
 
 def main():
-    # play_game(1)
-    load_game("saved_games/game182.json")
+    play_game(1)
+    # load_game("saved_games/game182.json")
 
 
 print("Hello Game")

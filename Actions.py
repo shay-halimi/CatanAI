@@ -7,13 +7,14 @@ from Resources import SETTLEMENT_PRICE
 from Resources import ROAD_PRICE
 from Resources import CITY_PRICE
 from Resources import DEV_PRICE
+from API import API
 from Auxilary import r2s
 from Resources import Resource
 from abc import ABC
-from random import uniform
 import math
 from random import randrange
-from random import randint
+
+api = None  # type: API
 
 
 class Action(ABC):
@@ -23,6 +24,9 @@ class Action(ABC):
         self.heuristic = hand.heuristic if self.heuristic_method is None else self.heuristic_method(self)
         self.log = self.hand.board.log  # type: Log
         self.name = 'action'
+        global api
+        if not api:
+            api = API(self.hand.board.get_names())
 
     def do_action(self):
         self.hand.heuristic = self.heuristic
@@ -242,6 +246,16 @@ class BuildSettlement(Action):
     def do_action(self):
         super().do_action()
         self.buy_settlement()
+        self.action_aftermath()
+
+    def action_aftermath(self):
+        i, j = self.crossroad.location
+        api.print_action(self.name)
+        api.print_settlement(self.hand.index, i, j)
+        api.point_on_crossroad(i, j)
+        api.save_copy()
+        api.delete_action()
+        self.log_action()
 
     def log_action(self):
         log = {
@@ -302,7 +316,7 @@ class BuildFirstSettlement(BuildSettlement):
 
     def do_action(self):
         self.create_settlement()
-        self.log_action()
+        self.action_aftermath()
 
     def is_legal(self):
         return True
@@ -435,11 +449,12 @@ class BuildRoad(Action):
         build_road = BuildRoad(self.hand, self.heuristic_method, self.road)
         build_road.tmp_do()
         if self.hand.board.longest_road_owner != self.hand.index:
-            heuristic_increment += (self.hand.board.longest_road_owner == self.hand.index)\
-            * self.hand.parameters.longest_road_value
+            heuristic_increment += (self.hand.board.longest_road_owner == self.hand.index) \
+                                   * self.hand.parameters.longest_road_value
         heuristic_increment += self.hand.parameters.longest_road_value - old_road_length
         build_road.undo()
         return heuristic_increment
+
 
 class BuildFreeRoad(BuildRoad):
     def __init__(self, player, heuristic_method, road):

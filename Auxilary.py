@@ -47,3 +47,20 @@ def next_turn(players, round, turn) -> (int, int):
     else:
         turn += 1
         return round, turn
+
+
+# how many crossroads are in a line
+def init_cr_line_len():
+    line_len = []
+    num_of_crossroads = 3
+    step = 1
+    for i in range(12):
+        line_len += [num_of_crossroads]
+        if i % 2 == 0:
+            num_of_crossroads += step
+        if i == 5:
+            step = -1
+    return line_len
+
+
+cr_line_len = init_cr_line_len()

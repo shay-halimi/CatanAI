@@ -3,31 +3,14 @@ from Resources import Resource
 from DevStack import DevStack
 import random
 import Dice
-import API
 from Auxilary import r2s
 from Auxilary import s2r
+from Auxilary import cr_line_len
 
 # ---- global variables ---- #
 
 DESSERT = 7
 INFINITY = 100
-
-
-# how many crossroads are in a line
-def init_cr_line_len():
-    line_len = []
-    num_of_crossroads = 3
-    step = 1
-    for i in range(12):
-        line_len += [num_of_crossroads]
-        if i % 2 == 0:
-            num_of_crossroads += step
-        if i == 5:
-            step = -1
-    return line_len
-
-
-cr_line_len = init_cr_line_len()
 
 
 # ---- classes ---- #
@@ -104,7 +87,8 @@ class Crossroad:
         if self.ownership == player and self.building < 2:
             self.building += 1
             self.fertility_dist = INFINITY
-            API.print_crossroad(self)
+            # Todo: delete comment
+            # print_crossroad(self)
 
     def tmp_build(self,player):
         legals = []
@@ -265,7 +249,8 @@ class Road:
                     self.board.hands[player].lands_log += [self.neighbors[i]]
                     self.neighbors[i].connected[player] = True
             self.upgrade_longest_road(player)
-            API.print_road(self)
+            # Todo: delete comment
+            #print_road(self)
             return True
         return False
 
@@ -383,6 +368,8 @@ class Board:
         for n in range(players):
             self.hands += [Hand(n, self)]
 
+        self.api = None
+
         # longest road stats
         self.longest_road_size = 4
         self.longest_road_owner = None
@@ -478,7 +465,9 @@ class Board:
     # ---- game development ---- #
 
     def next_turn(self, turn, rnd, dice=None):
-        API.next_turn(self, turn, rnd, self.hands, dice)
+        # Todo: delete comment
+        # API.next_turn(self, turn, rnd, self.hands, dice)
+        pass
 
     # ---- get legal moves ---- #
 
@@ -520,6 +509,12 @@ class Board:
                             if road2.is_legal(player):
                                 legal += [(road1, road2)]
         return legal
+
+    def get_names(self):
+        names = []
+        for h in self.hands:
+            names += [h.name]
+        return names
 
 
 # ---- test functions ---- #

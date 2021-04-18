@@ -1,6 +1,8 @@
 from PIL import Image, ImageDraw, ImageFont
 from Resources import Resource
 import Auxilary
+from Auxilary import cr_line_len
+
 
 # ---- Images and Sizes---- #
 
@@ -292,6 +294,8 @@ class API:
         self.font = ImageFont.truetype('Library/Fonts/Arial Bold.ttf', self.font_size)
         self.draw = ImageDraw.Draw(self.start)
         self.action_img = Image.open('images/source/action.JPG')
+        self.settlements = self.create_settlements()
+        self.settlement_mask = Image.open('images/source/settlement_mask.png').convert('L')
         self.red_delete_large = Image.open('images/source/new_turn.JPG').resize((840, 610))
         self.red_delete_small = Image.open('images/source/new_turn.JPG').resize((840, 370))
         self.dice = []
@@ -300,6 +304,21 @@ class API:
         self.print_names()
         self.print_resources()
         self.new_turn()
+        self.cr_size_w, self.cr_size_h = self.settlement_mask.size
+        self.land_w = 245
+        self.land_mid_h = 142
+        self.land_hat_h = 71
+        self.crossroad_start_x = 965 + self.land_w * 1.5 - self.cr_size_w / 2
+        self.crossroad_start_y = 765 - self.land_mid_h - self.cr_size_h / 2
+        self.copy = None # type: Image
+        self.crossroads = self.set_crossroads_locations()
+
+    def create_settlements(self):
+        settlements = []
+        for i in range(self.num_of_players):
+            name = 'images/source/settlement' + str(i + 1) + '.png'
+            settlements += [Image.open(name).convert("RGBA")]
+        return settlements
 
     def write_headline(self, text):
         w, h = self.draw.textsize(text, font=self.font)
@@ -333,6 +352,12 @@ class API:
         name = "images/destination/round " + str(self.round) + "  turn " + \
                str(self.turn) + "  action " + str(self.action) + ".jpg"
         self.start.save(name)
+        self.action += 1
+
+    def save_copy(self):
+        name = "images/destination/round " + str(self.round) + "  turn " + \
+               str(self.turn) + "  action " + str(self.action) + ".jpg"
+        self.copy.save(name)
         self.action += 1
 
     def delete_turn(self):
@@ -383,20 +408,44 @@ class API:
 
     def print_action(self, action_name: str):
         w, h = self.action_img.size
-        draw = ImageDraw.Draw(self.action_img)
+        copy = self.action_img.copy()
+        draw = ImageDraw.Draw(copy)
         font = ImageFont.truetype('Library/Fonts/Arial Bold.ttf', 60)
         w_t, h_t = self.draw.textsize(action_name, font=font)
         draw.multiline_text(((w - w_t) / 2, 70), action_name, fill=(0, 0, 0), font=font)
-        self.start.paste(self.action_img, (int((3160 - w) / 2), 230))
-        self.save_file()
-        self.delete_action()
+        self.start.paste(copy, (int((3160 - w) / 2), 230))
 
+    def set_crossroads_locations(self):
+        crossroads = []
+        y = self.crossroad_start_y
+        even = False
+        step = -int(self.land_w / 2)
+        start = self.crossroad_start_x
+        for i in range(12):
+            line = []
+            x = start
+            if even:
+                y += self.land_hat_h
+            else:
+                start += step
+                y += self.land_mid_h
+            if i == 5:
+                step *= -1
+            for j in range(cr_line_len[i]):
+                line.append((int(x), int(y)))
+                x += self.land_w
+            even = not even
+            crossroads.append(line)
+        return crossroads
 
-api = API(["shay", "snow", "player1", "player2"])
-api.show_dice(1, 5)
-api.end_turn()
-api.new_turn()
-api.print_action("build free road")
-api.save_file()
-api.end_turn()
-api.new_turn()
+    def point_on_crossroad(self, i, j):
+        x, y = self.crossroads[i][j]
+        w, h = self.settlement_mask.size
+        x += w / 2
+        y += h / 2
+        self.copy = self.start.copy()
+        draw = ImageDraw.Draw(self.copy)
+        draw.ellipse((x - 100, y - 100, x + 100, y + 100), outline=(255, 0, 0, 0), width=10)
+
+    def print_settlement(self, index, i, j):
+        self.start.paste(self.settlements[index], self.crossroads[i][j], self.settlement_mask)
