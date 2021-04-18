@@ -330,7 +330,7 @@ class BuildSecondSettlement(BuildSettlement):
     def do_action(self):
         self.create_settlement()
         self.crossroad.produce(self.hand.index)
-        self.log_action()
+        self.action_aftermath()
 
     def is_legal(self):
         return True
