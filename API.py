@@ -365,7 +365,6 @@ class API:
         w, h = d1.size
         self.start.paste(d1, (int(3160 / 2 - w - 50), 300))
         self.start.paste(d2, (int(3160 / 2 + 50), 300))
-        self.save_file()
 
     def save_file(self):
         name = "images/destination/round " + str(self.round) + "  turn " + \

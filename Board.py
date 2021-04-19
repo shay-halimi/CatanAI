@@ -368,7 +368,7 @@ class Board:
         self.add_neighbors_to_roads()
 
         # create hands
-        self.hands = []
+        self.hands : list[Hand] = []
         for n in range(players):
             self.hands += [Hand(n, self)]
 
@@ -519,6 +519,9 @@ class Board:
         for h in self.hands:
             names += [h.name]
         return names
+
+    def get_dice(self):
+        return self.dice.dice1.number, self.dice.dice2.number
 
 
 # ---- test functions ---- #

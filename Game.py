@@ -70,6 +70,8 @@ class Game:
                 break
 
     def play_turn(self, player: Player):
+        self.api.end_turn()
+        self.api.new_turn()
         self.log.turn_log['resources'] = resource_log(player.hand)
         self.throw_dice()
         if self.players[player.index].is_computer:
@@ -87,7 +89,11 @@ class Game:
     def throw_dice(self):
         for i, j in self.board.dice.throw():
             self.board.map[i][j].produce()
-            self.log.dice(self.board.dice.sum)
+        self.api.show_dice(*self.board.get_dice())
+        for p in self.players:
+            self.api.print_resources(p.index, p.hand.resources)
+        self.api.save_file()
+        self.log.dice(self.board.dice.sum)
         if self.board.dice.sum == 7:
             self.throw_cards()
 
@@ -133,7 +139,7 @@ class Game:
         board.log_board()
         return board
 
-    def create_players(self, num):
+    def create_players(self, num) -> list[Player]:
         players = []
         r = randint(0, num)
         for i in range(num):

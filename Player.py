@@ -91,7 +91,7 @@ class Player:
         else:
             self.name = name
         self.is_computer = is_computer
-        self.board = board
+        self.board: Board = board
         self.hand = board.hands[index]
         self.hand.name = self.name
         self.simple_heuristic = SimpleHeuristic(self.index, self.board)
