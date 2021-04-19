@@ -166,7 +166,7 @@ def load_game(path):
 
 def play_game(num):
     for i in range(num):
-        game = Game(3)
+        game = Game(4)
         game.play_game()
 
 

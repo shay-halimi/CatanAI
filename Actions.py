@@ -42,6 +42,12 @@ class Action(ABC):
     def undo(self):
         pass
 
+    def shared_aftermath(self):
+        api.print_resources(self.hand.index, self.hand.resources)
+        api.save_copy()
+        api.delete_action()
+        self.log_action()
+
 
 class DoNothing(Action):
     def __init__(self, hand, heuristic_method):
@@ -252,9 +258,7 @@ class BuildSettlement(Action):
         api.print_action(self.name)
         api.print_settlement(self.hand.index, i, j)
         api.point_on_crossroad(i, j)
-        api.save_copy()
-        api.delete_action()
-        self.log_action()
+        self.shared_aftermath()
 
     def log_action(self):
         log = {
@@ -351,9 +355,7 @@ class BuildCity(Action):
         api.print_action(self.name)
         api.print_city(self.hand.index, i, j)
         api.point_on_crossroad(i, j)
-        api.save_copy()
-        api.delete_action()
-        self.log_action()
+        self.shared_aftermath()
 
     def log_action(self):
         log = {
@@ -418,9 +420,7 @@ class BuildRoad(Action):
         i1, j1 = self.road.neighbors[1].location
         api.print_road(self.hand.index, i0, j0, i1, j1)
         api.point_on_road(i0, j0, i1, j1)
-        api.save_copy()
-        api.delete_action()
-        self.log_action()
+        self.shared_aftermath()
 
     def log_action(self):
         log = {

@@ -12,8 +12,8 @@ class Parameters:
         self.longest_road_value = 5
         self.biggest_army_value = 4.5
         self.road_value = 0.2
-        self.resource_value = {Resource.CLAY: 1, Resource.WOOD: 1, Resource.WHEAT: 1, Resource.IRON: 1,
-                               Resource.SHEEP: 1}
+        self.resource_value = {Resource.CLAY: 1, Resource.WOOD: 1, Resource.SHEEP: 1, Resource.WHEAT: 1,
+                               Resource.IRON: 1}
         self.dev_card_value = 0.5
 
 

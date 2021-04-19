@@ -302,7 +302,10 @@ class API:
         for i in range(1, 7):
             self.dice += [Image.open('images/source/die' + str(i) + '.jpg')]
         self.print_names()
-        self.print_resources()
+        self.resource_locations = []
+        self.print_resources_imgs()
+        self.resource_img = Image.open('images/source/resource.png')
+        self.resource_mask = Image.open('images/source/resource_mask.png').convert('L')
         self.new_turn()
         self.cr_size_w, self.cr_size_h = self.settlement_mask.size
         self.land_w = 245
@@ -387,7 +390,7 @@ class API:
         if self.num_of_players > 3:
             self.write_from_right(self.names[3], 1320, -1)
 
-    def print_resources(self):
+    def print_resources_imgs(self):
         resources = []
         resources += [Image.open('images/source/mini clay.JPG')]
         resources += [Image.open('images/source/mini wood.JPG')]
@@ -396,23 +399,35 @@ class API:
         resources += [Image.open('images/source/mini iron.JPG')]
         w, h = resources[0].size
         line = 1221
+        player_resource_locations = []
         for r in resources:
+            player_resource_locations += [(46 + resources[0].size[0], line - h)]
             self.start.paste(r, (26, line - h))
             line -= (h + 20)
-        line = 1221
-        if self.num_of_players > 2:
-            for r in resources:
-                self.start.paste(r, (3247 - w, line - h))
-                line -= (h + 20)
+        self.resource_locations += [player_resource_locations]
         line = 1461
+        player_resource_locations = []
         for r in resources:
+            player_resource_locations += [(46 + resources[0].size[0], line)]
             self.start.paste(r, (26, line))
             line += (h + 20)
-        line = 1461
-        if self.num_of_players > 3:
+        self.resource_locations += [player_resource_locations]
+        if self.num_of_players > 2:
+            line = 1221
+            player_resource_locations = []
             for r in resources:
+                player_resource_locations += [(3227 - w - resources[0].size[0], line - h)]
+                self.start.paste(r, (3247 - w, line - h))
+                line -= (h + 20)
+            self.resource_locations += [player_resource_locations]
+        if self.num_of_players > 3:
+            line = 1461
+            player_resource_locations = []
+            for r in resources:
+                player_resource_locations += [(3227 - w - resources[0].size[0], line)]
                 self.start.paste(r, (3247 - w, line))
                 line += (h + 20)
+            self.resource_locations += [player_resource_locations]
 
     def print_action(self, action_name: str):
         w, h = self.action_img.size
@@ -481,3 +496,13 @@ class API:
 
     def print_road(self, index, i0, j0, i1, j1):
         self.draw.line(resize_road(0.2, self.get_road_location(i0, j0, i1, j1)), fill=self.colors[index], width=20)
+
+    def print_resources(self, index, resources):
+        for i, r in enumerate(resources):
+            w, h = self.resource_img.size
+            copy = self.resource_img.copy()
+            draw = ImageDraw.Draw(copy)
+            font = ImageFont.truetype('Library/Fonts/Arial Bold.ttf', 60)
+            w_t, h_t = self.draw.textsize(str(resources[r]), font=font)
+            draw.multiline_text(((w - w_t) / 2, (h - h_t) / 2), str(resources[r]), fill=(0, 0, 0), font=font)
+            self.start.paste(copy, self.resource_locations[index][i], self.resource_mask)
