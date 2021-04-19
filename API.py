@@ -397,41 +397,40 @@ class API:
             self.write_from_right(self.names[3], 1320, -1)
 
     def print_resources_imgs(self):
-        resources = []
-        resources += [Image.open('images/source/mini clay.JPG')]
-        resources += [Image.open('images/source/mini wood.JPG')]
-        resources += [Image.open('images/source/mini sheep.JPG')]
-        resources += [Image.open('images/source/mini wheat.JPG')]
-        resources += [Image.open('images/source/mini iron.JPG')]
-        w, h = resources[0].size
+        resources = {Resource.CLAY: Image.open('images/source/mini clay.JPG'),
+                     Resource.WOOD: Image.open('images/source/mini wood.JPG'),
+                     Resource.SHEEP: Image.open('images/source/mini sheep.JPG'),
+                     Resource.WHEAT: Image.open('images/source/mini wheat.JPG'),
+                     Resource.IRON: Image.open('images/source/mini iron.JPG')}
+        w, h = resources[Resource.CLAY].size
         line = 1221
-        player_resource_locations = []
+        player_resource_locations = {}
         for r in resources:
-            player_resource_locations += [(46 + resources[0].size[0], line - h)]
-            self.start.paste(r, (26, line - h))
+            player_resource_locations[r] = (46 + resources[r].size[0], line - h)
+            self.start.paste(resources[r], (26, line - h))
             line -= (h + 20)
         self.resource_locations += [player_resource_locations]
         line = 1461
-        player_resource_locations = []
+        player_resource_locations = {}
         for r in resources:
-            player_resource_locations += [(46 + resources[0].size[0], line)]
-            self.start.paste(r, (26, line))
+            player_resource_locations[r] = (46 + resources[r].size[0], line)
+            self.start.paste(resources[r], (26, line))
             line += (h + 20)
         self.resource_locations += [player_resource_locations]
         if self.num_of_players > 2:
             line = 1221
-            player_resource_locations = []
+            player_resource_locations = {}
             for r in resources:
-                player_resource_locations += [(3227 - w - resources[0].size[0], line - h)]
-                self.start.paste(r, (3247 - w, line - h))
+                player_resource_locations[r] = (3227 - w - resources[r].size[0], line - h)
+                self.start.paste(resources[r], (3247 - w, line - h))
                 line -= (h + 20)
             self.resource_locations += [player_resource_locations]
         if self.num_of_players > 3:
             line = 1461
-            player_resource_locations = []
+            player_resource_locations = {}
             for r in resources:
-                player_resource_locations += [(3227 - w - resources[0].size[0], line)]
-                self.start.paste(r, (3247 - w, line))
+                player_resource_locations[r] = (3227 - w - resources[r].size[0], line)
+                self.start.paste(resources[r], (3247 - w, line))
                 line += (h + 20)
             self.resource_locations += [player_resource_locations]
 
@@ -505,7 +504,7 @@ class API:
         self.draw.line(resize_road(0.2, self.get_road_location(i0, j0, i1, j1)), fill=self.colors[index], width=20)
 
     def print_resources(self, index, resources):
-        for i, r in enumerate(resources):
+        for r in resources:
             w, h = self.resource_img.size
             copy = self.resource_img.copy()
             draw = ImageDraw.Draw(copy)
@@ -513,8 +512,8 @@ class API:
             w_t, h_t = self.draw.textsize(str(resources[r]), font=font)
             draw.multiline_text(((w - w_t) / 2, (h - h_t) / 2), str(resources[r]), fill=(0, 0, 0), font=font)
             if self.do_i_save_copy:
-                self.copy.paste(copy, self.resource_locations[index][i], self.resource_mask)
-            self.start.paste(copy, self.resource_locations[index][i], self.resource_mask)
+                self.copy.paste(copy, self.resource_locations[index][r], self.resource_mask)
+            self.start.paste(copy, self.resource_locations[index][r], self.resource_mask)
 
     def show_terrain(self, lands):
         # setting the y location of the start of the terrain

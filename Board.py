@@ -23,6 +23,7 @@ class Terrain:
         self.crossroads = []
         self.has_bandit = False
         self.board = None
+        self.location = None
 
     def __str__(self):
         return "(" + str(self.num) + "," + str(self.resource) + ")"
@@ -328,6 +329,7 @@ class Board:
         # link the terrains to their crossroads and vice versa and give them link to board
         for i, line in enumerate(self.map):
             for j, terrain in enumerate(line):
+                terrain.location = (i, j)
                 terrain.board = self
                 top = 0 if i < 3 else 1
                 terrain.crossroads += [self.crossroads[2 * i][j + top]]
