@@ -317,6 +317,13 @@ class API:
         self.copy = None  # type: Image
         self.crossroads = self.set_crossroads_locations()
         self.colors = [(254, 242, 0), (0, 163, 232), (239, 227, 175), (255, 127, 38)]
+        self.lands_imgs = {Resource.CLAY: Image.open('images/source/clay land.JPG').resize((246,287)),
+                           Resource.WOOD: Image.open('images/source/wood land.JPG').resize((246,287)),
+                           Resource.SHEEP: Image.open('images/source/sheep land.JPG').resize((246,287)),
+                           Resource.WHEAT: Image.open('images/source/wheat land.JPG').resize((246,287)),
+                           Resource.IRON: Image.open('images/source/iron land.JPG').resize((246,287)),
+                           Resource.DESSERT: Image.open('images/source/dessert.JPG').resize((246,287))}
+        self.land_mask = Image.open('images/source/land_mask.JPG').resize((246,287)).convert('L')
 
     def create_settlements(self):
         settlements = []
@@ -508,3 +515,43 @@ class API:
             if self.do_i_save_copy:
                 self.copy.paste(copy, self.resource_locations[index][i], self.resource_mask)
             self.start.paste(copy, self.resource_locations[index][i], self.resource_mask)
+
+    def show_terrain(self, lands):
+        # setting the y location of the start of the terrain
+        y = 768
+        # printing the terrain
+        for i, line in enumerate(lands):
+            x = 965
+            if i == 0 or i == 4:
+                x += self.land_w
+            if i == 1 or i == 3:
+                x += self.land_w / 2
+            for land in line:
+                print("\n\n\n##########")
+                print((int(x), int(y)))
+                print(self.lands_imgs[land.resource].size)
+                print(self.lands_imgs[land.resource])
+                print("##########\n\n\n")
+                print(self.lands_imgs[land.resource].size)
+                print(self.land_mask.size)
+                self.start.paste(self.lands_imgs[land.resource], (int(x), int(y)), self.land_mask)
+                x += self.land_w
+            y += (self.land_mid_h + self.land_hat_h)
+        self.save_file()
+
+
+"""
+                if land.num != 7:
+                    curr_num_img = number_img.copy()
+                    draw = ImageDraw.Draw(curr_num_img)
+                    if land.num == 6 or land.num == 8:
+                        draw.multiline_text(num_loc, str(land.num), fill=(255, 0, 0), font=font)
+                    else:
+                        draw.multiline_text(num_loc, str(land.num), fill=(0, 0, 0), font=font)
+                    curr_num_img.save('images/temp/temp.jpg')
+                    curr_num_img = Image.open('images/temp/temp.jpg')
+                    curr_img.paste(curr_num_img, (x, y), number_mask)
+                x += terrain_size[0]
+            y += ter_top_mid_height
+        curr_img.save('images/temp/background.jpg', quality=95)
+"""

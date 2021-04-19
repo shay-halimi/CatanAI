@@ -64,7 +64,7 @@ class Crossroad:
         self.api_location = None
         self.board = board
         self.terrains = []  # type: list[Terrain]
-        self.neighbors = [] # type: list[Crossroad]
+        self.neighbors = []  # type: list[Neighbor]
         # rules
         self.connected = [False] * self.board.players
         self.legal = True
@@ -90,7 +90,7 @@ class Crossroad:
             # Todo: delete comment
             # print_crossroad(self)
 
-    def tmp_build(self,player):
+    def tmp_build(self, player):
         legals = []
         if self.ownership is None:
             self.ownership = player
@@ -250,7 +250,7 @@ class Road:
                     self.neighbors[i].connected[player] = True
             self.upgrade_longest_road(player)
             # Todo: delete comment
-            #print_road(self)
+            # print_road(self)
             return True
         return False
 
@@ -329,12 +329,14 @@ class Board:
         for i, line in enumerate(self.map):
             for j, terrain in enumerate(line):
                 terrain.board = self
-                terrain.crossroads += [self.crossroads[2 * i][j]]
+                top = 0 if i < 3 else 1
+                terrain.crossroads += [self.crossroads[2 * i][j + top]]
                 terrain.crossroads += [self.crossroads[2 * i + 1][j]]
                 terrain.crossroads += [self.crossroads[2 * i + 1][j + 1]]
                 terrain.crossroads += [self.crossroads[2 * i + 2][j]]
                 terrain.crossroads += [self.crossroads[2 * i + 2][j + 1]]
-                terrain.crossroads += [self.crossroads[2 * i + 3][j]]
+                bottom = 1 if i < 2 else 0
+                terrain.crossroads += [self.crossroads[2 * i + 3][j + bottom]]
                 for cr in terrain.crossroads:
                     cr.terrains += [terrain]
 

@@ -1,3 +1,4 @@
+import Actions
 from Player import Player
 from Player import Dork
 from Player import LogToAction
@@ -20,6 +21,9 @@ class Game:
         self.board = self.create_board(players, board_log)
         self.players = self.create_players(players)
         self.players_num = players
+        self.api = API(self.board.get_names())
+        self.api.show_terrain(self.board.map)
+        Actions.api = self.api
         # create the API
         # ToDo: delete comment
         # start_api(self.board)
@@ -124,6 +128,7 @@ class Game:
             board.load_map(board_log)
         else:
             board.shuffle_map()
+
         # log the board
         board.log_board()
         return board

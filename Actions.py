@@ -24,11 +24,6 @@ class Action(ABC):
         self.heuristic = hand.heuristic if self.heuristic_method is None else self.heuristic_method(self)
         self.log = self.hand.board.log  # type: Log
         self.name = 'action'
-        global api
-        try:
-            api
-        except NameError:
-            api = API(self.hand.board.get_names())
 
     def do_action(self):
         self.hand.heuristic = self.heuristic
