@@ -293,6 +293,7 @@ class API:
         self.font = ImageFont.truetype('Library/Fonts/Arial Bold.ttf', self.font_size)
         self.draw = ImageDraw.Draw(self.start)
         self.action_img = Image.open('images/source/action.JPG')
+        self.do_i_save_copy = False
         self.settlements = self.create_settlements()
         self.cities = self.create_cities()
         self.settlement_mask = Image.open('images/source/settlement_mask.png').convert('L')
@@ -362,13 +363,11 @@ class API:
     def save_file(self):
         name = "images/destination/round " + str(self.round) + "  turn " + \
                str(self.turn) + "  action " + str(self.action) + ".jpg"
-        self.start.save(name)
-        self.action += 1
-
-    def save_copy(self):
-        name = "images/destination/round " + str(self.round) + "  turn " + \
-               str(self.turn) + "  action " + str(self.action) + ".jpg"
-        self.copy.save(name)
+        if self.do_i_save_copy:
+            self.copy.save(name)
+            self.do_i_save_copy = False
+        else:
+            self.start.save(name)
         self.action += 1
 
     def delete_turn(self):
@@ -477,6 +476,7 @@ class API:
         self.copy = self.start.copy()
         draw = ImageDraw.Draw(self.copy)
         draw.ellipse((x - size, y - size, x + size, y + size), outline=(255, 0, 0, 0), width=10)
+        self.do_i_save_copy = True
 
     def point_on_crossroad(self, i, j):
         x, y = self.get_crossroad_location(i, j)
@@ -505,4 +505,6 @@ class API:
             font = ImageFont.truetype('Library/Fonts/Arial Bold.ttf', 60)
             w_t, h_t = self.draw.textsize(str(resources[r]), font=font)
             draw.multiline_text(((w - w_t) / 2, (h - h_t) / 2), str(resources[r]), fill=(0, 0, 0), font=font)
+            if self.do_i_save_copy:
+                self.copy.paste(copy, self.resource_locations[index][i], self.resource_mask)
             self.start.paste(copy, self.resource_locations[index][i], self.resource_mask)

@@ -14,7 +14,7 @@ from abc import ABC
 import math
 from random import randrange
 
-api = None  # type: API
+api: API
 
 
 class Action(ABC):
@@ -25,7 +25,9 @@ class Action(ABC):
         self.log = self.hand.board.log  # type: Log
         self.name = 'action'
         global api
-        if not api:
+        try:
+            api
+        except NameError:
             api = API(self.hand.board.get_names())
 
     def do_action(self):
@@ -44,7 +46,7 @@ class Action(ABC):
 
     def shared_aftermath(self):
         api.print_resources(self.hand.index, self.hand.resources)
-        api.save_copy()
+        api.save_file()
         api.delete_action()
         self.log_action()
 
@@ -134,7 +136,7 @@ class UseMonopole(Action):
         selected_resource_quantity = 0
         for hand in self.hand.board.hands:
             selected_resource_quantity += hand.resources[self.resource]
-        return (self.hand.parameters.resource_value[self.resource] * selected_resource_quantity)
+        return self.hand.parameters.resource_value[self.resource] * selected_resource_quantity
 
     def use_monopole(self):
         for card in self.hand.cards["monopole"]:
@@ -242,7 +244,7 @@ class UseVictoryPoint(Action):
 
 
 class BuildSettlement(Action):
-    def __init__(self, hand, heuristic_method, crossroad):
+    def __init__(self, hand, heuristic_method, crossroad: Crossroad):
         self.crossroad = crossroad
         super().__init__(hand, heuristic_method)
         self.name = 'build settlement'
