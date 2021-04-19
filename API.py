@@ -3,7 +3,6 @@ from Resources import Resource
 import Auxilary
 from Auxilary import cr_line_len
 
-
 # ---- Images and Sizes---- #
 
 # start image
@@ -295,6 +294,7 @@ class API:
         self.draw = ImageDraw.Draw(self.start)
         self.action_img = Image.open('images/source/action.JPG')
         self.settlements = self.create_settlements()
+        self.cities = self.create_cities()
         self.settlement_mask = Image.open('images/source/settlement_mask.png').convert('L')
         self.red_delete_large = Image.open('images/source/new_turn.JPG').resize((840, 610))
         self.red_delete_small = Image.open('images/source/new_turn.JPG').resize((840, 370))
@@ -310,8 +310,9 @@ class API:
         self.land_hat_h = 71
         self.crossroad_start_x = 965 + self.land_w * 1.5 - self.cr_size_w / 2
         self.crossroad_start_y = 765 - self.land_mid_h - self.cr_size_h / 2
-        self.copy = None # type: Image
+        self.copy = None  # type: Image
         self.crossroads = self.set_crossroads_locations()
+        self.colors = [(254, 242, 0), (0, 163, 232), (239, 227, 175), (255, 127, 38)]
 
     def create_settlements(self):
         settlements = []
@@ -319,6 +320,13 @@ class API:
             name = 'images/source/settlement' + str(i + 1) + '.png'
             settlements += [Image.open(name).convert("RGBA")]
         return settlements
+
+    def create_cities(self):
+        cities = []
+        for i in range(self.num_of_players):
+            name = 'images/source/city' + str(i + 1) + '.png'
+            cities += [Image.open(name).convert("RGBA")]
+        return cities
 
     def write_headline(self, text):
         w, h = self.draw.textsize(text, font=self.font)
@@ -438,14 +446,38 @@ class API:
             crossroads.append(line)
         return crossroads
 
-    def point_on_crossroad(self, i, j):
+    def get_crossroad_location(self, i, j):
         x, y = self.crossroads[i][j]
         w, h = self.settlement_mask.size
         x += w / 2
         y += h / 2
+        return x, y
+
+    def get_road_location(self, i0, j0, i1, j1):
+        x0, y0 = self.get_crossroad_location(i0, j0)
+        x1, y1 = self.get_crossroad_location(i1, j1)
+        return x0, y0, x1, y1
+
+    def point_with_circle(self, x, y, size):
         self.copy = self.start.copy()
         draw = ImageDraw.Draw(self.copy)
-        draw.ellipse((x - 100, y - 100, x + 100, y + 100), outline=(255, 0, 0, 0), width=10)
+        draw.ellipse((x - size, y - size, x + size, y + size), outline=(255, 0, 0, 0), width=10)
+
+    def point_on_crossroad(self, i, j):
+        x, y = self.get_crossroad_location(i, j)
+        self.point_with_circle(x, y, 100)
+
+    def point_on_road(self, i0, j0, i1, j1):
+        x0, y0 = self.get_crossroad_location(i0, j0)
+        x1, y1 = self.get_crossroad_location(i1, j1)
+        x, y = (x0 + x1) / 2, (y0 + y1) / 2
+        self.point_with_circle(x, y, 100)
+
+    def print_city(self, index, i, j):
+        self.start.paste(self.cities[index], self.crossroads[i][j], self.settlement_mask)
 
     def print_settlement(self, index, i, j):
         self.start.paste(self.settlements[index], self.crossroads[i][j], self.settlement_mask)
+
+    def print_road(self, index, i0, j0, i1, j1):
+        self.draw.line(resize_road(0.2, self.get_road_location(i0, j0, i1, j1)), fill=self.colors[index], width=20)

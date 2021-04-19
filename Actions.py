@@ -30,7 +30,6 @@ class Action(ABC):
 
     def do_action(self):
         self.hand.heuristic = self.heuristic
-        self.hand.print_resources()
         print("player : " + self.name + " " + self.name)
         self.log_action()
 
@@ -344,9 +343,16 @@ class BuildCity(Action):
         self.name = 'build city'
 
     def do_action(self):
-        self.hand.print_resources()
-        print("player : " + self.name + " supposed to be city here : " + self.name)
         self.buy_city()
+        self.action_aftermath()
+
+    def action_aftermath(self):
+        i, j = self.crossroad.location
+        api.print_action(self.name)
+        api.print_city(self.hand.index, i, j)
+        api.point_on_crossroad(i, j)
+        api.save_copy()
+        api.delete_action()
         self.log_action()
 
     def log_action(self):
@@ -396,7 +402,7 @@ class BuildCity(Action):
 
 
 class BuildRoad(Action):
-    def __init__(self, hand, heuristic_method, road):
+    def __init__(self, hand, heuristic_method, road: Road):
         super().__init__(hand, heuristic_method)
         self.road = road
         self.name = 'build road'
@@ -404,6 +410,17 @@ class BuildRoad(Action):
     def do_action(self):
         super().do_action()
         self.buy_road()
+        self.action_aftermath()
+
+    def action_aftermath(self):
+        api.print_action(self.name)
+        i0, j0 = self.road.neighbors[0].location
+        i1, j1 = self.road.neighbors[1].location
+        api.print_road(self.hand.index, i0, j0, i1, j1)
+        api.point_on_road(i0, j0, i1, j1)
+        api.save_copy()
+        api.delete_action()
+        self.log_action()
 
     def log_action(self):
         log = {
@@ -428,15 +445,15 @@ class BuildRoad(Action):
     # ---- take a temporary action ---- #
 
     def tmp_do(self):
-        if self.hand.can_buy_road() and self.road.is_legal():
+        if self.hand.can_buy_road() and self.road.is_legal(self.hand.index):
             self.hand.pay(ROAD_PRICE)
-            self.road.temp_build()
+            self.road.temp_build(self.hand.index)
 
     # ---- undo an action ---- #
 
     def undo(self):
         self.hand.receive(ROAD_PRICE)
-        self.road.undo_build(self.hand.index)
+        self.road.undo_build()
 
     def create_road(self):
         self.hand.road_pieces -= 1
@@ -463,7 +480,7 @@ class BuildFreeRoad(BuildRoad):
 
     def do_action(self):
         self.create_road()
-        self.log_action()
+        self.action_aftermath()
 
     def is_legal(self):
         return True

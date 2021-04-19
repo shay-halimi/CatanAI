@@ -64,7 +64,7 @@ class Crossroad:
         self.api_location = None
         self.board = board
         self.terrains = []  # type: list[Terrain]
-        self.neighbors = []
+        self.neighbors = [] # type: list[Crossroad]
         # rules
         self.connected = [False] * self.board.players
         self.legal = True

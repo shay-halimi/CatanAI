@@ -133,11 +133,5 @@ class Hand:
 
     # ---- test functions ---- #
 
-    def print_resources(self):
-        print("resources of player : " + self.name)
-        for resource in self.resources:
-            print(r2s(resource) + " : " + str(self.resources[resource]) + "|||", end="")
-        print()
-
     def update_resource_values(self):
         pass
