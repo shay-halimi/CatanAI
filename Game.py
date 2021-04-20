@@ -78,6 +78,7 @@ class Game:
             while player.compute_turn():
                 pass
         self.next_turn()
+
     #     todo human player interface
 
     # Todo: check the order of functions

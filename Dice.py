@@ -31,6 +31,8 @@ class Dice:
         self.dice1.throw()
         self.dice2.throw()
         self.sum = self.dice1.number + self.dice2.number
+        if self.sum == 7:
+            return []
         return self.number_to_terrain[self.sum]
 
     def load(self, num):

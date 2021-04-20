@@ -280,6 +280,14 @@ def print_stats(img, hands):
     return img
 
 
+def create_land_numbers():
+    land_nums = {}
+    for i in range(2, 13):
+        if i != 7:
+            land_nums[i] = Image.open('images/source/number' + str(i) + '.JPG')
+    return land_nums
+
+
 class API:
     def __init__(self, names: list[str]):
         self.names = names
@@ -317,13 +325,15 @@ class API:
         self.copy = None  # type: Image
         self.crossroads = self.set_crossroads_locations()
         self.colors = [(254, 242, 0), (0, 163, 232), (239, 227, 175), (255, 127, 38)]
-        self.lands_imgs = {Resource.CLAY: Image.open('images/source/clay land.JPG').resize((246,287)),
-                           Resource.WOOD: Image.open('images/source/wood land.JPG').resize((246,287)),
-                           Resource.SHEEP: Image.open('images/source/sheep land.JPG').resize((246,287)),
-                           Resource.WHEAT: Image.open('images/source/wheat land.JPG').resize((246,287)),
-                           Resource.IRON: Image.open('images/source/iron land.JPG').resize((246,287)),
-                           Resource.DESSERT: Image.open('images/source/dessert.JPG').resize((246,287))}
-        self.land_mask = Image.open('images/source/land_mask.JPG').resize((246,287)).convert('L')
+        self.lands_imgs = {Resource.CLAY: Image.open('images/source/clay land.JPG').resize((246, 287)),
+                           Resource.WOOD: Image.open('images/source/wood land.JPG').resize((246, 287)),
+                           Resource.SHEEP: Image.open('images/source/sheep land.JPG').resize((246, 287)),
+                           Resource.WHEAT: Image.open('images/source/wheat land.JPG').resize((246, 287)),
+                           Resource.IRON: Image.open('images/source/iron land.JPG').resize((246, 287)),
+                           Resource.DESSERT: Image.open('images/source/dessert.JPG').resize((246, 287))}
+        self.land_mask = Image.open('images/source/land_mask.JPG').resize((246, 287)).convert('L')
+        self.land_nums = create_land_numbers()
+        self.number_mask = Image.open('images/source/number_mask.jpg').convert('L')
 
     def create_settlements(self):
         settlements = []
@@ -525,14 +535,13 @@ class API:
             if i == 1 or i == 3:
                 x += self.land_w / 2
             for land in line:
-                print("\n\n\n##########")
-                print((int(x), int(y)))
-                print(self.lands_imgs[land.resource].size)
-                print(self.lands_imgs[land.resource])
-                print("##########\n\n\n")
-                print(self.lands_imgs[land.resource].size)
-                print(self.land_mask.size)
-                self.start.paste(self.lands_imgs[land.resource], (int(x), int(y)), self.land_mask)
+                land_img = self.lands_imgs[land.resource].copy()
+                if land.num != 7:
+                    print("\n\n")
+                    print(self.land_nums[land.num].size)
+                    print(self.number_mask.size)
+                    land_img.paste(self.land_nums[land.num], (83, 104), self.number_mask)
+                self.start.paste(land_img, (int(x), int(y)), self.land_mask)
                 x += self.land_w
             y += (self.land_mid_h + self.land_hat_h)
         self.save_file()
