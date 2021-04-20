@@ -96,7 +96,7 @@ class Crossroad:
         if self.ownership is None:
             self.ownership = player
             for n in range(len(self.neighbors)):
-                legals.append([self.neighbors[n].crossroad.legal])
+                legals += [self.neighbors[n].crossroad.legal]
                 self.neighbors[n].crossroad.legal = False
         if self.ownership == player and self.building < 2:
             self.building += 1
@@ -297,7 +297,7 @@ class Board:
         self.bandit_location = None
 
         # create 2d array of crossroads
-        self.crossroads = []
+        self.crossroads = []    # type: List[List[Crossroad]]
         for i in range(12):
             line = []
             for j in range(cr_line_len[i]):
