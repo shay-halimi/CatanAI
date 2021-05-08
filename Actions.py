@@ -717,22 +717,23 @@ class BuyDevCard(Action):
         return card
 
     def undo(self, info):
-        card = info # type: DevCard
         hand = self.hand
         hand.receive(DEV_PRICE)
-        hand.cards[card.name].pop()
-        self.stack.return_card(card)
+        hand.unknown_dev_cards -= 1
 
     def compute_heuristic(self):
         return self.hand.parameters.dev_card_value
 
     def buy_development_card(self):
         hand = self.hand
-        stack = self.stack
         hand.pay(DEV_PRICE)
-        card = stack.get()
-        hand.cards[card.name] += [card]
-        return card
+        if self.evaluation_state:
+            hand.unknown_dev_cards += 1
+        else:
+            stack = self.stack
+            card = stack.get()
+            hand.cards[card.name] += [card]
+        return None
 
 
 class ThrowCards(Action):
