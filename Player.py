@@ -20,7 +20,7 @@ from Actions import UseYearOfPlenty
 from Actions import BuyDevCard
 from Actions import ThrowCards
 from Actions import Action
-from Board import Board
+from Board import Board,Terrain,Crossroad
 from Hand import Hand
 from Resources import Resource
 from Auxilary import s2r
@@ -126,10 +126,10 @@ class Player:
                 for terrain in line:
                     if terrain == self.board.bandit_location:
                         continue
-                    for p in range(self.board.players):
-                        if p != self.index:
+                    for cr in Terrain.get_crossroads((terrain)):
+                        if Crossroad.get_ownership(cr) is not (None or self.index):
                             h = None if heuristic is None else heuristic["use knight"]
-                            legal_moves += [UseKnight(self.hand, h, terrain, p)]
+                            legal_moves += [UseKnight(self.hand, h, terrain, Crossroad.get_ownership(cr))]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["monopole"]))) > 0:
             for r in Resource:
                 if r != Resource.DESSERT:
