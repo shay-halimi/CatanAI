@@ -55,6 +55,9 @@ class DevStack:
             return card
         return None
 
+    def return_card(self, card):
+        self.deck.append(card)
+
     def has_cards(self):
         if len(self.deck) != 0:
             return True

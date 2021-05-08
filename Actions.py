@@ -17,6 +17,8 @@ from DevStack import Monopole
 from DevStack import YearOfProsper
 from DevStack import VictoryPointCard
 from DevStack import RoadBuilding
+from DevStack import DevCard
+from DevStack import DevStack
 from abc import ABC
 import math
 from random import randrange
@@ -704,31 +706,33 @@ class Trade(Action):
 
 class BuyDevCard(Action):
     def __init__(self, hand, heuristic_method):
+        self.stack = hand.board.devStack   # type: DevStack
         super().__init__(hand, heuristic_method)
         self.name = 'buy devCard'
         # self.heuristic += self.compute_heuristic()
 
     def do_action(self):
         super().do_action()
-        name = self.buy_development_card()
-        return name
+        card = self.buy_development_card()
+        return card
 
     def undo(self, info):
-        name = info
+        card = info # type: DevCard
         hand = self.hand
         hand.receive(DEV_PRICE)
-        hand.cards[name].pop()
+        hand.cards[card.name].pop()
+        self.stack.return_card(card)
 
     def compute_heuristic(self):
         return self.hand.parameters.dev_card_value
 
     def buy_development_card(self):
         hand = self.hand
-        stack = self.hand.board.devStack
+        stack = self.stack
         hand.pay(DEV_PRICE)
         card = stack.get()
         hand.cards[card.name] += [card]
-        return card.name
+        return card
 
 
 class ThrowCards(Action):
