@@ -8,6 +8,10 @@ import json
 from typing import List
 from random import uniform
 from Hand import Hand
+from Hand import SETTLEMENT_PRICE
+from Hand import CITY_PRICE
+from Hand import DEV_PRICE
+from Hand import ROAD_PRICE
 
 
 class SimpleHeuristic:
@@ -76,6 +80,39 @@ def greatest_crossroad(crossroads):
     return max_cr["cr"]
 
 
+def show_score_analysis(hand: Hand):
+    print('points : ' + str(hand.points))
+    for resource in Resource:
+        if resource != Resource.DESSERT:
+            print(r2s(resource) + ' : ' + str(hand.resources[resource]))
+    for v in hand.cards.values():
+        if v:
+            print(v[0].name + ' : ' + str(len(v)))
+    if hand.index != hand.board.longest_road_owner:
+        road_value = 2 - 0.3 * (hand.board.longest_road_size + 1 - hand.longest_road)
+        if road_value > 0:
+            print('road value : ' + str(road_value))
+    if hand.index != hand.board.largest_army_owner:
+        army_value = 2 - 0.5 * (hand.board.largest_army_size - hand.largest_army)
+        if army_value > 0:
+            print('armay value : ' + str(army_value))
+
+
+def able_to_buy_score(hand: Hand, price, value):
+    resources = hand.resources.copy()
+    score = 0
+    can_pay = True
+    while can_pay:
+        for resource in price:
+            if resources[resource] >= price[resource]:
+                resources[resource] -= price[resource]
+            else:
+                can_pay = False
+                break
+        score += value
+    return score
+
+
 def hand_stat(hand: Hand):
     stat = hand.points
     for resource in Resource:
@@ -91,6 +128,10 @@ def hand_stat(hand: Hand):
         army_value = 2 - 0.5 * (hand.board.largest_army_size - hand.largest_army)
         if army_value > 0:
             stat += army_value
+    stat += able_to_buy_score(hand, SETTLEMENT_PRICE, 0.9)
+    stat += able_to_buy_score(hand, CITY_PRICE, 0.9)
+    stat += able_to_buy_score(hand, ROAD_PRICE, 0.6)
+    stat += able_to_buy_score(hand, DEV_PRICE, 0.7)
     return stat
 
 
@@ -99,5 +140,7 @@ def hand_heuristic(action: Action):
     undo_info = action.do_action()
     value = hand_stat(action.hand)
     action.undo(undo_info)
+    if len(action.hand.cards['knight']) > 10:
+        print('there is something fishy')
     action.evaluation_off()
     return value

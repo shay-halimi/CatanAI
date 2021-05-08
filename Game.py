@@ -107,7 +107,6 @@ class Game:
     def throw_dice(self):
         for i, j in self.board.dice.throw():
             self.board.map[i][j].produce()
-        print('dice : ' + str(self.board.get_dice()))
         self.api.show_dice(*self.board.get_dice())
         for p in self.players:
             self.api.print_resources(p.index, p.hand.resources)

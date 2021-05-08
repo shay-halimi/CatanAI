@@ -3,6 +3,7 @@ from Heuristics import StatisticsHeuristic
 from Heuristics import best_action
 from Heuristics import greatest_crossroad
 from Heuristics import hand_heuristic
+from Heuristics import show_score_analysis
 from Actions import Trade
 from Actions import BuildFreeRoad
 from Actions import BuildRoad
@@ -248,13 +249,17 @@ def create_general_heuristic(heuristic):
 
 def print_choices(actions: list[Action]):
     types = {}
+    if actions:
+        print('total points : ' + str(actions[0].points))
     for action in actions:
         if action.name not in types:
-            types[action.name] = action.heuristic
-        elif action.heuristic > types[action.name]:
-            types[action.name] = action.heuristic
-    for type, heuristic in types.items():
-        print(type + ' : ' + str(heuristic))
+            types[action.name] = action
+        elif action.heuristic > types[action.name].heuristic:
+            types[action.name] = action
+    for type, action in types.items():
+        print(type + ' : ' + str(action.heuristic))
+        show_score_analysis(action.hand)
+        print('####################################\n')
 
 
 class Dork(Player):

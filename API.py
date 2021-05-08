@@ -45,7 +45,7 @@ def resize_arrows(size):
 class API:
     def __init__(self, names: list[str]):
         self.note_switch = False
-        self.on_switch = True
+        self.on_switch = False
         if self.on_switch:
             self.times = Image.open('images/source/times.png')
             self.times_mask = Image.open('images/source/times_mask.png').convert('L')
