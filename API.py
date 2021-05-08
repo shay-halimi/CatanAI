@@ -381,9 +381,6 @@ class API:
                 for land in line:
                     land_img = self.lands_imgs[land.resource].copy()
                     if land.num != 7:
-                        print("\n\n")
-                        print(self.land_nums[land.num].size)
-                        print(self.number_mask.size)
                         land_img.paste(self.land_nums[land.num], (83, 104), self.number_mask)
                     self.start.paste(land_img, (int(x), int(y)), self.land_mask)
                     x += self.land_w

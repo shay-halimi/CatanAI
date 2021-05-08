@@ -46,6 +46,9 @@ class Hand:
         # ---- these are values that we can manipulate according to success ---- #
         self.parameters = Parameters()
 
+        # Todo : delete
+        self.check_points = 0
+
     # ---- get information ---- #
 
     def get_resources_number(self):
@@ -102,6 +105,9 @@ class Hand:
     def add_card(self, card: DevCard):
         name = card.get_name()
         self.cards[name] += [card]
+
+    def add_point(self):
+        self.points += 1
 
     def subtract_point(self):
         self.points -= 1

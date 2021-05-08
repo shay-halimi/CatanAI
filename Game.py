@@ -14,14 +14,17 @@ import json
 
 class Game:
 
-    def __init__(self, players, board_log=None):
+    def __init__(self, players, names=None, board_log=None):
         self.round = 0
         self.turn = 0
         self.log = Log(players)
         self.board = self.create_board(players, board_log)
         self.players = self.create_players(players)
         self.players_num = players
-        self.api = API(self.board.get_names())
+        if names is None:
+            self.api = API(self.board.get_names())
+        else:
+            self.api = API(names)
         self.api.show_terrain(self.board.map)
         Actions.api = self.api
 
@@ -61,9 +64,9 @@ class Game:
                     if hand.points == max_points:
                         self.board.statistics_logger.end_game(hand.index)
                 return
-            print("\n\n\n")
+            print("\n")
             print(self.round)
-            print("\n\n\n")
+            print("\n")
             for hand in self.board.hands:
                 for typeCard in hand.cards.values():
                     if typeCard:
@@ -104,6 +107,7 @@ class Game:
     def throw_dice(self):
         for i, j in self.board.dice.throw():
             self.board.map[i][j].produce()
+        print('dice : ' + str(self.board.get_dice()))
         self.api.show_dice(*self.board.get_dice())
         for p in self.players:
             self.api.print_resources(p.index, p.hand.resources)
@@ -129,7 +133,6 @@ class Game:
                     self.load_dice(turn['dice'])
                 print("resources : " + str(self.players[t].hand.resources))
                 for i, action in enumerate(turn['actions']):
-                    print(action)
                     player = self.players[action['player']]
                     a = LogToAction(self.board, player, action).get_action()
                     a.do_action()
@@ -155,7 +158,7 @@ class Game:
         return board
 
     def create_players(self, num) -> list[Player]:
-        players = []
+        players = []    # type: list[Player]
         for i in range(num):
             player = Dork(i, self.board)
             players += [player]
@@ -178,7 +181,7 @@ def load_game(path):
         turn_off = True
         turn_api_on()
     """
-    game = Game(3, board)
+    game = Game(3, None, board)
     game.load_game(rounds)
     """
     if turn_off:
@@ -188,7 +191,7 @@ def load_game(path):
 
 def play_game(num):
     for i in range(num):
-        game = Game(4)
+        game = Game(4, ['shay', 'snow', 'shaked', 'odeya'])
         game.play_game()
 
 

@@ -49,7 +49,7 @@ class Action(ABC):
     # do action return necessary information for undo
     def do_action(self):
         if not self.evaluation_state:
-            print(self.name)
+            print('index : ' +  str(self.index) + ' | action : ' + self.name)
         # self.hand.heuristic = self.heuristic
         return None
 
@@ -75,8 +75,6 @@ class Action(ABC):
             self.statistics_logger.save_action(self.hand.index, essentials, regulars)
             if self.hand.points > self.points:
                 self.statistics_logger.got_point(self.hand.index)
-            print(self.name)
-            print(self.heuristic)
 
     def create_keys(self):
         essentials = [self.name, 'points : ' + str(self.points), 'player : ' + str(self.hand.name)]
@@ -367,6 +365,7 @@ class BuildSettlement(Action):
         build_info = info
         self.crossroad.undo_build(self.index, build_info)
         self.hand.receive(SETTLEMENT_PRICE)
+        self.hand.subtract_point()
         self.hand.settlements_log.pop()
 
     def action_aftermath(self):
@@ -407,7 +406,7 @@ class BuildSettlement(Action):
         hand = self.hand
         self.crossroad.connected[hand.index] = True
         hand.settlement_pieces -= 1
-        hand.points += 1
+        hand.add_point()
         for resource in Resource:
             if resource is not Resource.DESSERT:
                 hand.production_all += self.crossroad.val[resource] / 36
@@ -440,6 +439,7 @@ class BuildFirstSettlement(BuildSettlement):
     def undo(self, info):
         build_info = info
         self.crossroad.undo_build(self.index, build_info)
+        self.hand.subtract_point()
         self.hand.settlements_log.pop()
 
     def is_legal(self):
@@ -462,6 +462,7 @@ class BuildSecondSettlement(BuildFirstSettlement):
         build_info = info
         self.crossroad.undo_produce(self.index)
         self.crossroad.undo_build(self.index, build_info)
+        self.hand.subtract_point()
         self.hand.settlements_log.pop()
 
 
@@ -481,6 +482,7 @@ class BuildCity(Action):
         build_info = info
         self.crossroad.undo_build(self.index, build_info)
         self.hand.receive(CITY_PRICE)
+        self.hand.subtract_point()
         self.hand.cities.pop()
 
     def action_aftermath(self):
@@ -519,7 +521,7 @@ class BuildCity(Action):
         hand = self.hand
         hand.settlement_pieces += 1
         hand.city_pieces -= 1
-        hand.points += 1
+        hand.add_point()
         build_info = self.crossroad.build(hand.index)
         hand.set_distances()
         return build_info
