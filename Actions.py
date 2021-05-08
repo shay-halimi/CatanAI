@@ -666,7 +666,8 @@ class Trade(Action):
     def do_action(self):
         super().do_action()
         self.trade()
-        api.trade(self.hand.board.players, self.hand.index, self.src, self.dst, self.give, self.take)
+        if not self.evaluation_state:
+            api.trade(self.hand.board.players, self.hand.index, self.src, self.dst, self.give, self.take)
         self.shared_aftermath()
         return self.src, self.give, self.dst, self.take
 
