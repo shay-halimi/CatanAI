@@ -43,6 +43,7 @@ class Hand:
                            Resource.SHEEP: 0}
 
         self.production_all = 0
+        self.unknown_dev_cards = 0
         # ---- these are values that we can manipulate according to success ---- #
         self.parameters = Parameters()
 
