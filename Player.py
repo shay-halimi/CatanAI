@@ -17,6 +17,8 @@ from Actions import UseYearOfPlenty
 from Actions import BuyDevCard
 from Actions import ThrowCards
 from Board import Board
+from Board import Terrain
+from Board import Crossroad
 from Hand import Hand
 from Resources import Resource
 from Auxilary import s2r
@@ -119,9 +121,9 @@ class Player:
             for terrain in self.board.map:
                 if terrain == self.board.bandit_location:
                     continue
-                for p in range(self.board.players):
-                    if p != self.index:
-                        legal_moves += [UseKnight(self.hand, None, terrain, p)]
+                for cr in Terrain.get_crossroads((terrain)):
+                    if Crossroad.get_ownership(cr) is not (None or self.index):
+                        legal_moves += [UseKnight(self.hand, None, terrain, Crossroad.get_ownership(cr))]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["monopole"]))) > 0:
             for i in range(1, 6):
                 legal_moves += [UseMonopole(self, None, Resource[i])]
@@ -151,6 +153,7 @@ class Player:
                         if dst is not Resource.DESSERT:
                             legal_moves += [Trade(self.hand, None, resource, exchange_rate, dst, 1)]
         # ToDo : Add trade between players
+        #ToDo : add throw LegalCards moves
         return legal_moves
 
     #########################################################################

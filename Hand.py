@@ -16,6 +16,8 @@ class Parameters:
                                Resource.IRON: 1}
         self.dev_card_value = 0.5
 
+    def get_resource_value(self):
+        return self.resource_value
 
 class Hand:
     def __init__(self, index, board):

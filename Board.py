@@ -25,6 +25,9 @@ class Terrain:
         self.board = None
         self.location = None
 
+    def get_crossroads(self):
+        return self.crossroads
+
     def __str__(self):
         return "(" + str(self.num) + "," + str(self.resource) + ")"
 
@@ -80,6 +83,9 @@ class Crossroad:
         self.building = 0
         self.port = None
 
+    def get_ownership(self):
+        return self.ownership
+
     def build(self, player):
         if self.ownership is None:
             self.ownership = player
@@ -88,8 +94,6 @@ class Crossroad:
         if self.ownership == player and self.building < 2:
             self.building += 1
             self.fertility_dist = INFINITY
-            # Todo: delete comment
-            # print_crossroad(self)
 
     def tmp_build(self, player):
         legals = []
