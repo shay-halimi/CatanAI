@@ -65,11 +65,11 @@ class Action(ABC):
         pass
 
     def shared_aftermath(self):
-        api.print_action(self.name)
-        api.print_resources(self.hand.index, self.hand.resources)
-        api.save_file()
-        api.delete_action()
         if not self.evaluation_state:
+            api.print_action(self.name)
+            api.print_resources(self.hand.index, self.hand.resources)
+            api.save_file()
+            api.delete_action()
             self.log_action()
             essentials, regulars = self.create_keys()
             self.statistics_logger.save_action(self.hand.index, essentials, regulars)
@@ -365,15 +365,16 @@ class BuildSettlement(Action):
 
     def undo(self, info):
         build_info = info
-        self.crossroad.unbuild(self.index, build_info)
+        self.crossroad.undo_build(self.index, build_info)
         self.hand.receive(SETTLEMENT_PRICE)
         self.hand.settlements_log.pop()
 
     def action_aftermath(self):
-        i, j = self.crossroad.location
-        api.print_action(self.name)
-        api.print_settlement(self.hand.index, i, j)
-        api.point_on_crossroad(i, j)
+        if not self.evaluation_state:
+            i, j = self.crossroad.location
+            api.print_action(self.name)
+            api.print_settlement(self.hand.index, i, j)
+            api.point_on_crossroad(i, j)
         self.shared_aftermath()
 
     def log_action(self):
@@ -401,18 +402,6 @@ class BuildSettlement(Action):
         #        resource]
         hand.settlements_log += [self.crossroad]
         return undo_info
-
-    def compute_heuristic(self):
-        hand = self.hand
-        old_production_variety = len(list(filter(lambda x: x.value != 0, hand.production)))
-        old_production = hand.production
-        legals = self.crossroad.tmp_build(self.hand.index)
-        heuristic_increment = len(list(filter(lambda x: x.value != 0, hand.production))) - old_production_variety
-        for resource in hand.production:
-            heuristic_increment += (hand.production[resource] - old_production[resource]) * \
-                                   hand.parameters.resource_value[resource]
-        self.crossroad.unbuild(self.hand.index, legals)
-        return heuristic_increment
 
     def create_settlement(self):
         hand = self.hand
@@ -448,20 +437,32 @@ class BuildFirstSettlement(BuildSettlement):
         self.action_aftermath()
         return build_info
 
+    def undo(self, info):
+        build_info = info
+        self.crossroad.undo_build(self.index, build_info)
+        self.hand.settlements_log.pop()
+
     def is_legal(self):
         return True
 
 
-class BuildSecondSettlement(BuildSettlement):
+class BuildSecondSettlement(BuildFirstSettlement):
     def __init__(self, hand, heuristic_method, crossroad):
         super().__init__(hand, heuristic_method, crossroad)
         self.name = 'build second settlement'
 
     def do_action(self):
         build_info = self.create_settlement()
+        self.crossroad.produce(self.index)
         self.hand.settlements_log += [self.crossroad]
         self.action_aftermath()
         return build_info
+
+    def undo(self, info):
+        build_info = info
+        self.crossroad.undo_produce(self.index)
+        self.crossroad.undo_build(self.index, build_info)
+        self.hand.settlements_log.pop()
 
 
 class BuildCity(Action):
@@ -478,7 +479,7 @@ class BuildCity(Action):
 
     def undo(self, info):
         build_info = info
-        self.crossroad.unbuild(self.index, build_info)
+        self.crossroad.undo_build(self.index, build_info)
         self.hand.receive(CITY_PRICE)
         self.hand.cities.pop()
 
@@ -523,18 +524,6 @@ class BuildCity(Action):
         hand.set_distances()
         return build_info
 
-    def compute_heuristic(self):
-        hand = self.hand
-        old_production_variety = len(list(filter(lambda x: x.value != 0, hand.production)))
-        old_production = hand.production
-        legals = self.crossroad.tmp_build(self.hand.index)
-        heuristic_increment = len(list(filter(lambda x: x.value != 0, hand.production))) - old_production_variety
-        for resource in hand.production:
-            heuristic_increment += (hand.production[resource] - old_production[resource]) * \
-                                   hand.parameters.resource_value[resource]
-        self.crossroad.unbuild(self.hand.index, legals)
-        return heuristic_increment
-
     def create_keys(self):
         essentials, regulars = super().create_keys()
         regulars += ['all production : ' + str(self.crossroad.val['sum'])]
@@ -557,12 +546,13 @@ class BuildRoad(Action):
         return info
 
     def action_aftermath(self):
-        api.print_action(self.name)
-        api.write_a_note(str(self.check_longest_road()))
-        i0, j0 = self.road.neighbors[0].location
-        i1, j1 = self.road.neighbors[1].location
-        api.print_road(self.hand.index, i0, j0, i1, j1)
-        api.point_on_road(i0, j0, i1, j1)
+        if not self.evaluation_state:
+            api.print_action(self.name)
+            api.write_a_note(str(self.check_longest_road()))
+            i0, j0 = self.road.neighbors[0].location
+            i1, j1 = self.road.neighbors[1].location
+            api.print_road(self.hand.index, i0, j0, i1, j1)
+            api.point_on_road(i0, j0, i1, j1)
         self.shared_aftermath()
 
     def log_action(self):
@@ -653,6 +643,9 @@ class BuildFreeRoad(BuildRoad):
         info = self.create_road()
         self.action_aftermath()
         return info
+
+    def undo(self, info):
+        self.road.undo_build(info)
 
     def is_legal(self):
         return True

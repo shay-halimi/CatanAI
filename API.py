@@ -44,7 +44,8 @@ def resize_arrows(size):
 
 class API:
     def __init__(self, names: list[str]):
-        self.on_switch = False
+        self.note_switch = False
+        self.on_switch = True
         if self.on_switch:
             self.times = Image.open('images/source/times.png')
             self.times_mask = Image.open('images/source/times_mask.png').convert('L')
@@ -106,7 +107,7 @@ class API:
             self.number_mask = Image.open('images/source/number_mask.jpg').convert('L')
 
     def write_a_note(self, text):
-        if self.on_switch:
+        if self.on_switch and self.note_switch:
             w, h = self.draw.textsize(text, font=self.font)
             self.start.paste(self.headline_mask, (int((3160 - w) / 2), 2100))
             self.draw.multiline_text(((3160 - w) / 2, 2100), text, fill=(255, 255, 255), font=self.font)

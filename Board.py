@@ -103,20 +103,7 @@ class Crossroad:
             self.fertility_dist = INFINITY
         return legals
 
-    # build do the same as temp build
-    # ToDo: delete
-    def tmp_build(self, player):
-        legals = []
-        if self.ownership is None:
-            self.ownership = player
-            for n in range(len(self.neighbors)):
-                legals += [self.neighbors[n].crossroad.legal]
-                self.neighbors[n].crossroad.legal = False
-        if self.ownership == player and self.building < 2:
-            self.building += 1
-        return legals
-
-    def unbuild(self, player, legals):
+    def undo_build(self, player, legals):
         assert self.ownership == player
         if self.building == 1:
             self.ownership = None
@@ -125,9 +112,16 @@ class Crossroad:
         self.building -= 1
 
     def produce(self, player):
+        hand = self.board.hands[player]
         for t in self.terrains:
             if t.resource != Resource.DESSERT:
-                self.board.hands[player].resources[t.resource] += 1
+                hand.add_resources(t.resource, 1)
+
+    def undo_produce(self, player):
+        hand = self.board.hands[player]
+        for t in self.terrains:
+            if t.resource != Resource.DESSERT:
+                hand.subtract_resources(t.resource, 1)
 
     # link the crossroad with its neighbor edges
     def add_neighbor(self, road, crossroad):

@@ -77,7 +77,7 @@ def take_best_action(actions):
         for a in actions:
             if a.heuristic > baction.heuristic:
                 baction = a
-        info = baction.do_action()
+        baction.do_action()
         return baction
     else:
         return None
