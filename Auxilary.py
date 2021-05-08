@@ -16,16 +16,16 @@ def r2s(resource: Resource):
         return "NONE"
 
 
-def s2r(str):
-    if str == "wood":
+def s2r(resource):
+    if resource == "wood":
         return Resource.WOOD
-    elif str == "clay":
+    elif resource == "clay":
         return Resource.CLAY
-    elif str == "sheep":
+    elif resource == "sheep":
         return Resource.SHEEP
-    elif str == "wheat":
+    elif resource == "wheat":
         return Resource.WHEAT
-    elif str == "iron":
+    elif resource == "iron":
         return Resource.IRON
     else:
         return Resource.DESSERT
@@ -39,14 +39,14 @@ def resource_log(hand):
             'iron': hand.resources[Resource.IRON]}
 
 
-def next_turn(players, round, turn) -> (int, int):
+def next_turn(players, rnd, turn) -> (int, int):
     if turn == players - 1:
         turn = 0
-        round += 1
-        return round, turn
+        rnd += 1
+        return rnd, turn
     else:
         turn += 1
-        return round, turn
+        return rnd, turn
 
 
 # how many crossroads are in a line

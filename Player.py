@@ -2,6 +2,7 @@ from Heuristics import SimpleHeuristic
 from Heuristics import StatisticsHeuristic
 from Heuristics import best_action
 from Heuristics import greatest_crossroad
+from Heuristics import hand_heuristic
 from Actions import Trade
 from Actions import BuildFreeRoad
 from Actions import BuildRoad
@@ -10,15 +11,15 @@ from Actions import BuildFirstSettlement
 from Actions import BuildSecondSettlement
 from Actions import BuildCity
 from Actions import DoNothing
+from Actions import UseDevCard
 from Actions import UseKnight
 from Actions import UseMonopole
 from Actions import UseBuildRoads
 from Actions import UseYearOfPlenty
 from Actions import BuyDevCard
 from Actions import ThrowCards
+from Actions import Action
 from Board import Board
-from Board import Terrain
-from Board import Crossroad
 from Hand import Hand
 from Resources import Resource
 from Auxilary import s2r
@@ -69,18 +70,15 @@ class LogToAction:
             if v is n.crossroad:
                 return n.road
 
-    def is_legal(self):
-        return True
-
 
 def take_best_action(actions):
     if actions:
-        best_action = actions.pop()
+        baction = actions.pop() # type: Action
         for a in actions:
-            if a.heuristic > best_action.heuristic:
-                best_action = a
-        best_action.do_action()
-        return best_action
+            if a.heuristic > baction.heuristic:
+                baction = a
+        info = baction.do_action()
+        return baction
     else:
         return None
 
@@ -112,48 +110,61 @@ class Player:
                 num_cards -= cards_to_throw
         ThrowCards(self.hand, None, cards)
 
-    def get_legal_moves(self):
+    def get_legal_moves(self, heuristic):
         legal_moves = []
-        legal_moves += [DoNothing(self.hand, None)]
+        h = None if heuristic is None else heuristic["do nothing"]
+        legal_moves += [DoNothing(self.hand, h)]
         # finding legal moves from devCards
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["knight"]))) > 0:
             # need to check if the cards
-            for terrain in self.board.map:
-                if terrain == self.board.bandit_location:
-                    continue
-                for cr in Terrain.get_crossroads((terrain)):
-                    if Crossroad.get_ownership(cr) is not (None or self.index):
-                        legal_moves += [UseKnight(self.hand, None, terrain, Crossroad.get_ownership(cr))]
+            for line in self.board.map:
+                for terrain in line:
+                    if terrain == self.board.bandit_location:
+                        continue
+                    for p in range(self.board.players):
+                        if p != self.index:
+                            h = None if heuristic is None else heuristic["use knight"]
+                            legal_moves += [UseKnight(self.hand, h, terrain, p)]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["monopole"]))) > 0:
-            for i in range(1, 6):
-                legal_moves += [UseMonopole(self, None, Resource[i])]
+            for r in Resource:
+                if r != Resource.DESSERT:
+                    h = None if heuristic is None else heuristic["use monopole"]
+                    legal_moves += [UseMonopole(self.hand, h, r)]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["road builder"]))) > 0:
             for [road1, road2] in self.board.get_two_legal_roads(self.index):
-                legal_moves += [UseBuildRoads(self.hand, None, road1, road2)]
+                h = None if heuristic is None else heuristic["use build roads"]
+                legal_moves += [UseBuildRoads(self.hand, h, road1, road2)]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["year of prosper"]))) > 0:
-            for i in range(1, 6):
-                for j in range(1, 6):
-                    legal_moves += [UseYearOfPlenty(self.hand, None, Resource[i], Resource[j])]
+            for r1 in Resource:
+                if r1 != Resource.DESSERT:
+                    for r2 in Resource:
+                        if r2 != Resource.DESSERT:
+                            h = None if heuristic is None else heuristic["use year of plenty"]
+                            legal_moves += [UseYearOfPlenty(self.hand, h, r1, r2)]
         if self.board.hands[self.index].can_buy_road():
             for road in self.board.get_legal_roads(self.index):
-                legal_moves += [BuildRoad(self.hand, None, road)]
+                h = None if heuristic is None else heuristic["build road"]
+                legal_moves += [BuildRoad(self.hand, h, road)]
         if self.board.hands[self.index].can_buy_settlement():
             for crossword in self.board.get_lands(self.index):
-                legal_moves += [BuildSettlement(self.hand, None, crossword)]
+                h = None if heuristic is None else heuristic["build settlement"]
+                legal_moves += [BuildSettlement(self.hand, h, crossword)]
         if self.board.hands[self.index].can_buy_city():
             for settlement in self.board.get_settlements(self.index):
-                legal_moves += [BuildCity(self.hand, None, settlement)]
+                h = None if heuristic is None else heuristic["build city"]
+                legal_moves += [BuildCity(self.hand, h, settlement)]
         if self.board.hands[self.index].can_buy_development_card():
-            legal_moves += [BuyDevCard(self.hand, None)]
+            h = None if heuristic is None else heuristic["buy dev card"]
+            legal_moves += [BuyDevCard(self.hand, h)]
         for resource in Resource:
             if resource is not Resource.DESSERT:
                 can_trade, exchange_rate = self.hand.can_trade(resource, 1)
                 if can_trade:
                     for dst in Resource:
                         if dst is not Resource.DESSERT:
-                            legal_moves += [Trade(self.hand, None, resource, exchange_rate, dst, 1)]
+                            h = None if heuristic is None else heuristic["trade"]
+                            legal_moves += [Trade(self.hand, h, resource, exchange_rate, dst, 1)]
         # ToDo : Add trade between players
-        #ToDo : add throw LegalCards moves
         return legal_moves
 
     #########################################################################
@@ -176,11 +187,13 @@ class Player:
         return cr, road
 
     def simple_choice(self):
-        actions = self.get_legal_moves()
+        actions = self.get_legal_moves(None)
         settlements = []
         cities = []
         roads = []
         trades = []
+        buy_development = None
+        use_development = []
         for a in actions:
             if isinstance(a, BuildSettlement):
                 settlements += [a]
@@ -190,6 +203,10 @@ class Player:
                 roads += [a]
             elif isinstance(a, Trade):
                 trades += [a]
+            elif isinstance(a, BuyDevCard):
+                buy_development = a
+            elif isinstance(a, UseDevCard):
+                use_development += [a]
         a = None
         if settlements:
             a = best_action(settlements)
@@ -197,6 +214,10 @@ class Player:
             a = best_action(cities)
         elif roads:
             a = best_action(roads)
+        elif use_development:
+            a = best_action(use_development)
+        elif buy_development:
+            a = buy_development
         elif trades:
             a = best_action(trades)
         if a:
@@ -207,41 +228,65 @@ class Player:
         return self.simple_choice()
 
 
+def create_general_heuristic(heuristic):
+    return {"do nothing": heuristic,
+            "use knight": heuristic,
+            "use monopole": heuristic,
+            "road builder": heuristic,
+            "use build roads": heuristic,
+            "use year of plenty": heuristic,
+            "build road": heuristic,
+            "build settlement": heuristic,
+            "build city": heuristic,
+            "buy dev card": heuristic,
+            "trade": heuristic}
+
+
 class Dork(Player):
     def __init__(self, index, board: Board):
         super().__init__(index, board, "Dork")
-        self.statistics = StatisticsHeuristic()
+        self.statistics = StatisticsHeuristic(board.statistics_logger)
+        self.heuristic = create_general_heuristic(hand_heuristic)
 
     def computer_1st_settlement(self):
         legal_crossroads = self.board.get_legal_crossroads_start()
         actions = []
-        heuristic = self.statistics.settlement_value
+        heuristic = hand_heuristic
         for cr in legal_crossroads:
             actions += [BuildFirstSettlement(self.hand, heuristic, cr)]
-        best_action = take_best_action(actions)
+        baction = take_best_action(actions) # type: BuildFirstSettlement
         actions = []
-        cr = best_action.crossroad
+        cr = baction.crossroad
         # add heuristic for road
         for n in cr.neighbors:
-            actions += [BuildFreeRoad(self.hand, None, n.road)]
+            actions += [BuildFreeRoad(self.hand, heuristic, n.road)]
         take_best_action(actions)
 
     def computer_2nd_settlement(self):
         legal_crossroads = self.board.get_legal_crossroads_start()
         actions = []
-        heuristic = self.statistics.settlement_value
+        heuristic = hand_heuristic
         for cr in legal_crossroads:
             actions += [BuildSecondSettlement(self.hand, heuristic, cr)]
-        best_action = take_best_action(actions)
+        best_action = take_best_action(actions) # type: BuildSecondSettlement
         actions = []
         cr = best_action.crossroad
         for n in cr.neighbors:
-            actions += [BuildFreeRoad(self.hand, None, n.road)]
+            actions += [BuildFreeRoad(self.hand, heuristic, n.road)]
         take_best_action(actions)
 
     def simple_choice(self):
-        actions = self.get_legal_moves()
-        best_action = None
+        actions = self.get_legal_moves(self.heuristic)
+        best_action = None  # type: Action
+        for a in actions:
+            if best_action is None:
+                best_action = a
+            elif a.heuristic > best_action.heuristic:
+                best_action = a
+        if best_action is not None:
+            print(best_action.name)
+            best_action.do_action()
+        """
         for a in actions:
             if isinstance(a, BuildSettlement):
                 if best_action is None:
@@ -266,6 +311,7 @@ class Dork(Player):
                     a.do_action()
                     return True
         return False
+        """
 
     def compute_turn(self):
         self.simple_choice()

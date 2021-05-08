@@ -3,6 +3,7 @@ from Resources import Resource
 from DevStack import DevStack
 import random
 import Dice
+from Log import StatisticsLogger
 from Auxilary import r2s
 from Auxilary import s2r
 from Auxilary import cr_line_len
@@ -25,9 +26,6 @@ class Terrain:
         self.board = None
         self.location = None
 
-    def get_crossroads(self):
-        return self.crossroads
-
     def __str__(self):
         return "(" + str(self.num) + "," + str(self.resource) + ")"
 
@@ -37,7 +35,7 @@ class Terrain:
     def produce(self):
         if not self.has_bandit and self.resource is not Resource.DESSERT:
             for cr in self.crossroads:
-                if cr.ownership is not None :
+                if cr.ownership is not None:
                     self.board.hands[cr.ownership].resources[self.resource] += cr.building
 
     def can_put_bandit(self):
@@ -59,6 +57,16 @@ class Terrain:
             'number': self.num
         }
         return log
+
+    def bandit_value(self, index):
+        negative_value = 0  # how much index player earn on the terrain
+        positive_value = 0  # how much the rest of the players earn on the terrain
+        for cr in self.crossroads:
+            if cr.ownership == index:
+                negative_value += cr.building * (6 - abs(7 - self.num))
+            elif cr.ownership is not None:
+                positive_value += cr.building * (6 - abs(7 - self.num))
+        return negative_value, positive_value
 
 
 class Crossroad:
@@ -83,18 +91,20 @@ class Crossroad:
         self.building = 0
         self.port = None
 
-    def get_ownership(self):
-        return self.ownership
-
     def build(self, player):
+        legals = []
         if self.ownership is None:
             self.ownership = player
             for n in self.neighbors:
+                legals += [n.crossroad.legal]
                 n.crossroad.legal = False
         if self.ownership == player and self.building < 2:
             self.building += 1
             self.fertility_dist = INFINITY
+        return legals
 
+    # build do the same as temp build
+    # ToDo: delete
     def tmp_build(self, player):
         legals = []
         if self.ownership is None:
@@ -193,6 +203,7 @@ class Road:
         self.neighbors = []
         self.board = board
         self.temp_build_info = {}
+        self.traveled = False
 
     def upgrade_longest_road(self, player):
         i = player
@@ -225,39 +236,26 @@ class Road:
             return True
         return False
 
-    def temp_build(self, player):
-        if self.is_legal(player):
-            self.owner = player
-            self.temp_build_info["connected0"] = self.neighbors[0].connected[player]
-            self.temp_build_info["connected1"] = self.neighbors[1].connected[player]
-            self.neighbors[0].connected[player] = True
-            self.neighbors[1].connected[player] = True
-            self.temp_build_info["longest_road_size"] = self.board.longest_road_size
-            self.temp_build_info["longest road owner"] = self.board.longest_road_owner
-            self.upgrade_longest_road(player)
-            return True
-        return False
-
-    def undo_build(self):
+    def undo_build(self, info):
+        c1, c2, lrs, lro = info
         player = self.owner
         self.owner = None
-        self.neighbors[0].connected[player] = self.temp_build_info["connected0"]
-        self.neighbors[1].connected[player] = self.temp_build_info["connected1"]
-        self.board.longest_road_size = self.temp_build_info["longest_road_size"]
-        self.board.longest_road_owner = self.temp_build_info["longest road owner"]
+        n1, n2 = self.neighbors  # type: Crossroad, Crossroad
+        n1.connected[player] = c1
+        n2.connected[player] = c2
+        self.board.longest_road_size = lrs
+        self.board.longest_road_owner = lro
 
     def build(self, player):
-        if self.is_legal(player):
-            self.owner = player
-            for i in range(2):
-                if not self.neighbors[i].connected[player]:
-                    self.board.hands[player].lands_log += [self.neighbors[i]]
-                    self.neighbors[i].connected[player] = True
-            self.upgrade_longest_road(player)
-            # Todo: delete comment
-            # print_road(self)
-            return True
-        return False
+        self.owner = player
+        n1, n2 = self.neighbors
+        hand = self.board.hands[player]
+        hand.lands_log += [n1, n2]
+        c1, c2 = n1.connected[player], n2.connected[player]
+        n1.connected[player], n2.connected[player] = True, True
+        self.upgrade_longest_road(player)
+        lrs, lro = self.board.longest_road_size, self.board.longest_road_owner
+        return c1, c2, lrs, lro
 
     def get_location(self):
         return str(self.neighbors[0].location) + " " + str(self.neighbors[1].location)
@@ -287,6 +285,7 @@ class Neighbor:
 
 class Board:
     def __init__(self, players, log):
+        self.statistics_logger = StatisticsLogger()
         self.log = log
         self.players = players
         self.devStack = DevStack()
@@ -301,7 +300,7 @@ class Board:
         self.bandit_location = None
 
         # create 2d array of crossroads
-        self.crossroads = []    # type: List[List[Crossroad]]
+        self.crossroads = []  # type: list[list[Crossroad]]
         for i in range(12):
             line = []
             for j in range(cr_line_len[i]):
@@ -372,7 +371,7 @@ class Board:
         self.add_neighbors_to_roads()
 
         # create hands
-        self.hands : list[Hand] = []
+        self.hands: list[Hand] = []
         for n in range(players):
             self.hands += [Hand(n, self)]
 
@@ -459,10 +458,6 @@ class Board:
                 log += [t_log]
         self.log.board(log)
 
-    def get_max_points(self):
-        max_points = max(self.hands)
-        return max_points
-
     def update_longest_road(self, player):
         former = self.longest_road_owner
         if former is not None:
@@ -511,11 +506,12 @@ class Board:
         for line1 in self.roads:
             for road1 in line1:
                 if road1.is_legal(player):
-                    road1.temp_build(player)
+                    info1 = road1.build(player)
                     for line2 in self.roads:
                         for road2 in line2:
                             if road2.is_legal(player):
                                 legal += [(road1, road2)]
+                    road1.undo_build(info1)
         return legal
 
     def get_names(self):

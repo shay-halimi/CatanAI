@@ -1,6 +1,5 @@
 import random
 
-
 ROBBER = 7
 
 
@@ -21,7 +20,7 @@ class Dice:
         self.dice2 = Die()
         self.sum = self.dice1.number + self.dice2.number
         self.number_to_terrain = {}
-        for i in range(2,13):
+        for i in range(2, 13):
             self.number_to_terrain[i] = []
 
     def __str__(self):
@@ -46,5 +45,3 @@ def test_die():
     print("   Initial state: " + str(dice))
     dice.throw()
     print("   After throw: " + str(dice))
-
-

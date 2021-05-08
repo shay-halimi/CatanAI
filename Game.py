@@ -24,34 +24,46 @@ class Game:
         self.api = API(self.board.get_names())
         self.api.show_terrain(self.board.map)
         Actions.api = self.api
-        # create the API
-        # ToDo: delete comment
-        # start_api(self.board)
 
     def start_game(self):
         for i in range(len(self.players)):
+            self.api.new_turn()
             self.log.turn_log['resources'] = resource_log(self.players[i].hand)
             if self.players[i].is_computer:
                 self.players[i].computer_1st_settlement()
             else:
                 pass
             self.next_turn()
+            self.api.end_turn()
         for i in range(len(self.players) - 1, -1, -1):
+            self.api.new_turn_name(self.players[i].name)
             self.log.turn_log['resources'] = resource_log(self.players[i].hand)
             if self.players[i].is_computer:
                 self.players[i].computer_2nd_settlement()
             else:
                 pass
             self.next_turn()
+            self.api.end_turn()
+        self.api.round = 1
+        self.api.turn = self.players_num - 1
 
     def play_game(self):
         self.start_game()
-        while max(list(map(lambda x: x.points, self.board.hands))) < 10:
+        while self.play_round():
             if self.round > 200:
                 print("too many rounds")
+                self.log.end_game()
+                max_points = 0
+                for hand in self.board.hands:
+                    if hand.points > max_points:
+                        max_points = hand.points
+                for hand in self.board.hands:
+                    if hand.points == max_points:
+                        self.board.statistics_logger.end_game(hand.index)
                 return
-            self.play_round()
+            print("\n\n\n")
             print(self.round)
+            print("\n\n\n")
             for hand in self.board.hands:
                 for typeCard in hand.cards.values():
                     if typeCard:
@@ -59,15 +71,17 @@ class Game:
                             card.ok_to_use = True
         for hand in self.board.hands:
             if hand.points >= 10:
-                # TODO need to call Log.finish_game
                 print("player number " + str(hand.index) + " is the winner")
                 self.log.end_game()
+                self.board.statistics_logger.end_game(hand.index)
+                return
 
     def play_round(self):
         for player in self.players:
             self.play_turn(player)
             if max(list(map(lambda x: x.points, self.board.hands))) >= 10:
-                break
+                return False
+        return True
 
     def play_turn(self, player: Player):
         self.api.end_turn()
@@ -94,6 +108,7 @@ class Game:
         for p in self.players:
             self.api.print_resources(p.index, p.hand.resources)
         self.api.save_file()
+        self.api.delete_action()
         self.log.dice(self.board.dice.sum)
         if self.board.dice.sum == 7:
             self.throw_cards()
@@ -106,9 +121,9 @@ class Game:
 
     # Todo: enable knight before dice
     def load_game(self, rounds):
-        for r, round in enumerate(rounds):
-            for t, turn in enumerate(round['turns']):
-                print("\n\n\n round : " + str(round['round']) + " | turn : " + str(turn['turn']))
+        for r, rnd in enumerate(rounds):
+            for t, turn in enumerate(rnd['turns']):
+                print("\n\n\n round : " + str(rnd['round']) + " | turn : " + str(turn['turn']))
                 if 'dice' in turn:
                     print("dice : " + str(turn['dice']))
                     self.load_dice(turn['dice'])
@@ -117,7 +132,6 @@ class Game:
                     print(action)
                     player = self.players[action['player']]
                     a = LogToAction(self.board, player, action).get_action()
-                    assert a.is_legal()
                     a.do_action()
                 self.board.next_turn(t, r)
 
@@ -142,12 +156,8 @@ class Game:
 
     def create_players(self, num) -> list[Player]:
         players = []
-        r = randint(0, num)
         for i in range(num):
-            if i == r:
-                player = Dork(i, self.board)
-            else:
-                player = Player(i, self.board)
+            player = Dork(i, self.board)
             players += [player]
         self.board.api = API(self.board.get_names())
         return players
