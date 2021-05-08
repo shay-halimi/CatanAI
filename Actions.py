@@ -52,7 +52,6 @@ class Action(ABC):
     def do_action(self):
         if not self.evaluation_state:
             print('index : ' + str(self.index) + ' | action : ' + self.name)
-        # self.hand.heuristic = self.heuristic
         return None
 
     def log_action(self):
@@ -103,10 +102,6 @@ class UseDevCard(Action):
         super().__init__(hand, heuristic_method)
         self.name = 'use development card'
 
-    def do_action(self):
-        super().do_action()
-        self.shared_aftermath()
-
 
 class UseKnight(UseDevCard):
     def __init__(self, hand, heuristic_method, terrain, dst):
@@ -119,7 +114,6 @@ class UseKnight(UseDevCard):
         terrain = self.hand.board.bandit_location
         super().do_action()
         resource = self.use_knight()
-        # ToDo : give a more meaningful type
         self.shared_aftermath()
         return terrain, self.dst, self.hand.index, resource
 
@@ -132,7 +126,8 @@ class UseKnight(UseDevCard):
             if knight.is_valid():
                 if terrain.put_bandit():
                     hand.cards["knight"].remove(knight)
-                    return self.steal()
+                    steal = self.steal()
+                    return steal
         return None
 
     # todo test it
@@ -224,7 +219,6 @@ class UseYearOfPlenty(UseDevCard):
     def do_action(self):
         super().do_action()
         self.use_year_of_plenty()
-        # ToDo : give a more meaningful type
         self.shared_aftermath()
         return self.resource1, self.resource2, self.hand.index
 
@@ -255,7 +249,6 @@ class UseBuildRoads(UseDevCard):
     def do_action(self):
         super().do_action()
         info = self.build_2_roads()
-        # ToDo : give a more meaningful type
         self.shared_aftermath()
         return info
 
@@ -288,7 +281,6 @@ class UseVictoryPoint(UseDevCard):
     def do_action(self):
         super().do_action()
         self.use_victory_point()
-        # ToDo : give a more meaningful type
         self.shared_aftermath()
         return self.index
 
@@ -654,8 +646,8 @@ class BuyDevCard(Action):
 
     def do_action(self):
         super().do_action()
-        card = self.buy_development_card()
-        return card
+        self.buy_development_card()
+        return None
 
     def undo(self, info):
         hand = self.hand
@@ -671,7 +663,6 @@ class BuyDevCard(Action):
             stack = self.stack
             card = stack.get()
             hand.cards[card.name] += [card]
-        return None
 
 
 class ThrowCards(Action):
