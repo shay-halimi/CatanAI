@@ -46,9 +46,6 @@ class Hand:
         # ---- these are values that we can manipulate according to success ---- #
         self.parameters = Parameters()
 
-        # Todo : delete
-        self.check_points = 0
-
     # ---- get information ---- #
 
     def get_resources_number(self):

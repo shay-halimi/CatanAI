@@ -140,7 +140,5 @@ def hand_heuristic(action: Action):
     undo_info = action.do_action()
     value = hand_stat(action.hand)
     action.undo(undo_info)
-    if len(action.hand.cards['knight']) > 10:
-        print('there is something fishy')
     action.evaluation_off()
     return value
