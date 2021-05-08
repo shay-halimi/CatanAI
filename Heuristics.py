@@ -98,19 +98,18 @@ def show_score_analysis(hand: Hand):
             print('armay value : ' + str(army_value))
 
 
-def able_to_buy_score(hand: Hand, price, value):
-    resources = hand.resources.copy()
+def able_to_buy_score(resources: dict, price, value):
     score = 0
-    can_pay = True
-    while can_pay:
+    before = resources.copy()
+    while True:
+        now = before.copy()
         for resource in price:
-            if resources[resource] >= price[resource]:
-                resources[resource] -= price[resource]
+            if now[resource] >= price[resource]:
+                now[resource] -= price[resource]
             else:
-                can_pay = False
-                break
+                return score, before
         score += value
-    return score
+        before = now.copy()
 
 
 def hand_stat(hand: Hand):
@@ -120,6 +119,7 @@ def hand_stat(hand: Hand):
             stat += hand.resources[resource] * 0.12
     for v in hand.cards.values():
         stat += len(v) * 0.4
+        stat += hand.unknown_dev_cards * 0.4
     if hand.index != hand.board.longest_road_owner:
         road_value = 2 - 0.3 * (hand.board.longest_road_size + 1 - hand.longest_road)
         if road_value > 0:
@@ -128,10 +128,14 @@ def hand_stat(hand: Hand):
         army_value = 2 - 0.5 * (hand.board.largest_army_size - hand.largest_army)
         if army_value > 0:
             stat += army_value
-    stat += able_to_buy_score(hand, SETTLEMENT_PRICE, 0.9)
-    stat += able_to_buy_score(hand, CITY_PRICE, 0.9)
-    stat += able_to_buy_score(hand, ROAD_PRICE, 0.6)
-    stat += able_to_buy_score(hand, DEV_PRICE, 0.7)
+    score, resources = able_to_buy_score(hand.resources, SETTLEMENT_PRICE, 0.48)
+    stat += score
+    score, resources = able_to_buy_score(resources, CITY_PRICE, 0.3)
+    stat += score
+    score, resources = able_to_buy_score(resources, ROAD_PRICE, 0.36)
+    stat += score
+    score, resources = able_to_buy_score(resources, DEV_PRICE, 0.34)
+    stat += score
     return stat
 
 
