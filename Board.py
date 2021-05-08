@@ -103,20 +103,7 @@ class Crossroad:
             self.fertility_dist = INFINITY
         return legals
 
-    # build do the same as temp build
-    # ToDo: delete
-    def tmp_build(self, player):
-        legals = []
-        if self.ownership is None:
-            self.ownership = player
-            for n in range(len(self.neighbors)):
-                legals += [self.neighbors[n].crossroad.legal]
-                self.neighbors[n].crossroad.legal = False
-        if self.ownership == player and self.building < 2:
-            self.building += 1
-        return legals
-
-    def unbuild(self, player, legals):
+    def undo_build(self, player, legals):
         assert self.ownership == player
         if self.building == 1:
             self.ownership = None
@@ -125,9 +112,16 @@ class Crossroad:
         self.building -= 1
 
     def produce(self, player):
+        hand = self.board.hands[player]
         for t in self.terrains:
             if t.resource != Resource.DESSERT:
-                self.board.hands[player].resources[t.resource] += 1
+                hand.add_resources(t.resource, 1)
+
+    def undo_produce(self, player):
+        hand = self.board.hands[player]
+        for t in self.terrains:
+            if t.resource != Resource.DESSERT:
+                hand.subtract_resources(t.resource, 1)
 
     # link the crossroad with its neighbor edges
     def add_neighbor(self, road, crossroad):
@@ -222,9 +216,13 @@ class Road:
         if self.board.hands[i].longest_road > self.board.longest_road_size:
             self.board.longest_road_size = self.board.hands[i].longest_road
             if self.board.longest_road_owner is not None:
-                self.board.hands[self.board.longest_road_owner].points -= 2
+                lro = self.board.hands[self.board.longest_road_owner]   # type: Hand
+                lro.subtract_point()
+                lro.subtract_point()
             self.board.longest_road_owner = player
-            self.board.hands[player].points += 2
+            hand = self.board.hands[player] # type: Hand
+            hand.add_point()
+            hand.add_point()
 
     def is_connected(self, player):
         if self.neighbors[0].connected[player] or self.neighbors[1].connected[player]:
@@ -457,13 +455,6 @@ class Board:
                 t_log['j'] = j
                 log += [t_log]
         self.log.board(log)
-
-    def update_longest_road(self, player):
-        former = self.longest_road_owner
-        if former is not None:
-            self.hands[former].points -= 2
-        self.hands[player].points += 2
-        self.longest_road_size += 1
 
     # ---- game development ---- #
 

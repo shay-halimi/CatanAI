@@ -103,6 +103,9 @@ class Hand:
         name = card.get_name()
         self.cards[name] += [card]
 
+    def add_point(self):
+        self.points += 1
+
     def subtract_point(self):
         self.points -= 1
 

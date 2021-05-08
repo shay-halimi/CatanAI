@@ -17,6 +17,8 @@ from DevStack import Monopole
 from DevStack import YearOfProsper
 from DevStack import VictoryPointCard
 from DevStack import RoadBuilding
+from DevStack import DevCard
+from DevStack import DevStack
 from abc import ABC
 import math
 from random import randrange
@@ -49,7 +51,7 @@ class Action(ABC):
     # do action return necessary information for undo
     def do_action(self):
         if not self.evaluation_state:
-            print(self.name)
+            print('index : ' +  str(self.index) + ' | action : ' + self.name)
         # self.hand.heuristic = self.heuristic
         return None
 
@@ -65,18 +67,16 @@ class Action(ABC):
         pass
 
     def shared_aftermath(self):
-        api.print_action(self.name)
-        api.print_resources(self.hand.index, self.hand.resources)
-        api.save_file()
-        api.delete_action()
         if not self.evaluation_state:
+            api.print_action(self.name)
+            api.print_resources(self.hand.index, self.hand.resources)
+            api.save_file()
+            api.delete_action()
             self.log_action()
             essentials, regulars = self.create_keys()
             self.statistics_logger.save_action(self.hand.index, essentials, regulars)
             if self.hand.points > self.points:
                 self.statistics_logger.got_point(self.hand.index)
-            print(self.name)
-            print(self.heuristic)
 
     def create_keys(self):
         essentials = [self.name, 'points : ' + str(self.points), 'player : ' + str(self.hand.name)]
@@ -230,9 +230,9 @@ class UseMonopole(UseDevCard):
 
 class UseYearOfPlenty(UseDevCard):
     def __init__(self, hand, heuristic_method, resource1, resource2):
-        super().__init__(hand, heuristic_method)
         self.resource1 = resource1
         self.resource2 = resource2
+        super().__init__(hand, heuristic_method)
         # self.heuristic += self.compute_heuristic()
         self.name = 'use year of plenty'
 
@@ -259,8 +259,8 @@ class UseYearOfPlenty(UseDevCard):
     def use_year_of_plenty(self):
         for card in self.hand.cards["year of prosper"]:
             if card.is_valid():
-                self.hand.resources[self.resource1] += 1
-                self.hand.resources[self.resource2] += 1
+                self.hand.add_resources(self.resource1, 1)
+                self.hand.add_resources(self.resource2, 1)
                 self.hand.cards["year of prosper"].remove(card)
 
 
@@ -365,15 +365,17 @@ class BuildSettlement(Action):
 
     def undo(self, info):
         build_info = info
-        self.crossroad.unbuild(self.index, build_info)
+        self.crossroad.undo_build(self.index, build_info)
         self.hand.receive(SETTLEMENT_PRICE)
+        self.hand.subtract_point()
         self.hand.settlements_log.pop()
 
     def action_aftermath(self):
-        i, j = self.crossroad.location
-        api.print_action(self.name)
-        api.print_settlement(self.hand.index, i, j)
-        api.point_on_crossroad(i, j)
+        if not self.evaluation_state:
+            i, j = self.crossroad.location
+            api.print_action(self.name)
+            api.print_settlement(self.hand.index, i, j)
+            api.point_on_crossroad(i, j)
         self.shared_aftermath()
 
     def log_action(self):
@@ -402,23 +404,11 @@ class BuildSettlement(Action):
         hand.settlements_log += [self.crossroad]
         return undo_info
 
-    def compute_heuristic(self):
-        hand = self.hand
-        old_production_variety = len(list(filter(lambda x: x.value != 0, hand.production)))
-        old_production = hand.production
-        legals = self.crossroad.tmp_build(self.hand.index)
-        heuristic_increment = len(list(filter(lambda x: x.value != 0, hand.production))) - old_production_variety
-        for resource in hand.production:
-            heuristic_increment += (hand.production[resource] - old_production[resource]) * \
-                                   hand.parameters.resource_value[resource]
-        self.crossroad.unbuild(self.hand.index, legals)
-        return heuristic_increment
-
     def create_settlement(self):
         hand = self.hand
         self.crossroad.connected[hand.index] = True
         hand.settlement_pieces -= 1
-        hand.points += 1
+        hand.add_point()
         for resource in Resource:
             if resource is not Resource.DESSERT:
                 hand.production_all += self.crossroad.val[resource] / 36
@@ -448,20 +438,34 @@ class BuildFirstSettlement(BuildSettlement):
         self.action_aftermath()
         return build_info
 
+    def undo(self, info):
+        build_info = info
+        self.crossroad.undo_build(self.index, build_info)
+        self.hand.subtract_point()
+        self.hand.settlements_log.pop()
+
     def is_legal(self):
         return True
 
 
-class BuildSecondSettlement(BuildSettlement):
+class BuildSecondSettlement(BuildFirstSettlement):
     def __init__(self, hand, heuristic_method, crossroad):
         super().__init__(hand, heuristic_method, crossroad)
         self.name = 'build second settlement'
 
     def do_action(self):
         build_info = self.create_settlement()
+        self.crossroad.produce(self.index)
         self.hand.settlements_log += [self.crossroad]
         self.action_aftermath()
         return build_info
+
+    def undo(self, info):
+        build_info = info
+        self.crossroad.undo_produce(self.index)
+        self.crossroad.undo_build(self.index, build_info)
+        self.hand.subtract_point()
+        self.hand.settlements_log.pop()
 
 
 class BuildCity(Action):
@@ -478,15 +482,17 @@ class BuildCity(Action):
 
     def undo(self, info):
         build_info = info
-        self.crossroad.unbuild(self.index, build_info)
+        self.crossroad.undo_build(self.index, build_info)
         self.hand.receive(CITY_PRICE)
+        self.hand.subtract_point()
         self.hand.cities.pop()
 
     def action_aftermath(self):
-        i, j = self.crossroad.location
-        api.print_action(self.name)
-        api.print_city(self.hand.index, i, j)
-        api.point_on_crossroad(i, j)
+        if not self.evaluation_state:
+            i, j = self.crossroad.location
+            api.print_action(self.name)
+            api.print_city(self.hand.index, i, j)
+            api.point_on_crossroad(i, j)
         self.shared_aftermath()
 
     def log_action(self):
@@ -518,22 +524,10 @@ class BuildCity(Action):
         hand = self.hand
         hand.settlement_pieces += 1
         hand.city_pieces -= 1
-        hand.points += 1
+        hand.add_point()
         build_info = self.crossroad.build(hand.index)
         hand.set_distances()
         return build_info
-
-    def compute_heuristic(self):
-        hand = self.hand
-        old_production_variety = len(list(filter(lambda x: x.value != 0, hand.production)))
-        old_production = hand.production
-        legals = self.crossroad.tmp_build(self.hand.index)
-        heuristic_increment = len(list(filter(lambda x: x.value != 0, hand.production))) - old_production_variety
-        for resource in hand.production:
-            heuristic_increment += (hand.production[resource] - old_production[resource]) * \
-                                   hand.parameters.resource_value[resource]
-        self.crossroad.unbuild(self.hand.index, legals)
-        return heuristic_increment
 
     def create_keys(self):
         essentials, regulars = super().create_keys()
@@ -557,12 +551,13 @@ class BuildRoad(Action):
         return info
 
     def action_aftermath(self):
-        api.print_action(self.name)
-        api.write_a_note(str(self.check_longest_road()))
-        i0, j0 = self.road.neighbors[0].location
-        i1, j1 = self.road.neighbors[1].location
-        api.print_road(self.hand.index, i0, j0, i1, j1)
-        api.point_on_road(i0, j0, i1, j1)
+        if not self.evaluation_state:
+            api.print_action(self.name)
+            api.write_a_note(str(self.check_longest_road()))
+            i0, j0 = self.road.neighbors[0].location
+            i1, j1 = self.road.neighbors[1].location
+            api.print_road(self.hand.index, i0, j0, i1, j1)
+            api.point_on_road(i0, j0, i1, j1)
         self.shared_aftermath()
 
     def log_action(self):
@@ -654,6 +649,9 @@ class BuildFreeRoad(BuildRoad):
         self.action_aftermath()
         return info
 
+    def undo(self, info):
+        self.road.undo_build(info)
+
     def is_legal(self):
         return True
 
@@ -671,7 +669,8 @@ class Trade(Action):
     def do_action(self):
         super().do_action()
         self.trade()
-        api.trade(self.hand.board.players, self.hand.index, self.src, self.dst, self.give, self.take)
+        if not self.evaluation_state:
+            api.trade(self.hand.board.players, self.hand.index, self.src, self.dst, self.give, self.take)
         self.shared_aftermath()
         return self.src, self.give, self.dst, self.take
 
@@ -680,10 +679,6 @@ class Trade(Action):
         hand = self.hand
         hand.add_resources(source, give)
         hand.subtract_resources(destination, take)
-
-    # todo
-    def compute_heuristic(self):
-        pass
 
     def log_action(self):
         log = {
@@ -700,8 +695,8 @@ class Trade(Action):
         return self.hand.can_pay({self.src: self.give})
 
     def trade(self):
-        self.hand.resources[self.src] -= self.give
-        self.hand.resources[self.dst] += self.take
+        self.hand.subtract_resources(self.src, self.give)
+        self.hand.add_resources(self.dst, self.take)
 
     def create_keys(self):
         essentials, regulars = super().create_keys()
@@ -711,31 +706,33 @@ class Trade(Action):
 
 class BuyDevCard(Action):
     def __init__(self, hand, heuristic_method):
+        self.stack = hand.board.devStack   # type: DevStack
         super().__init__(hand, heuristic_method)
         self.name = 'buy devCard'
         # self.heuristic += self.compute_heuristic()
 
     def do_action(self):
         super().do_action()
-        name = self.buy_development_card()
-        return name
+        card = self.buy_development_card()
+        return card
 
     def undo(self, info):
-        name = info
+        card = info # type: DevCard
         hand = self.hand
         hand.receive(DEV_PRICE)
-        hand.cards[name].pop()
+        hand.cards[card.name].pop()
+        self.stack.return_card(card)
 
     def compute_heuristic(self):
         return self.hand.parameters.dev_card_value
 
     def buy_development_card(self):
         hand = self.hand
-        stack = self.hand.board.devStack
+        stack = self.stack
         hand.pay(DEV_PRICE)
         card = stack.get()
         hand.cards[card.name] += [card]
-        return card.name
+        return card
 
 
 class ThrowCards(Action):

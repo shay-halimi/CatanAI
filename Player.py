@@ -3,6 +3,7 @@ from Heuristics import StatisticsHeuristic
 from Heuristics import best_action
 from Heuristics import greatest_crossroad
 from Heuristics import hand_heuristic
+from Heuristics import show_score_analysis
 from Actions import Trade
 from Actions import BuildFreeRoad
 from Actions import BuildRoad
@@ -77,7 +78,11 @@ def take_best_action(actions):
         for a in actions:
             if a.heuristic > baction.heuristic:
                 baction = a
-        info = baction.do_action()
+        baction.do_action()
+        print('taken action : ' + baction.name)
+        print('user : ' + str(baction.index))
+        print('score : ' + str(baction.heuristic))
+        print('\n\n')
         return baction
     else:
         return None
@@ -110,7 +115,7 @@ class Player:
                 num_cards -= cards_to_throw
         ThrowCards(self.hand, None, cards)
 
-    def get_legal_moves(self, heuristic):
+    def get_legal_moves(self, heuristic) -> list[Action]:
         legal_moves = []
         h = None if heuristic is None else heuristic["do nothing"]
         legal_moves += [DoNothing(self.hand, h)]
@@ -242,6 +247,21 @@ def create_general_heuristic(heuristic):
             "trade": heuristic}
 
 
+def print_choices(actions: list[Action]):
+    types = {}
+    if actions:
+        print('total points : ' + str(actions[0].points))
+    for action in actions:
+        if action.name not in types:
+            types[action.name] = action
+        elif action.heuristic > types[action.name].heuristic:
+            types[action.name] = action
+    for type, action in types.items():
+        print(type + ' : ' + str(action.heuristic))
+        show_score_analysis(action.hand)
+        print('####################################\n')
+
+
 class Dork(Player):
     def __init__(self, index, board: Board):
         super().__init__(index, board, "Dork")
@@ -276,42 +296,19 @@ class Dork(Player):
         take_best_action(actions)
 
     def simple_choice(self):
+        print('\nI am ' + str(self.index) + ' now in simple choice : ')
         actions = self.get_legal_moves(self.heuristic)
         best_action = None  # type: Action
+        print_choices(actions)
         for a in actions:
             if best_action is None:
                 best_action = a
             elif a.heuristic > best_action.heuristic:
                 best_action = a
         if best_action is not None:
-            print(best_action.name)
+            print('   my best action : ')
+            print(best_action.name + ' : ' + str(best_action.heuristic))
             best_action.do_action()
-        """
-        for a in actions:
-            if isinstance(a, BuildSettlement):
-                if best_action is None:
-                    best_action = a
-                elif a.heuristic > best_action.heuristic:
-                    best_action = a
-        if best_action is not None:
-            best_action.do_action()
-            return True
-        for a in actions:
-            if isinstance(a, BuildCity):
-                a.do_action()
-                return True
-        if not self.hand.get_lands() and self.hand.settlement_pieces:
-            for a in actions:
-                if isinstance(a, BuildRoad):
-                    a.do_action()
-                    return True
-        for a in actions:
-            if isinstance(a, Trade):
-                if self.simple_heuristic.accept_trade(a):
-                    a.do_action()
-                    return True
-        return False
-        """
 
     def compute_turn(self):
         self.simple_choice()
