@@ -96,6 +96,7 @@ def hand_stat(hand: Hand):
 
 def hand_heuristic(action: Action):
     action.evaluation_on()
+    # add this comment
     undo_info = action.do_action()
     value = hand_stat(action.hand)
     action.undo(undo_info)
