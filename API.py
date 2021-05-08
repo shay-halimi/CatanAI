@@ -53,7 +53,6 @@ class API:
             self.take = Image.open('images/source/take.png')
             self.give_mask = Image.open('images/source/give_mask.png').convert('L')
             self.take_mask = Image.open('images/source/take_mask.png').convert('L')
-            self.tester_on = False
             self.names = names
             self.round = 0
             self.turn = 0
@@ -115,7 +114,6 @@ class API:
 
     def trade(self, buyer, seller, source, destination, give, take):
         if self.on_switch:
-            self.tester_on = True
             if buyer == self.num_of_players:
                 buyer_img = Image.open('images/source/bank.jpg').resize((111, 94))
             else:

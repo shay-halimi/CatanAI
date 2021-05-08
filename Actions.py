@@ -228,9 +228,9 @@ class UseMonopole(UseDevCard):
 
 class UseYearOfPlenty(UseDevCard):
     def __init__(self, hand, heuristic_method, resource1, resource2):
-        super().__init__(hand, heuristic_method)
         self.resource1 = resource1
         self.resource2 = resource2
+        super().__init__(hand, heuristic_method)
         # self.heuristic += self.compute_heuristic()
         self.name = 'use year of plenty'
 
@@ -257,8 +257,8 @@ class UseYearOfPlenty(UseDevCard):
     def use_year_of_plenty(self):
         for card in self.hand.cards["year of prosper"]:
             if card.is_valid():
-                self.hand.resources[self.resource1] += 1
-                self.hand.resources[self.resource2] += 1
+                self.hand.add_resources(self.resource1, 1)
+                self.hand.add_resources(self.resource2, 1)
                 self.hand.cards["year of prosper"].remove(card)
 
 
@@ -486,10 +486,11 @@ class BuildCity(Action):
         self.hand.cities.pop()
 
     def action_aftermath(self):
-        i, j = self.crossroad.location
-        api.print_action(self.name)
-        api.print_city(self.hand.index, i, j)
-        api.point_on_crossroad(i, j)
+        if not self.evaluation_state:
+            i, j = self.crossroad.location
+            api.print_action(self.name)
+            api.print_city(self.hand.index, i, j)
+            api.point_on_crossroad(i, j)
         self.shared_aftermath()
 
     def log_action(self):
@@ -677,10 +678,6 @@ class Trade(Action):
         hand.add_resources(source, give)
         hand.subtract_resources(destination, take)
 
-    # todo
-    def compute_heuristic(self):
-        pass
-
     def log_action(self):
         log = {
             'name': self.name,
@@ -696,8 +693,8 @@ class Trade(Action):
         return self.hand.can_pay({self.src: self.give})
 
     def trade(self):
-        self.hand.resources[self.src] -= self.give
-        self.hand.resources[self.dst] += self.take
+        self.hand.subtract_resources(self.src, self.give)
+        self.hand.add_resources(self.dst, self.take)
 
     def create_keys(self):
         essentials, regulars = super().create_keys()
