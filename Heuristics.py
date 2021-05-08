@@ -7,11 +7,10 @@ from Auxilary import r2s
 import json
 from typing import List
 from random import uniform
-from Hand import Hand
-from Hand import SETTLEMENT_PRICE
-from Hand import CITY_PRICE
-from Hand import DEV_PRICE
-from Hand import ROAD_PRICE
+from Hand import Hand, ROAD_PRICE, SETTLEMENT_PRICE, CITY_PRICE, DEV_PRICE
+from Actions import ThrowCards, BuildRoad
+
+import math
 
 
 class SimpleHeuristic:
@@ -53,13 +52,13 @@ class StatisticsHeuristic:
 
     def get_statistic(self, action: Action):
         essentials, regulars = action.create_keys()
-        ratio = self.st_logger.get_statistic(essentials, regulars) # type: float
+        ratio = self.st_logger.get_statistic(essentials, regulars)  # type: float
         return ratio
 
     def actions_to_point(self, action: Action):
         essentials, regulars = action.create_keys()
         actions = self.st_logger.get_actions_to_point(essentials, regulars)
-        return 1/ actions + self.get_statistic(action)
+        return 1 / actions + self.get_statistic(action)
 
 
 def best_action(actions: List[Action]):
@@ -146,3 +145,149 @@ def hand_heuristic(action: Action):
     action.undo(undo_info)
     action.evaluation_off()
     return value
+
+
+# this function given an action sends the action to its appropriate function that compute it function incrementally
+def compute_heuristic_basic(action):
+    if type(action).__name__ == "DoNothing":
+        return compute_heuristic_do_nothing(action)
+    if type(action).__name__ == "UseKnight":
+        return compute_heuristic_use_knight(action)
+    if type(action).__name__ == "UseMonopole":
+        return compute_heuristic_use_monopole(action)
+    if type(action).__name__ == "UseYearOfPlenty":
+        return compute_heuristic_use_year_of_plenty(action)
+    if type(action).__name__ == "UseBuildRoads":
+        return compute_heuristic_use_build_roads(action)
+    if type(action).__name__ == "UseVictoryPoint":
+        return compute_heuristic_use_victory_point(action)
+    if type(action).__name__ == "BuildSettlement":
+        return compute_heuristic_build_settlement(action)
+    if type(action).__name__ == "BuildFirstSettlement":
+        return compute_heuristic_build_first_settlement(action)
+    if type(action).__name__ == "BuildSecondSettlement":
+        return compute_heuristic_build_second_settlement(action)
+    if type(action).__name__ == "BuildCity":
+        return compute_heuristic_build_city(action)
+    if type(action).__name__ == "BuildRoad":
+        return compute_heuristic_build_road(action)
+    if type(action).__name__ == "BuildFreeRoad":
+        return compute_heuristic_build_free_road(action)
+    if type(action).__name__ == "Trade":
+        return compute_heuristic_trade(action)
+    if type(action).__name__ == "BuyDevCard":
+        return compute_heuristic_buy_dev_card()
+    if type(action).__name__ == "ThrowCards":
+        return compute_heuristic_throw_cards(action)
+    assert False  # we don't want to reach this point
+
+
+def compute_heuristic_throw_cards(action):
+    heuristic_increment = 0
+    for card in ThrowCards.get_cards(action.cards):
+        heuristic_increment -= action.hand.parameters.get_resource_value[card]
+
+
+def compute_heuristic_buy_dev_card(action):
+    return action.hand.heuristic + action.hand.parameters.dev_card_value
+
+
+def compute_heuristic_trade(action):
+    return action.hand.heuristic
+
+
+# TO-DO we can compute here a much more complicated heuristic based on distance from other players distance from other city
+# and reasources in the way that the road is pointing
+def compute_heuristic_build_free_road(action):
+    return action.hand.heuristic
+
+
+def compute_heuristic_build_road(action):
+    hand = action.hand
+    hand.pay(ROAD_PRICE)
+    action.create_road()
+    return
+
+
+def compute_heuristic_build_city(action):
+    hand = action.hand
+    old_production_variety = len(list(filter(lambda x: x.value != 0, hand.production)))
+    old_production = hand.production
+    legals = action.crossroad.tmp_build(action.hand.index)
+    heuristic_increment = len(list(filter(lambda x: x.value != 0, hand.production))) - old_production_variety
+    for resource in hand.production:
+        heuristic_increment += (hand.production[resource] - old_production[resource]) * \
+                               hand.parameters.resource_value[resource]
+    action.crossroad.unbuild(action.hand.index, legals)
+    return heuristic_increment
+
+
+# todo
+def compute_heuristic_build_first_settlement(action):
+    pass
+
+
+def compute_heuristic_build_second_settlement(action):
+    pass
+
+
+def compute_heuristic_build_settlement(action):
+    hand = action.hand
+    old_production_variety = len(list(filter(lambda x: x.value != 0, hand.production)))
+    old_production = hand.production
+    legals = action.crossroad.tmp_build(action.hand.index)
+    heuristic_increment = len(list(filter(lambda x: x.value != 0, hand.production))) - old_production_variety
+    for resource in hand.production:
+        heuristic_increment += (hand.production[resource] - old_production[resource]) * \
+                               hand.parameters.resource_value[resource]
+    action.crossroad.unbuild(action.hand.index, legals)
+    return heuristic_increment
+
+
+def compute_heuristic_do_nothing(action):
+    return action.hand.heuristic
+
+
+def compute_heuristic_use_knight(action):
+    action.hand
+    # resource = action.use_knight()
+    # #TODO wrong, heuristic does not update on itself
+    # new_heuristic = action.hand.heuristic
+    # action.undo_use_knight(resource, action.terrain)
+    # return new_heuristic
+
+
+def compute_heuristic_use_monopole(action):
+    selected_resource_quantity = 0
+    for hand in action.hand.board.hands:
+        selected_resource_quantity += hand.resources[action.resource]
+    return action.hand.parameters.resource_value[action.resource] * selected_resource_quantity
+
+
+def compute_heuristic_use_year_of_plenty(action):
+    return action.hand.parameters.resource_value[action.resource1] + \
+           action.hand.parameters.resource_value[action.resource2]
+
+
+def compute_heuristic_use_build_roads(action):
+    heuristic_increment = 0
+    old_road_length = action.hand.parameters.longest_road_value
+    build_road1 = BuildRoad(action.hand, action.heuristic_method, action.road1)
+    build_road2 = BuildRoad(action.hand, action.heuristic_method, action.road2)
+    build_road1.tmp_do()
+    build_road2.tmp_do()
+    if action.hand.board.longest_road_owner != action.hand.index:
+        heuristic_increment += (action.hand.board.longest_road_owner == action.hand.index) * 5
+    heuristic_increment += action.hand.parameters.longest_road_value - old_road_length
+    hand_heuristic = action.hand.heuristic
+    build_road1.undo()
+    build_road2.undo()
+    return heuristic_increment
+
+
+# we could adjust here the heuristic values according to the size of values we want i.e in [0,1]
+def compute_heuristic_use_victory_point(action):
+    if len(list(filter(lambda x: x.ok_to_use, action.hand.cards["victory points"]))) + action.hand.points >= 10:
+        return math.inf
+    else:
+        return -100

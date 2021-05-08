@@ -51,7 +51,7 @@ class Action(ABC):
     # do action return necessary information for undo
     def do_action(self):
         if not self.evaluation_state:
-            print('index : ' +  str(self.index) + ' | action : ' + self.name)
+            print('index : ' + str(self.index) + ' | action : ' + self.name)
         # self.hand.heuristic = self.heuristic
         return None
 
@@ -92,10 +92,6 @@ class DoNothing(Action):
     def do_action(self):
         pass
 
-    # Todo: move to heuristic
-    def compute_heuristic(self):
-        return self.hand.heuristic
-
     def create_keys(self):
         keys = super().create_keys()
         # ToDo: DoNothing should get next best action heuristic score in __init__ as key
@@ -118,8 +114,6 @@ class UseKnight(UseDevCard):
         self.dst = dst
         super().__init__(hand, heuristic_method)
         self.name = 'use knight'
-
-    # self.heuristic += self.compute_heuristic()
 
     def do_action(self):
         terrain = self.hand.board.bandit_location
@@ -179,7 +173,6 @@ class UseMonopole(UseDevCard):
         self.resource = resource
         super().__init__(player, heuristic_method)
         self.name = 'use monopole'
-        # self.heuristic += self.compute_heuristic()
 
     def do_action(self):
         super().do_action()
@@ -195,13 +188,6 @@ class UseMonopole(UseDevCard):
         card = Monopole()
         card.ok_to_use = True
         self.hand.add_card(card)
-
-    # Todo: move to heuristic
-    def compute_heuristic(self):
-        selected_resource_quantity = 0
-        for hand in self.hand.board.hands:
-            selected_resource_quantity += hand.resources[self.resource]
-        return self.hand.parameters.resource_value[self.resource] * selected_resource_quantity
 
     def use_monopole(self):
         amounts = []
@@ -233,13 +219,11 @@ class UseYearOfPlenty(UseDevCard):
         self.resource1 = resource1
         self.resource2 = resource2
         super().__init__(hand, heuristic_method)
-        # self.heuristic += self.compute_heuristic()
         self.name = 'use year of plenty'
 
     def do_action(self):
         super().do_action()
         self.use_year_of_plenty()
-        # self.heuristic += self.compute_heuristic()
         # ToDo : give a more meaningful type
         self.shared_aftermath()
         return self.resource1, self.resource2, self.hand.index
@@ -252,9 +236,6 @@ class UseYearOfPlenty(UseDevCard):
         card = YearOfProsper()
         card.ok_to_use = True
         self.hand.add_card(card)
-
-    def compute_heuristic(self):
-        return self.hand.parameters.resource_value[self.resource1] + self.hand.parameters.resource_value[self.resource2]
 
     def use_year_of_plenty(self):
         for card in self.hand.cards["year of prosper"]:
@@ -270,7 +251,6 @@ class UseBuildRoads(UseDevCard):
         self.road2 = road2
         super().__init__(hand, heuristic_method)
         self.name = 'use build roads'
-        # self.heuristic += self.compute_heuristic()
 
     def do_action(self):
         super().do_action()
@@ -287,22 +267,6 @@ class UseBuildRoads(UseDevCard):
         card.ok_to_use = True
         self.hand.add_card(card)
 
-    # ToDo: fix
-    def compute_heuristic(self):
-        heuristic_increment = 0
-        old_road_length = self.hand.parameters.longest_road_value
-        build_road1 = BuildRoad(self.hand, self.heuristic_method, self.road1)
-        build_road2 = BuildRoad(self.hand, self.heuristic_method, self.road2)
-        build_road1.tmp_do()
-        build_road2.tmp_do()
-        if self.hand.board.longest_road_owner != self.hand.index:
-            heuristic_increment += (self.hand.board.longest_road_owner == self.hand.index) * 5
-        heuristic_increment += self.hand.parameters.longest_road_value - old_road_length
-        # hand_heuristic = self.hand.heuristic
-        build_road1.undo(None)
-        build_road2.undo(None)
-        return heuristic_increment
-
     def build_2_roads(self):
         hand = self.hand  # type: Hand
         road1 = self.road1  # type: Road
@@ -311,7 +275,6 @@ class UseBuildRoads(UseDevCard):
         for index, card in enumerate(cards):
             if card.ok_to_use:
                 self.hand.cards["road builder"].pop(index)
-                # self.heuristic += self.compute_heuristic()
                 info1 = road1.build(hand.index)
                 info2 = road2.build(hand.index)
                 return [road1, info1, road2, info2]
@@ -321,7 +284,6 @@ class UseVictoryPoint(UseDevCard):
     def __init__(self, hand, heuristic_method):
         super().__init__(hand, heuristic_method)
         self.name = "use victory_point"
-        # self.heuristic += self.compute_heuristic()
 
     def do_action(self):
         super().do_action()
@@ -336,12 +298,6 @@ class UseVictoryPoint(UseDevCard):
         self.hand.add_card(card)
         self.hand.subtract_point()
 
-    def compute_heuristic(self):
-        if len(list(filter(lambda x: x.ok_to_use, self.hand.cards["victory points"]))) + self.hand.points >= 10:
-            return math.inf
-        else:
-            return -100
-
     def use_victory_point(self):
         hand = self.hand
         hand.points += len(hand.cards['victory points'])
@@ -355,7 +311,6 @@ class BuildSettlement(Action):
         self.crossroad = crossroad
         super().__init__(hand, heuristic_method)
         self.name = 'build settlement'
-        # self.heuristic += self.compute_heuristic()
 
     def do_action(self):
         super().do_action()
@@ -472,7 +427,6 @@ class BuildCity(Action):
     def __init__(self, hand, heuristic_method, crossroad: Crossroad):
         self.crossroad = crossroad
         super().__init__(hand, heuristic_method)
-        # self.heuristic += self.compute_heuristic()
         self.name = 'build city'
 
     def do_action(self):
@@ -592,18 +546,6 @@ class BuildRoad(Action):
         self.hand.set_distances()
         return info
 
-    def compute_heuristic(self):
-        heuristic_increment = 0
-        old_road_length = self.hand.parameters.longest_road_value
-        build_road = BuildRoad(self.hand, self.heuristic_method, self.road)
-        build_road.tmp_do()
-        if self.hand.board.longest_road_owner != self.hand.index:
-            heuristic_increment += (self.hand.board.longest_road_owner == self.hand.index) \
-                                   * self.hand.parameters.longest_road_value
-        heuristic_increment += self.hand.parameters.longest_road_value - old_road_length
-        build_road.undo(None)
-        return heuristic_increment
-
     def travel_left(self, cr: Crossroad, roads, right):
         end = True
         longest_road = roads
@@ -706,10 +648,9 @@ class Trade(Action):
 
 class BuyDevCard(Action):
     def __init__(self, hand, heuristic_method):
-        self.stack = hand.board.devStack   # type: DevStack
+        self.stack = hand.board.devStack  # type: DevStack
         super().__init__(hand, heuristic_method)
         self.name = 'buy devCard'
-        # self.heuristic += self.compute_heuristic()
 
     def do_action(self):
         super().do_action()
@@ -720,9 +661,6 @@ class BuyDevCard(Action):
         hand = self.hand
         hand.receive(DEV_PRICE)
         hand.unknown_dev_cards -= 1
-
-    def compute_heuristic(self):
-        return self.hand.parameters.dev_card_value
 
     def buy_development_card(self):
         hand = self.hand
