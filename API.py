@@ -44,6 +44,7 @@ def resize_arrows(size):
 
 class API:
     def __init__(self, names: list[str]):
+        self.note_switch = False
         self.on_switch = False
         if self.on_switch:
             self.times = Image.open('images/source/times.png')
@@ -52,7 +53,6 @@ class API:
             self.take = Image.open('images/source/take.png')
             self.give_mask = Image.open('images/source/give_mask.png').convert('L')
             self.take_mask = Image.open('images/source/take_mask.png').convert('L')
-            self.tester_on = False
             self.names = names
             self.round = 0
             self.turn = 0
@@ -106,7 +106,7 @@ class API:
             self.number_mask = Image.open('images/source/number_mask.jpg').convert('L')
 
     def write_a_note(self, text):
-        if self.on_switch:
+        if self.on_switch and self.note_switch:
             w, h = self.draw.textsize(text, font=self.font)
             self.start.paste(self.headline_mask, (int((3160 - w) / 2), 2100))
             self.draw.multiline_text(((3160 - w) / 2, 2100), text, fill=(255, 255, 255), font=self.font)
@@ -114,7 +114,6 @@ class API:
 
     def trade(self, buyer, seller, source, destination, give, take):
         if self.on_switch:
-            self.tester_on = True
             if buyer == self.num_of_players:
                 buyer_img = Image.open('images/source/bank.jpg').resize((111, 94))
             else:
@@ -380,9 +379,6 @@ class API:
                 for land in line:
                     land_img = self.lands_imgs[land.resource].copy()
                     if land.num != 7:
-                        print("\n\n")
-                        print(self.land_nums[land.num].size)
-                        print(self.number_mask.size)
                         land_img.paste(self.land_nums[land.num], (83, 104), self.number_mask)
                     self.start.paste(land_img, (int(x), int(y)), self.land_mask)
                     x += self.land_w
