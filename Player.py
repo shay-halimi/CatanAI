@@ -127,9 +127,10 @@ class Player:
                     if terrain == self.board.bandit_location:
                         continue
                     for cr in Terrain.get_crossroads((terrain)):
-                        if Crossroad.get_ownership(cr) is not (None or self.index):
+                        destination = cr.get_ownership()
+                        if destination is not None and destination != self.index:
                             h = None if heuristic is None else heuristic["use knight"]
-                            legal_moves += [UseKnight(self.hand, h, terrain, Crossroad.get_ownership(cr))]
+                            legal_moves += [UseKnight(self.hand, h, terrain, destination)]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["monopole"]))) > 0:
             for r in Resource:
                 if r != Resource.DESSERT:
