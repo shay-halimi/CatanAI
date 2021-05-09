@@ -137,7 +137,7 @@ class Player:
                     h = None if heuristic is None else heuristic["use monopole"]
                     legal_moves += [UseMonopole(self.hand, h, r)]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["road builder"]))) > 0:
-            for [road1, road2] in self.board.get_two_legal_roads(self.index):
+            for [road1, road2] in self.board.get_two_legal_roads(self.hand):
                 h = None if heuristic is None else heuristic["use build roads"]
                 legal_moves += [UseBuildRoads(self.hand, h, road1, road2)]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["year of prosper"]))) > 0:

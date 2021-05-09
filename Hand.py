@@ -18,6 +18,11 @@ class Parameters:
         self.dev_card_value = 0.5
 
 
+ROAD_PIECES = 15
+SETTLEMENT_PIECES = 5
+CITY_PIECES = 4
+
+
 class Hand:
     def __init__(self, index, board):
         self.index = index
@@ -27,9 +32,9 @@ class Hand:
         self.resources = {Resource.WOOD: 0, Resource.IRON: 0, Resource.WHEAT: 0, Resource.SHEEP: 0, Resource.CLAY: 0}
         self.cards = {"knight": [], "victory points": [], "monopole": [], "road builder": [],
                       "year of prosper": []}  # type: dict[str: list[DevCard]]
-        self.road_pieces = 15
-        self.settlement_pieces = 5
-        self.city_pieces = 4
+        self.road_pieces = ROAD_PIECES
+        self.settlement_pieces = SETTLEMENT_PIECES
+        self.city_pieces = CITY_PIECES
         # ---- board --- #
         self.board = board
         self.ports = set()
@@ -48,6 +53,15 @@ class Hand:
         self.parameters = Parameters()
 
     # ---- get information ---- #
+
+    def get_roads_amount(self):
+        return ROAD_PIECES - self.road_pieces
+
+    def get_settlements_amount(self):
+        return SETTLEMENT_PIECES - self.settlement_pieces
+
+    def get_cities_amount(self):
+        return CITY_PIECES - self.city_pieces
 
     def get_resources_number(self):
         resource_sum = 0
