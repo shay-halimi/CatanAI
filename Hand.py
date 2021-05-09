@@ -112,7 +112,22 @@ class Hand:
         paragraph += 'index : ' + str(self.index)
         paragraph += 'name : ' + str(self.name) + '\n'
         paragraph += 'points : ' + str(self.points) + '\n'
-        paragraph += 'settlements : '
+        paragraph += 'roads : ' + str(self.get_roads_amount()) + '\n'
+        paragraph += 'settlements : ' + str(self.get_settlements_amount()) + '\n'
+        paragraph += 'cities : ' + str(self.get_cities_amount()) + '\n'
+        paragraph += 'production : ' + str(self.production_all) + '\n'
+        paragraph += 'wood : ' + str(self.resources[Resource.WOOD]) + '\n'
+        paragraph += 'clay : ' + str(self.resources[Resource.CLAY]) + '\n'
+        paragraph += 'wheat : ' + str(self.resources[Resource.WHEAT]) + '\n'
+        paragraph += 'sheep : ' + str(self.resources[Resource.SHEEP]) + '\n'
+        paragraph += 'iron : ' + str(self.resources[Resource.IRON]) + '\n'
+        paragraph += 'victory points : ' + str(self.cards['victory points']) + '\n'
+        paragraph += 'knight : ' + str(self.cards['knight']) + '\n'
+        paragraph += 'monopole : ' + str(self.cards['monopole']) + '\n'
+        paragraph += 'road builder : ' + str(self.cards['road builder']) + '\n'
+        paragraph += 'year of prosper : ' + str(self.cards['year of prosper']) + '\n'
+        paragraph += 'longest road : ' + str(self.longest_road) + '\n'
+        paragraph += 'heuristic : ' + str(self.heuristic) + '\n'
 
     def add_resources(self, resource: Resource, amount):
         if resource is not None:
