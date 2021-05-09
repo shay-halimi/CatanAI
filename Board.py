@@ -97,16 +97,23 @@ class Crossroad:
     def get_ownership(self):
         return self.ownership
 
-    def build(self, player):
+    def add_production(self, hand: Hand):
+        for resource in Resource:
+            if resource is not Resource.DESSERT:
+                hand.production_all += self.val[resource] / 36
+                hand.production[resource] += self.val[resource] / 36
+
+    def build(self, hand: Hand):
         legals = []
         if self.ownership is None:
-            self.ownership = player
+            self.ownership = hand.index
             for n in self.neighbors:
                 legals += [n.crossroad.legal]
                 n.crossroad.legal = False
-        if self.ownership == player and self.building < 2:
+        if self.ownership == hand.index and self.building < 2:
             self.building += 1
             self.fertility_dist = INFINITY
+            self.add_production(hand)
         return legals
 
     def undo_build(self, player, legals):
@@ -498,15 +505,15 @@ class Board:
                     legal += [road]
         return legal
 
-    def get_two_legal_roads(self, player):
+    def get_two_legal_roads(self, hand: Hand):
         legal = []
         for line1 in self.roads:
             for road1 in line1:
-                if road1.is_legal(player):
-                    info1 = road1.build(player)
+                if road1.is_legal(hand.index):
+                    info1 = road1.build(hand.index)
                     for line2 in self.roads:
                         for road2 in line2:
-                            if road2.is_legal(player):
+                            if road2.is_legal(hand.index):
                                 legal += [(road1, road2)]
                     road1.undo_build(info1)
         return legal
