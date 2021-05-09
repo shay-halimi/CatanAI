@@ -92,6 +92,14 @@ class Hand:
 
     # ---- auxiliary functions ---- #
 
+    def __str__(self):
+        paragraph = '----------------------------\n'
+        paragraph += 'hand : \n'
+        paragraph += 'index : ' + str(self.index)
+        paragraph += 'name : ' + str(self.name) + '\n'
+        paragraph += 'points : ' + str(self.points) + '\n'
+        paragraph += 'settlements : '
+
     def add_resources(self, resource: Resource, amount):
         if resource is not None:
             self.resources[resource] += amount
