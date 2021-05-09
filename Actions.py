@@ -356,10 +356,7 @@ class BuildSettlement(Action):
         self.crossroad.connected[hand.index] = True
         hand.settlement_pieces -= 1
         hand.add_point()
-        for resource in Resource:
-            if resource is not Resource.DESSERT:
-                hand.production_all += self.crossroad.val[resource] / 36
-        undo_info = self.crossroad.build(hand.index)
+        undo_info = self.crossroad.build(hand)
         hand.set_distances()
         if self.crossroad.port is not None:
             hand.ports.add(self.crossroad.port)
@@ -471,7 +468,7 @@ class BuildCity(Action):
         hand.settlement_pieces += 1
         hand.city_pieces -= 1
         hand.add_point()
-        build_info = self.crossroad.build(hand.index)
+        build_info = self.crossroad.build(hand)
         hand.set_distances()
         return build_info
 
