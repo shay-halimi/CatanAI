@@ -109,7 +109,7 @@ class Hand:
     def __str__(self):
         paragraph = '----------------------------\n'
         paragraph += 'hand : \n'
-        paragraph += 'index : ' + str(self.index)
+        paragraph += 'index : ' + str(self.index) + '\n'
         paragraph += 'name : ' + str(self.name) + '\n'
         paragraph += 'points : ' + str(self.points) + '\n'
         paragraph += 'roads : ' + str(self.get_roads_amount()) + '\n'

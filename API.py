@@ -44,9 +44,9 @@ def resize_arrows(size):
 
 
 class API:
-    def __init__(self, names: list[str], time: Time):
+    def __init__(self, api_on, names: list[str], time: Time):
         self.note_switch = False
-        self.on_switch = False
+        self.on_switch = api_on
         if self.on_switch:
             self.times = Image.open('images/source/times.png')
             self.times_mask = Image.open('images/source/times_mask.png').convert('L')
@@ -104,6 +104,12 @@ class API:
             self.land_mask = Image.open('images/source/land_mask.JPG').resize((246, 287)).convert('L')
             self.land_nums = create_land_numbers()
             self.number_mask = Image.open('images/source/number_mask.jpg').convert('L')
+
+    def turn_on(self):
+        self.on_switch = True
+
+    def turn_off(self):
+        self.on_switch = False
 
     def write_a_note(self, text):
         if self.on_switch and self.note_switch:

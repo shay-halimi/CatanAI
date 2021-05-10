@@ -1,26 +1,60 @@
 from Time import Time
 from Game import Game
 from Board import Board
+from Player import Player
 from Player import Dork
 from API import API
 from Log import StatisticsLogger
 from Log import Log
+import json
 
 API_ON = False
 NAMES = ['shay', 'snow', 'shaked', 'odeya']
+AI = [Dork, Dork, Dork, Dork]
 PLAYERS = 4
 RUNS = 1
+LOAD_GAME = False
+PATH = "saved_games/game182.json"
+
+
+def load_board(board: Board, log):
+    board.load_map(log)
+
+
+def load_game(path):
+    with open(path) as json_file:
+        game = json.load(json_file)
+        board = game['board']
+        rounds = game['rounds']
+        return board, rounds
 
 
 def main():
     names = NAMES[0:PLAYERS]
-    for i in range(RUNS):
+    runs = 1 if LOAD_GAME else RUNS
+    for i in range(runs):
         time = Time(PLAYERS)
         statistic_logger = StatisticsLogger()
         log = Log(PLAYERS, time)
-        board = Board(PLAYERS, log, statistic_logger)
-        game = Game(time, PLAYERS, names)
-        game.play_game()
+        api = API(API_ON, names, time)
+        board = Board(api, PLAYERS, log, statistic_logger)
+        rounds_log = None  # just so the compiler won't cry
+        if LOAD_GAME:
+            if not API_ON:
+                api.turn_on()
+            board_log, rounds_log = load_game(PATH)
+            board.load_map(board_log)
+        else:
+            board.shuffle_map()
+        players = []  # type: list[Player]
+        for i in range(PLAYERS):
+            player = AI[i](i, board)
+            players += [player]
+        game = Game(api, players, board, time, PLAYERS, names)
+        if LOAD_GAME:
+            game.load_game(rounds_log)
+        else:
+            game.play_game()
 
 
 print("Hello Initiator")

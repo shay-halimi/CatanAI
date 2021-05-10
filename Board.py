@@ -7,6 +7,7 @@ from Log import StatisticsLogger
 from Auxilary import r2s
 from Auxilary import s2r
 from Auxilary import cr_line_len
+from API import API
 
 # ---- global variables ---- #
 
@@ -295,7 +296,7 @@ class Neighbor:
 
 
 class Board:
-    def __init__(self, players, log, statistics_logger: StatisticsLogger):
+    def __init__(self, api: API, players, log, statistics_logger: StatisticsLogger):
         self.statistics_logger = statistics_logger
         self.log = log
         self.players = players
@@ -386,7 +387,7 @@ class Board:
         for n in range(players):
             self.hands += [Hand(n, self)]
 
-        self.api = None
+        self.api = api
 
         # longest road stats
         self.longest_road_size = 4

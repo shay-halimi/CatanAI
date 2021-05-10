@@ -15,16 +15,13 @@ import json
 
 class Game:
 
-    def __init__(self, time: Time, players, names=None, board_log=None):
+    def __init__(self, api, players: list[Player], board: Board, time: Time, p_num, board_log=None):
         self.time = time
-        self.log = Log(players, time)
-        self.board = self.create_board(players, board_log)
-        self.players = self.create_players(players)
-        self.players_num = players
-        if names is None:
-            self.api = API(self.board.get_names())
-        else:
-            self.api = API(names)
+        self.log = Log(p_num, time)
+        self.board = board
+        self.players = players
+        self.players_num = p_num
+        self.api = api
         self.api.show_terrain(self.board.map)
         Actions.api = self.api
 
@@ -151,14 +148,6 @@ class Game:
         board.log_board()
         return board
 
-    def create_players(self, num) -> list[Player]:
-        players = []    # type: list[Player]
-        for i in range(num):
-            player = Dork(i, self.board)
-            players += [player]
-        self.board.api = API(self.board.get_names())
-        return players
-
 
 # ---- main ---- #
 
@@ -183,15 +172,10 @@ def load_game(path):
     """
 
 
-def play_game(num):
-    for i in range(num):
-        game = Game(4, ['shay', 'snow', 'shaked', 'odeya'])
-        game.play_game()
-
-
 def main():
-    play_game(1)
+    # play_game(1)
     # load_game("saved_games/game182.json")
+    pass
 
 
 print("Hello Game")
