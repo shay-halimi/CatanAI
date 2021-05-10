@@ -91,9 +91,10 @@ class Game:
         self.api.new_turn()
         self.log.turn_log['resources'] = resource_log(player.hand)
         self.throw_dice()
+        hand = player.hand
         if self.players[player.index].is_computer:
             while player.compute_turn():
-                pass
+                print(hand)
         self.next_turn()
 
     #     todo human player interface
