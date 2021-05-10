@@ -205,30 +205,36 @@ class Road:
         self.temp_build_info = {}
         self.traveled = False
 
+    # need to check if owner is player or int
+    def update_longest_road(self, player, road_length):
+        assert self.owner == player
+        if self.traveled:
+            return road_length
+        else:
+            cur_max = road_length + 1
+            self.traveled = True
+            for neighbor in self.neighbors: #type: Road
+                if neighbor.owner == player:
+                    cur_value = neighbor.update_longest_road(player, road_length + 1)
+                    if cur_value > cur_max:
+                        cur_max = cur_value
+            self.traveled
+            return cur_value
+
     def upgrade_longest_road(self, player):
-        i = player
-        v = self.neighbors[0].longest_road
-        u = self.neighbors[1].longest_road
-        temp = v[i]
-        if v[i] == 0:
-            temp = u[i] + 1
-        if u[i] == 0:
-            u[i] = v[i] + 1
-        v[i] = temp
-        if v[i] > self.board.hands[i].longest_road:
-            self.board.hands[i].longest_road = v[i]
-        if u[i] > self.board.hands[i].longest_road:
-            self.board.hands[i].longest_road = u[i]
-        if self.board.hands[i].longest_road > self.board.longest_road_size:
-            self.board.longest_road_size = self.board.hands[i].longest_road
-            if self.board.longest_road_owner is not None:
-                lro = self.board.hands[self.board.longest_road_owner]   # type: Hand
-                lro.subtract_point()
-                lro.subtract_point()
-            self.board.longest_road_owner = player
-            hand = self.board.hands[player] # type: Hand
-            hand.add_point()
-            hand.add_point()
+        updated_road_size =self.update_longest_road(player,0)
+        if self.board.longest_road_size < updated_road_size:
+            self.board.longest_road_size = updated_road_size
+        if self.board.hands[player].longest_road < updated_road_size:
+            self.board.hands[player].longest_road = updated_road_size
+        if self.board.longest_road_owner is not None:
+            lro = self.board.hands[self.board.longest_road_owner]  # type: Hand
+            lro.subtract_point()
+            lro.subtract_point()
+        self.board.longest_road_owner = player
+        hand = self.board.hands[player]  # type: Hand
+        hand.add_point()
+        hand.add_point()
 
     def is_connected(self, player):
         if self.neighbors[0].connected[player] or self.neighbors[1].connected[player]:
