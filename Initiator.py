@@ -46,6 +46,7 @@ def main():
             board.load_map(board_log)
         else:
             board.shuffle_map()
+        board.log_board()
         players = []  # type: list[Player]
         for i in range(PLAYERS):
             player = AI[i](i, board)

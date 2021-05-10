@@ -137,17 +137,6 @@ class Game:
         if self.board.dice.sum == 7:
             self.throw_cards()
 
-    def create_board(self, players, board_log=None):
-        board = Board(players, self.log)
-        if board_log:
-            board.load_map(board_log)
-        else:
-            board.shuffle_map()
-
-        # log the board
-        board.log_board()
-        return board
-
 
 # ---- main ---- #
 
