@@ -7,6 +7,7 @@ from Log import StatisticsLogger
 from Auxilary import r2s
 from Auxilary import s2r
 from Auxilary import cr_line_len
+from API import API
 
 # ---- global variables ---- #
 
@@ -229,11 +230,11 @@ class Road:
         if self.board.hands[i].longest_road > self.board.longest_road_size:
             self.board.longest_road_size = self.board.hands[i].longest_road
             if self.board.longest_road_owner is not None:
-                lro = self.board.hands[self.board.longest_road_owner]   # type: Hand
+                lro = self.board.hands[self.board.longest_road_owner]  # type: Hand
                 lro.subtract_point()
                 lro.subtract_point()
             self.board.longest_road_owner = player
-            hand = self.board.hands[player] # type: Hand
+            hand = self.board.hands[player]  # type: Hand
             hand.add_point()
             hand.add_point()
 
@@ -295,8 +296,8 @@ class Neighbor:
 
 
 class Board:
-    def __init__(self, players, log):
-        self.statistics_logger = StatisticsLogger()
+    def __init__(self, api: API, players, log, statistics_logger: StatisticsLogger):
+        self.statistics_logger = statistics_logger
         self.log = log
         self.players = players
         self.devStack = DevStack()
@@ -386,7 +387,7 @@ class Board:
         for n in range(players):
             self.hands += [Hand(n, self)]
 
-        self.api = None
+        self.api = api
 
         # longest road stats
         self.longest_road_size = 4
@@ -468,13 +469,6 @@ class Board:
                 t_log['j'] = j
                 log += [t_log]
         self.log.board(log)
-
-    # ---- game development ---- #
-
-    def next_turn(self, turn, rnd, dice=None):
-        # Todo: delete comment
-        # API.next_turn(self, turn, rnd, self.hands, dice)
-        pass
 
     # ---- get legal moves ---- #
 

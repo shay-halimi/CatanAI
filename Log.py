@@ -1,11 +1,11 @@
+from Time import Time
 import json
 from random import uniform
 
 
 class Log:
-    def __init__(self, players):
-        self.round = 0
-        self.turn = 0
+    def __init__(self, players, time: Time):
+        self.time = time
         self.players = players
 
         self.turn_log = {'turn': 0, 'actions': []}
@@ -17,14 +17,10 @@ class Log:
 
     def next_turn(self):
         self.round_log['turns'] += [self.turn_log]
-        if self.turn == self.players - 1:
-            self.turn = 0
-            self.round += 1
+        if self.time.get_turn() == self.players - 1:
             self.game_log['rounds'] += [self.round_log]
-            self.round_log = {'round': self.round, 'turns': []}
-        else:
-            self.turn += 1
-        self.turn_log = {'turn': self.turn, 'actions': []}
+            self.round_log = {'round': self.time.get_round(), 'turns': []}
+        self.turn_log = {'turn': self.time.get_turn(), 'actions': []}
 
     def dice(self, dice):
         self.turn_log['dice'] = dice
@@ -47,15 +43,15 @@ class Log:
             if res not in tracker['resolution']:
                 tracker['resolution'][res] = {'counter': 0, 'sum': 0, 'games': []}
             counter = tracker['resolution'][res]['counter']
-            sum = tracker['resolution'][res]['sum']
+            s = tracker['resolution'][res]['sum']
             counter += 1
-            sum += self.round
+            s += self.time.get_round()
             if counter >= stop:
-                tracker['resolution'][res]['games'] += [sum / counter]
+                tracker['resolution'][res]['games'] += [s / counter]
                 counter = 0
-                sum = 0
+                s = 0
             tracker['resolution'][res]['counter'] = counter
-            tracker['resolution'][res]['sum'] = sum
+            tracker['resolution'][res]['sum'] = s
         with open('tracking_development.json', 'w') as outfile:
             json.dump(tracker, outfile)
 
@@ -147,7 +143,7 @@ class StatisticsLogger:
             events = pointer[key]['events']
             wins = pointer[key]['wins']
             statistics += [Statistic(events, wins, total_wins, total_events - total_wins)]
-        st = statistics_merge(statistics)   # type: Statistic
+        st = statistics_merge(statistics)  # type: Statistic
         events = st.event
         wins = st.win
         return wins / events
@@ -175,7 +171,7 @@ def statistics_merge(statistics):
     if not statistics:
         return uniform(0, 0.66)
     else:
-        st = statistics.pop()   # type: Statistic
+        st = statistics.pop()  # type: Statistic
         while statistics:
             st.merge(statistics.pop())
     return st
@@ -196,4 +192,3 @@ class Statistic:
         self.lose = self.lose * statistic.lose / self.total_lose
         self.event = self.win + self.lose
         self.win_ratio = self.win / self.event
-

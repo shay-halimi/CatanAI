@@ -4,7 +4,6 @@ from Resources import SETTLEMENT_PRICE
 from Resources import CITY_PRICE
 from Resources import DEV_PRICE
 from DevStack import DevCard
-from Auxilary import r2s
 import math
 
 
@@ -109,7 +108,7 @@ class Hand:
     def __str__(self):
         paragraph = '----------------------------\n'
         paragraph += 'hand : \n'
-        paragraph += 'index : ' + str(self.index)
+        paragraph += 'index : ' + str(self.index) + '\n'
         paragraph += 'name : ' + str(self.name) + '\n'
         paragraph += 'points : ' + str(self.points) + '\n'
         paragraph += 'roads : ' + str(self.get_roads_amount()) + '\n'
@@ -150,7 +149,7 @@ class Hand:
 
     def set_distances(self):
         stack = []
-        stack_fert = []
+        stack_fertility = []
         for line in self.board.crossroads:
             for cr in line:
                 cr.fertility_dist = math.inf
@@ -168,13 +167,13 @@ class Hand:
                     if cr.distance[i] > ncr.distance[i] + 1:
                         cr.distance[i] = ncr.distance[i] + 1
                         stack.extend(x.crossroad for x in cr.neighbors if x.crossroad not in stack)
-        while stack_fert:
-            cr = stack_fert.pop()
+        while stack_fertility:
+            cr = stack_fertility.pop()
             for n in cr.neighbors:
                 ncr = n.crossroad
                 if cr.fertility_dist > ncr.fertility_dist + 1:
                     cr.fertility_dist = ncr.fertility_dist + 1
-                    stack_fert.extend(x.crossroad for x in cr.neighbors if x.crossroad not in stack)
+                    stack_fertility.extend(x.crossroad for x in cr.neighbors if x.crossroad not in stack)
 
     def can_pay(self, price):
         for resource in price:
