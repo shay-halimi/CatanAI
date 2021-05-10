@@ -220,7 +220,6 @@ class Road:
                         cur_value = cur_road.update_longest_road(player, road_length + 1)
                         if cur_value > cur_max:
                             cur_max = cur_value
-
             self.traveled = False
             return cur_max
 
