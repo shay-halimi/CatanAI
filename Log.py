@@ -1,11 +1,11 @@
+from Time import Time
 import json
 from random import uniform
 
 
 class Log:
-    def __init__(self, players):
-        self.round = 0
-        self.turn = 0
+    def __init__(self, players, time: Time):
+        self.time = time
         self.players = players
 
         self.turn_log = {'turn': 0, 'actions': []}
@@ -17,14 +17,10 @@ class Log:
 
     def next_turn(self):
         self.round_log['turns'] += [self.turn_log]
-        if self.turn == self.players - 1:
-            self.turn = 0
-            self.round += 1
+        if self.time.get_turn() == self.players - 1:
             self.game_log['rounds'] += [self.round_log]
-            self.round_log = {'round': self.round, 'turns': []}
-        else:
-            self.turn += 1
-        self.turn_log = {'turn': self.turn, 'actions': []}
+            self.round_log = {'round': self.time.get_round(), 'turns': []}
+        self.turn_log = {'turn': self.time.get_turn(), 'actions': []}
 
     def dice(self, dice):
         self.turn_log['dice'] = dice
@@ -49,7 +45,7 @@ class Log:
             counter = tracker['resolution'][res]['counter']
             sum = tracker['resolution'][res]['sum']
             counter += 1
-            sum += self.round
+            sum += self.time.get_round()
             if counter >= stop:
                 tracker['resolution'][res]['games'] += [sum / counter]
                 counter = 0
