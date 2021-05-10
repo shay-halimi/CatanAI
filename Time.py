@@ -11,3 +11,12 @@ class Time:
         else:
             self.turn += 1
         return self.round, self.turn
+
+    def get_turn(self):
+        return self.turn
+
+    def get_round(self):
+        return self.round
+
+    def get_time(self) -> (int, int):
+        return self.round, self.turn

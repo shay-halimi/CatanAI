@@ -469,13 +469,6 @@ class Board:
                 log += [t_log]
         self.log.board(log)
 
-    # ---- game development ---- #
-
-    def next_turn(self, turn, rnd, dice=None):
-        # Todo: delete comment
-        # API.next_turn(self, turn, rnd, self.hands, dice)
-        pass
-
     # ---- get legal moves ---- #
 
     def get_settlements(self, player):

@@ -1,3 +1,4 @@
+from Time import Time
 from Game import Game
 from Board import Board
 from Player import Dork
@@ -10,9 +11,10 @@ RUNS = 1
 
 
 def main():
+    names = NAMES[0:PLAYERS]
     for i in range(RUNS):
-        names = NAMES[0:PLAYERS]
-        game = Game(PLAYERS, names)
+        time = Time(PLAYERS)
+        game = Game(time, PLAYERS, names)
         game.play_game()
 
 

@@ -1,3 +1,4 @@
+from Time import Time
 import Actions
 from Player import Player
 from Player import Dork
@@ -14,9 +15,8 @@ import json
 
 class Game:
 
-    def __init__(self, players, names=None, board_log=None):
-        self.round = 0
-        self.turn = 0
+    def __init__(self, time: Time, players, names=None, board_log=None):
+        self.time = time
         self.log = Log(players)
         self.board = self.create_board(players, board_log)
         self.players = self.create_players(players)
@@ -53,7 +53,7 @@ class Game:
     def play_game(self):
         self.start_game()
         while self.play_round():
-            if self.round > 200:
+            if self.time.get_round() > 200:
                 print("too many rounds")
                 self.log.end_game()
                 max_points = 0
@@ -65,7 +65,7 @@ class Game:
                         self.board.statistics_logger.end_game(hand.index)
                 return
             print("\n")
-            print(self.round)
+            print(self.time.get_round())
             print("\n")
             for hand in self.board.hands:
                 for typeCard in hand.cards.values():
@@ -101,9 +101,8 @@ class Game:
 
     # Todo: check the order of functions
     def next_turn(self):
-        self.round, self.turn = next_turn(self.players_num, self.round, self.turn)
+        self.time.next_turn()
         self.log.next_turn()
-        self.board.next_turn(self.turn, self.round)
 
     def throw_dice(self):
         for i, j in self.board.dice.throw():
