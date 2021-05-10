@@ -205,7 +205,6 @@ class Road:
         self.temp_build_info = {}
         self.traveled = False
 
-    # need to check if owner is player or int
     def update_longest_road(self, player, road_length):
         assert self.owner == player
         if self.traveled:
