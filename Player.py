@@ -320,9 +320,3 @@ class Dork(Player):
             b_action.do_action()
             b_action.hand.heuristic = b_action.heuristic
         return b_action
-
-    def compute_turn(self):
-        action = self.simple_choice()
-        if action is None or action.name == 'do nothing':
-            return False
-        return True
