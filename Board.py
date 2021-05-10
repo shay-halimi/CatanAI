@@ -220,8 +220,9 @@ class Road:
                         cur_value = cur_road.update_longest_road(player, road_length + 1)
                         if cur_value > cur_max:
                             cur_max = cur_value
-            self.traveled
-            return cur_value
+
+            self.traveled = False
+            return cur_max
 
     def upgrade_longest_road(self, player):
         print(self.board.hands[player].longest_road)
