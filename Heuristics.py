@@ -286,7 +286,7 @@ def compute_heuristic_use_build_roads(action):
 
 # we could adjust here the heuristic values according to the size of values we want i.e in [0,1]
 def compute_heuristic_use_victory_point(action):
-    if len(list(filter(lambda x: x.ok_to_use, action.hand.cards["victory points"]))) + action.hand.points >= 10:
+    if len(action.hand.cards["victory points"]) + action.hand.points >= 10:
         return math.inf
     else:
         return -100
