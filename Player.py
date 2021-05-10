@@ -79,6 +79,7 @@ def take_best_action(actions):
             if a.heuristic > baction.heuristic:
                 baction = a
         baction.do_action()
+        baction.hand.heuristic = baction.heuristic
         print('taken action : ' + baction.name)
         print('user : ' + str(baction.index))
         print('score : ' + str(baction.heuristic))
@@ -310,6 +311,8 @@ class Dork(Player):
             print('   my best action : ')
             print(best_action.name + ' : ' + str(best_action.heuristic))
             best_action.do_action()
+            best_action.hand.heuristic = best_action.heuristic
+        return best_action
 
     def compute_turn(self):
-        self.simple_choice()
+        return self.simple_choice()

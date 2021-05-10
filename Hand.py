@@ -121,13 +121,14 @@ class Hand:
         paragraph += 'wheat : ' + str(self.resources[Resource.WHEAT]) + '\n'
         paragraph += 'sheep : ' + str(self.resources[Resource.SHEEP]) + '\n'
         paragraph += 'iron : ' + str(self.resources[Resource.IRON]) + '\n'
-        paragraph += 'victory points : ' + str(self.cards['victory points']) + '\n'
-        paragraph += 'knight : ' + str(self.cards['knight']) + '\n'
-        paragraph += 'monopole : ' + str(self.cards['monopole']) + '\n'
-        paragraph += 'road builder : ' + str(self.cards['road builder']) + '\n'
-        paragraph += 'year of prosper : ' + str(self.cards['year of prosper']) + '\n'
+        paragraph += 'victory points : ' + str(len(self.cards['victory points'])) + '\n'
+        paragraph += 'knight : ' + str(len(self.cards['knight'])) + '\n'
+        paragraph += 'monopole : ' + str(len(self.cards['monopole'])) + '\n'
+        paragraph += 'road builder : ' + str(len(self.cards['road builder'])) + '\n'
+        paragraph += 'year of prosper : ' + str(len(self.cards['year of prosper'])) + '\n'
         paragraph += 'longest road : ' + str(self.longest_road) + '\n'
         paragraph += 'heuristic : ' + str(self.heuristic) + '\n'
+        return paragraph
 
     def add_resources(self, resource: Resource, amount):
         if resource is not None:
