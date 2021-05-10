@@ -37,11 +37,3 @@ class Dice:
     def load(self, num):
         self.sum = num
         return self.number_to_terrain[self.sum]
-
-
-def test_die():
-    print("Testing dice:")
-    dice = Die()
-    print("   Initial state: " + str(dice))
-    dice.throw()
-    print("   After throw: " + str(dice))

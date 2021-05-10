@@ -46,14 +46,10 @@ class Terrain:
         return not self.has_bandit
 
     def put_bandit(self):
-        if self.can_put_bandit():
-            self.board.bandit_location.has_bandit = False
-            self.has_bandit = True
-            steal_stack = []
-            for cr in self.crossroads:
-                if cr.ownership is not None:
-                    steal_stack += [cr.ownership]
-            return steal_stack
+        self.board.bandit_location.has_bandit = False
+        self.has_bandit = True
+        self.board.bandit_location = self
+
 
     def get_log(self):
         log = {

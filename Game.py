@@ -77,6 +77,7 @@ class Game:
         return True
 
     def play_turn(self, player: Player):
+
         self.api.new_turn()
         self.log.turn_log['resources'] = resource_log(player.hand)
         self.throw_dice()
