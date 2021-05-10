@@ -17,7 +17,7 @@ RUNS = 1
 LOAD_GAME = False
 PATH = "saved_games/game182.json"
 PRINTER_ON = False
-PRINTER_OUTFILE = None
+PRINTER_OUTFILE = 'outfile.txt'
 
 
 def load_board(board: Board, log):
@@ -36,7 +36,7 @@ def main():
     if not PRINTER_ON:
         Printer.turn_off()
     else:
-        Printer.print_to_outfile(PRINTER_OUTFILE)
+        Printer.set_outfile(PRINTER_OUTFILE)
     names = NAMES[0:PLAYERS]
     runs = 1 if LOAD_GAME else RUNS
     for i in range(runs):
@@ -63,6 +63,8 @@ def main():
             game.load_game(rounds_log)
         else:
             game.play_game()
+    if PRINTER_ON:
+        Printer.close_outfile()
 
 
 print("Hello Initiator")

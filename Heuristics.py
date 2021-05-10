@@ -4,11 +4,10 @@ from Board import Terrain
 from Log import StatisticsLogger
 from Resources import Resource
 from Auxilary import r2s
-import json
 from typing import List
-from random import uniform
 from Hand import Hand, ROAD_PRICE, SETTLEMENT_PRICE, CITY_PRICE, DEV_PRICE
 from Actions import ThrowCards, BuildRoad
+from Printer import Printer
 
 import math
 
@@ -80,21 +79,21 @@ def greatest_crossroad(crossroads):
 
 
 def show_score_analysis(hand: Hand):
-    print('points : ' + str(hand.points))
+    Printer.printer('points : ' + str(hand.points))
     for resource in Resource:
         if resource != Resource.DESSERT:
-            print(r2s(resource) + ' : ' + str(hand.resources[resource]))
+            Printer.printer(r2s(resource) + ' : ' + str(hand.resources[resource]))
     for v in hand.cards.values():
         if v:
-            print(v[0].name + ' : ' + str(len(v)))
+            Printer.printer(v[0].name + ' : ' + str(len(v)))
     if hand.index != hand.board.longest_road_owner:
         road_value = 2 - 0.3 * (hand.board.longest_road_size + 1 - hand.longest_road)
         if road_value > 0:
-            print('road value : ' + str(road_value))
+            Printer.printer('road value : ' + str(road_value))
     if hand.index != hand.board.largest_army_owner:
         army_value = 2 - 0.5 * (hand.board.largest_army_size - hand.largest_army)
         if army_value > 0:
-            print('armay value : ' + str(army_value))
+            Printer.printer('armay value : ' + str(army_value))
 
 
 def able_to_buy_score(resources: dict, price, value):

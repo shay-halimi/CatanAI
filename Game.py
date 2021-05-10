@@ -6,6 +6,7 @@ from Board import Board
 from Log import Log
 from API import API
 from Auxilary import resource_log
+from Printer import Printer
 import math
 
 
@@ -82,7 +83,7 @@ class Game:
         hand = player.hand
         if self.players[player.index].is_computer:
             while player.compute_turn():
-                print(hand)
+                Printer.printer(hand)
         self.next_turn()
 
     #     todo human player interface

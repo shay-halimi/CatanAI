@@ -15,12 +15,19 @@ class Printer:
         cls.printer_on = False
 
     @classmethod
-    def print_to_outfile(cls, path):
-        cls.outfile = path
+    def set_outfile(cls, path):
+        cls.outfile = open(path, 'w')
+        cls.outfile.write("")
+        cls.outfile = open(path, 'a')
 
     @classmethod
-    def printer(cls, *args, sep=' ', end='\n', file=None):
+    def close_outfile(cls):
+        cls.outfile.close()
+
+    @classmethod
+    def printer(cls, *args, sep=' ', end='\n'):
         if cls.printer_on:
-            if file is None:
-                file = cls.outfile
-            print("".join(map(str,args)), sep=sep, end=end, file=file)
+            if cls.outfile is not None:
+                cls.outfile.write("".join(map(str, args)) + end)
+            else:
+                print("".join(map(str, args)), sep=sep, end=end)
