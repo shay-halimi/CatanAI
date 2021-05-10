@@ -4,6 +4,7 @@ from Heuristics import best_action
 from Heuristics import greatest_crossroad
 from Heuristics import hand_heuristic
 from Heuristics import show_score_analysis
+from Heuristics import compute_heuristic_use_victory_point
 from Actions import Trade
 from Actions import BuildFreeRoad
 from Actions import BuildRoad
@@ -118,10 +119,10 @@ class Player:
                 num_cards -= cards_to_throw
         ThrowCards(self.hand, None, cards)
 
-    def legal_victory_point(self, heuristic):
+    def legal_victory_point(self):
         legal_moves = []
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["victory points"]))) > 0:
-            h = None if heuristic is None else heuristic["victory points"]
+            h = compute_heuristic_use_victory_point
             legal_moves += [UseVictoryPoint(self.hand, h)]
         return legal_moves
 
@@ -217,7 +218,7 @@ class Player:
         h = None if heuristic is None else heuristic["do nothing"]
         legal_moves += [DoNothing(self.hand, h)]
         # finding legal moves from devCards
-        legal_moves += self.legal_victory_point(heuristic)
+        legal_moves += self.legal_victory_point()
         legal_moves += self.legal_knight(heuristic)
         legal_moves += self.legal_monopole(heuristic)
         legal_moves += self.legal_road_builder(heuristic)
