@@ -124,11 +124,10 @@ class UseKnight(UseDevCard):
         terrain = self.terrain
         for knight in hand.cards["knight"]:
             if knight.is_valid():
-                if terrain.put_bandit():
-                    hand.cards["knight"].remove(knight)
-                    steal = self.steal()
-                    return steal
-        return None
+                terrain.put_bandit()
+                hand.cards["knight"].remove(knight)
+                steal = self.steal()
+                return steal
 
     # todo test it
     def undo(self, undo_info):

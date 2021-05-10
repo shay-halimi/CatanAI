@@ -233,7 +233,10 @@ class Player:
         return a
 
     def compute_turn(self):
-        return self.simple_choice()
+        action = self.simple_choice()
+        if action is None or action.name == 'do nothing':
+            return False
+        return True
 
 
 def create_general_heuristic(heuristic):
@@ -319,4 +322,7 @@ class Dork(Player):
         return b_action
 
     def compute_turn(self):
-        return self.simple_choice()
+        action = self.simple_choice()
+        if action is None or action.name == 'do nothing':
+            return False
+        return True
