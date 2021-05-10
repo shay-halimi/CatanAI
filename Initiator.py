@@ -17,8 +17,8 @@ def main():
     for i in range(RUNS):
         time = Time(PLAYERS)
         statistic_logger = StatisticsLogger()
-        log = Log(PLAYERS)
-        board = Board(PLAYERS, log)
+        log = Log(PLAYERS, time)
+        board = Board(PLAYERS, log, statistic_logger)
         game = Game(time, PLAYERS, names)
         game.play_game()
 

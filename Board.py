@@ -295,8 +295,8 @@ class Neighbor:
 
 
 class Board:
-    def __init__(self, players, log):
-        self.statistics_logger = StatisticsLogger()
+    def __init__(self, players, log, statistics_logger: StatisticsLogger):
+        self.statistics_logger = statistics_logger
         self.log = log
         self.players = players
         self.devStack = DevStack()

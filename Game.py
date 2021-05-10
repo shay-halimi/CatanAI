@@ -17,7 +17,7 @@ class Game:
 
     def __init__(self, time: Time, players, names=None, board_log=None):
         self.time = time
-        self.log = Log(players)
+        self.log = Log(players, time)
         self.board = self.create_board(players, board_log)
         self.players = self.create_players(players)
         self.players_num = players
@@ -37,7 +37,6 @@ class Game:
             else:
                 pass
             self.next_turn()
-            self.api.end_turn()
         for i in range(len(self.players) - 1, -1, -1):
             self.api.new_turn_name(self.players[i].name)
             self.log.turn_log['resources'] = resource_log(self.players[i].hand)
@@ -46,9 +45,6 @@ class Game:
             else:
                 pass
             self.next_turn()
-            self.api.end_turn()
-        self.api.round = 1
-        self.api.turn = self.players_num - 1
 
     def play_game(self):
         self.start_game()
@@ -87,7 +83,6 @@ class Game:
         return True
 
     def play_turn(self, player: Player):
-        self.api.end_turn()
         self.api.new_turn()
         self.log.turn_log['resources'] = resource_log(player.hand)
         self.throw_dice()

@@ -2,6 +2,7 @@ from PIL import Image, ImageDraw, ImageFont
 from Resources import Resource
 import Auxilary
 from Auxilary import cr_line_len
+from Time import Time
 
 
 def resize_road(percent, location):
@@ -43,7 +44,7 @@ def resize_arrows(size):
 
 
 class API:
-    def __init__(self, names: list[str]):
+    def __init__(self, names: list[str], time: Time):
         self.note_switch = False
         self.on_switch = False
         if self.on_switch:
@@ -54,8 +55,7 @@ class API:
             self.give_mask = Image.open('images/source/give_mask.png').convert('L')
             self.take_mask = Image.open('images/source/take_mask.png').convert('L')
             self.names = names
-            self.round = 0
-            self.turn = 0
+            self.time = time
             self.action = 0
             self.num_of_players = len(names)
             self.start = Image.open('images/source/start.jpg')
@@ -183,14 +183,14 @@ class API:
 
     def new_turn(self):
         if self.on_switch:
-            self.new_turn_name(self.names[self.turn])
+            self.new_turn_name(self.names[self.time.get_turn()])
 
     def new_turn_name(self, name):
         if self.on_switch:
             self.action = 0
             self.headline_y = 480
             self.delete_turn()
-            self.write_headline("Round " + str(self.round))
+            self.write_headline("Round " + str(self.time.get_round()))
             self.write_headline(name)
             self.save_file()
 
@@ -203,8 +203,8 @@ class API:
 
     def save_file(self):
         if self.on_switch:
-            name = "images/destination/round " + str(self.round) + "  turn " + \
-                   str(self.turn) + "  action " + str(self.action) + ".jpg"
+            name = "images/destination/round " + str(self.time.get_round()) + "  turn " + \
+                   str(self.time.get_turn()) + "  action " + str(self.action) + ".jpg"
             if self.do_i_save_copy:
                 self.copy.save(name)
                 self.do_i_save_copy = False
@@ -220,10 +220,6 @@ class API:
         if self.on_switch:
             x, y = self.action_location
             self.start.paste(self.action_mask, (x - 10, y - 10))
-
-    def end_turn(self):
-        if self.on_switch:
-            self.round, self.turn = Auxilary.next_turn(self.num_of_players, self.round, self.turn)
 
     def print_profiles(self):
         self.write_from_left(self.names[0], 1320, 1, 0)
