@@ -25,6 +25,7 @@ from Hand import Hand
 from Resources import Resource
 from Auxilary import s2r
 from random import randint
+from Printer import Printer
 
 
 class LogToAction:
@@ -311,8 +312,8 @@ class Dork(Player):
             elif a.heuristic > b_action.heuristic:
                 b_action = a
         if b_action is not None:
-            print('   my best action : ')
-            print(b_action.name + ' : ' + str(b_action.heuristic))
+            Printer.printer('   my best action : ')
+            Printer.printer(b_action.name + ' : ' + str(b_action.heuristic))
             b_action.do_action()
             b_action.hand.heuristic = b_action.heuristic
         return b_action

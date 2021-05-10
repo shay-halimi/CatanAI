@@ -22,6 +22,7 @@ from abc import ABC
 import math
 from random import randrange
 from random import uniform
+from Printer import Printer
 
 api: API
 
@@ -50,7 +51,7 @@ class Action(ABC):
     # do action return necessary information for undo
     def do_action(self):
         if not self.evaluation_state:
-            print('index : ' + str(self.index) + ' | action : ' + self.name)
+            Printer.printer('index : ' + str(self.index) + ' | action : ' + self.name)
         return None
 
     def log_action(self):
