@@ -43,15 +43,15 @@ class Log:
             if res not in tracker['resolution']:
                 tracker['resolution'][res] = {'counter': 0, 'sum': 0, 'games': []}
             counter = tracker['resolution'][res]['counter']
-            sum = tracker['resolution'][res]['sum']
+            s = tracker['resolution'][res]['sum']
             counter += 1
-            sum += self.time.get_round()
+            s += self.time.get_round()
             if counter >= stop:
-                tracker['resolution'][res]['games'] += [sum / counter]
+                tracker['resolution'][res]['games'] += [s / counter]
                 counter = 0
-                sum = 0
+                s = 0
             tracker['resolution'][res]['counter'] = counter
-            tracker['resolution'][res]['sum'] = sum
+            tracker['resolution'][res]['sum'] = s
         with open('tracking_development.json', 'w') as outfile:
             json.dump(tracker, outfile)
 
@@ -143,7 +143,7 @@ class StatisticsLogger:
             events = pointer[key]['events']
             wins = pointer[key]['wins']
             statistics += [Statistic(events, wins, total_wins, total_events - total_wins)]
-        st = statistics_merge(statistics)   # type: Statistic
+        st = statistics_merge(statistics)  # type: Statistic
         events = st.event
         wins = st.win
         return wins / events
@@ -171,7 +171,7 @@ def statistics_merge(statistics):
     if not statistics:
         return uniform(0, 0.66)
     else:
-        st = statistics.pop()   # type: Statistic
+        st = statistics.pop()  # type: Statistic
         while statistics:
             st.merge(statistics.pop())
     return st
@@ -192,4 +192,3 @@ class Statistic:
         self.lose = self.lose * statistic.lose / self.total_lose
         self.event = self.win + self.lose
         self.win_ratio = self.win / self.event
-

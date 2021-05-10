@@ -17,7 +17,6 @@ from DevStack import Monopole
 from DevStack import YearOfProsper
 from DevStack import VictoryPointCard
 from DevStack import RoadBuilding
-from DevStack import DevCard
 from DevStack import DevStack
 from abc import ABC
 import math

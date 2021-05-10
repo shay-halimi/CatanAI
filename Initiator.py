@@ -38,7 +38,6 @@ def main():
         log = Log(PLAYERS, time)
         api = API(API_ON, names, time)
         board = Board(api, PLAYERS, log, statistic_logger)
-        rounds_log = None  # just so the compiler won't cry
         if LOAD_GAME:
             if not API_ON:
                 api.turn_on()
@@ -51,8 +50,9 @@ def main():
         for i in range(PLAYERS):
             player = AI[i](i, board)
             players += [player]
-        game = Game(api, players, board, time, PLAYERS, names)
+        game = Game(api, players, board, time, PLAYERS)
         if LOAD_GAME:
+            # noinspection PyUnboundLocalVariable
             game.load_game(rounds_log)
         else:
             game.play_game()

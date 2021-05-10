@@ -230,11 +230,11 @@ class Road:
         if self.board.hands[i].longest_road > self.board.longest_road_size:
             self.board.longest_road_size = self.board.hands[i].longest_road
             if self.board.longest_road_owner is not None:
-                lro = self.board.hands[self.board.longest_road_owner]   # type: Hand
+                lro = self.board.hands[self.board.longest_road_owner]  # type: Hand
                 lro.subtract_point()
                 lro.subtract_point()
             self.board.longest_road_owner = player
-            hand = self.board.hands[player] # type: Hand
+            hand = self.board.hands[player]  # type: Hand
             hand.add_point()
             hand.add_point()
 

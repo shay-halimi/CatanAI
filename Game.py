@@ -1,21 +1,17 @@
 from Time import Time
 import Actions
 from Player import Player
-from Player import Dork
 from Player import LogToAction
 from Board import Board
 from Log import Log
 from API import API
 from Auxilary import resource_log
-from Auxilary import next_turn
 import math
-from random import randint
-import json
 
 
 class Game:
 
-    def __init__(self, api, players: list[Player], board: Board, time: Time, p_num, board_log=None):
+    def __init__(self, api: API, players: list[Player], board: Board, time: Time, p_num):
         self.time = time
         self.log = Log(p_num, time)
         self.board = board
@@ -127,7 +123,6 @@ class Game:
                     player = self.players[action['player']]
                     a = LogToAction(self.board, player, action).get_action()
                     a.do_action()
-                self.board.next_turn(t, r)
 
     def load_dice(self, num):
         for i, j in self.board.dice.load(num):
@@ -139,26 +134,6 @@ class Game:
 
 
 # ---- main ---- #
-
-
-def load_game(path):
-    with open(path) as json_file:
-        game = json.load(json_file)
-        board = game['board']
-        rounds = game['rounds']
-    # Todo: delete comment
-    """
-    turn_off = False
-    if api_off:
-        turn_off = True
-        turn_api_on()
-    """
-    game = Game(3, None, board)
-    game.load_game(rounds)
-    """
-    if turn_off:
-        turn_api_off()
-    """
 
 
 def main():

@@ -1,6 +1,5 @@
 from PIL import Image, ImageDraw, ImageFont
 from Resources import Resource
-import Auxilary
 from Auxilary import cr_line_len
 from Time import Time
 
@@ -167,7 +166,6 @@ class API:
                                  font=self.font)
 
     def write_from_left(self, text, line, above, index):
-        w, h = self.draw.textsize(text, font=self.font)
         profile_y = 0 if above == -1 else self.profiles[0].size[1]
         self.start.paste(self.profiles[index], (20, line + 10 - 50 * above - profile_y))
         self.draw.multiline_text((40 + self.profiles[index].size[0], line - 150 * above), text, fill=(0, 0, 0),

@@ -20,7 +20,7 @@ from Actions import UseYearOfPlenty
 from Actions import BuyDevCard
 from Actions import ThrowCards
 from Actions import Action
-from Board import Board,Terrain,Crossroad
+from Board import Board, Terrain
 from Hand import Hand
 from Resources import Resource
 from Auxilary import s2r
@@ -74,17 +74,17 @@ class LogToAction:
 
 def take_best_action(actions):
     if actions:
-        baction = actions.pop() # type: Action
+        b_action = actions.pop()  # type: Action
         for a in actions:
-            if a.heuristic > baction.heuristic:
-                baction = a
-        baction.do_action()
-        baction.hand.heuristic = baction.heuristic
-        print('taken action : ' + baction.name)
-        print('user : ' + str(baction.index))
-        print('score : ' + str(baction.heuristic))
+            if a.heuristic > b_action.heuristic:
+                b_action = a
+        b_action.do_action()
+        b_action.hand.heuristic = b_action.heuristic
+        print('taken action : ' + b_action.name)
+        print('user : ' + str(b_action.index))
+        print('score : ' + str(b_action.heuristic))
         print('\n\n')
-        return baction
+        return b_action
     else:
         return None
 
@@ -127,7 +127,7 @@ class Player:
                 for terrain in line:
                     if terrain == self.board.bandit_location:
                         continue
-                    for cr in Terrain.get_crossroads((terrain)):
+                    for cr in Terrain.get_crossroads(terrain):
                         destination = cr.get_ownership()
                         if destination is not None and destination != self.index:
                             h = None if heuristic is None else heuristic["use knight"]
@@ -258,8 +258,8 @@ def print_choices(actions: list[Action]):
             types[action.name] = action
         elif action.heuristic > types[action.name].heuristic:
             types[action.name] = action
-    for type, action in types.items():
-        print(type + ' : ' + str(action.heuristic))
+    for t, action in types.items():
+        print(t + ' : ' + str(action.heuristic))
         show_score_analysis(action.hand)
         print('####################################\n')
 
@@ -276,9 +276,10 @@ class Dork(Player):
         heuristic = hand_heuristic
         for cr in legal_crossroads:
             actions += [BuildFirstSettlement(self.hand, heuristic, cr)]
-        baction = take_best_action(actions) # type: BuildFirstSettlement
+        # noinspection PyTypeChecker
+        b_action = take_best_action(actions)  # type: BuildFirstSettlement
         actions = []
-        cr = baction.crossroad
+        cr = b_action.crossroad
         # add heuristic for road
         for n in cr.neighbors:
             actions += [BuildFreeRoad(self.hand, heuristic, n.road)]
@@ -290,9 +291,10 @@ class Dork(Player):
         heuristic = hand_heuristic
         for cr in legal_crossroads:
             actions += [BuildSecondSettlement(self.hand, heuristic, cr)]
-        best_action = take_best_action(actions) # type: BuildSecondSettlement
+        # noinspection PyTypeChecker
+        b_action = take_best_action(actions)  # type: BuildSecondSettlement
         actions = []
-        cr = best_action.crossroad
+        cr = b_action.crossroad
         for n in cr.neighbors:
             actions += [BuildFreeRoad(self.hand, heuristic, n.road)]
         take_best_action(actions)
@@ -300,19 +302,20 @@ class Dork(Player):
     def simple_choice(self):
         print('\nI am ' + str(self.index) + ' now in simple choice : ')
         actions = self.get_legal_moves(self.heuristic)
-        best_action = None  # type: Action
+        # noinspection PyTypeChecker
+        b_action = None  # type: Action
         print_choices(actions)
         for a in actions:
-            if best_action is None:
-                best_action = a
-            elif a.heuristic > best_action.heuristic:
-                best_action = a
-        if best_action is not None:
+            if b_action is None:
+                b_action = a
+            elif a.heuristic > b_action.heuristic:
+                b_action = a
+        if b_action is not None:
             print('   my best action : ')
-            print(best_action.name + ' : ' + str(best_action.heuristic))
-            best_action.do_action()
-            best_action.hand.heuristic = best_action.heuristic
-        return best_action
+            print(b_action.name + ' : ' + str(b_action.heuristic))
+            b_action.do_action()
+            b_action.hand.heuristic = b_action.heuristic
+        return b_action
 
     def compute_turn(self):
         return self.simple_choice()
