@@ -6,6 +6,7 @@ from Player import Dork
 from API import API
 from Log import StatisticsLogger
 from Log import Log
+from Printer import Printer
 import json
 
 API_ON = False
@@ -15,6 +16,8 @@ PLAYERS = 4
 RUNS = 1
 LOAD_GAME = False
 PATH = "saved_games/game182.json"
+PRINTER_ON = False
+PRINTER_OUTFILE = 'outfile.txt'
 
 
 def load_board(board: Board, log):
@@ -30,6 +33,10 @@ def load_game(path):
 
 
 def main():
+    if not PRINTER_ON:
+        Printer.turn_off()
+    else:
+        Printer.set_outfile(PRINTER_OUTFILE)
     names = NAMES[0:PLAYERS]
     runs = 1 if LOAD_GAME else RUNS
     for i in range(runs):
@@ -56,6 +63,8 @@ def main():
             game.load_game(rounds_log)
         else:
             game.play_game()
+    if PRINTER_ON:
+        Printer.close_outfile()
 
 
 print("Hello Initiator")

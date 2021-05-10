@@ -25,6 +25,7 @@ from Hand import Hand
 from Resources import Resource
 from Auxilary import s2r
 from random import randint
+from Printer import Printer
 
 
 class LogToAction:
@@ -80,10 +81,10 @@ def take_best_action(actions):
                 b_action = a
         b_action.do_action()
         b_action.hand.heuristic = b_action.heuristic
-        print('taken action : ' + b_action.name)
-        print('user : ' + str(b_action.index))
-        print('score : ' + str(b_action.heuristic))
-        print('\n\n')
+        Printer.printer('taken action : ' + b_action.name)
+        Printer.printer('user : ' + str(b_action.index))
+        Printer.printer('score : ' + str(b_action.heuristic))
+        Printer.printer('\n\n')
         return b_action
     else:
         return None
@@ -252,16 +253,16 @@ def create_general_heuristic(heuristic):
 def print_choices(actions: list[Action]):
     types = {}
     if actions:
-        print('total points : ' + str(actions[0].points))
+        Printer.printer('total points : ' + str(actions[0].points))
     for action in actions:
         if action.name not in types:
             types[action.name] = action
         elif action.heuristic > types[action.name].heuristic:
             types[action.name] = action
     for t, action in types.items():
-        print(t + ' : ' + str(action.heuristic))
+        Printer.printer(t + ' : ' + str(action.heuristic))
         show_score_analysis(action.hand)
-        print('####################################\n')
+        Printer.printer('####################################\n')
 
 
 class Dork(Player):
@@ -300,7 +301,7 @@ class Dork(Player):
         take_best_action(actions)
 
     def simple_choice(self):
-        print('\nI am ' + str(self.index) + ' now in simple choice : ')
+        Printer.printer('\nI am ' + str(self.index) + ' now in simple choice : ')
         actions = self.get_legal_moves(self.heuristic)
         # noinspection PyTypeChecker
         b_action = None  # type: Action
@@ -311,8 +312,8 @@ class Dork(Player):
             elif a.heuristic > b_action.heuristic:
                 b_action = a
         if b_action is not None:
-            print('   my best action : ')
-            print(b_action.name + ' : ' + str(b_action.heuristic))
+            Printer.printer('   my best action : ')
+            Printer.printer(b_action.name + ' : ' + str(b_action.heuristic))
             b_action.do_action()
             b_action.hand.heuristic = b_action.heuristic
         return b_action
