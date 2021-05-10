@@ -94,7 +94,7 @@ class Hand:
         return self.can_pay(CITY_PRICE) and self.city_pieces
 
     def can_buy_development_card(self):
-        return self.can_pay(DEV_PRICE) and self.board.devStack and self.board.devStack.has_cards()
+        return self.can_pay(DEV_PRICE) and self.board.devStack.has_cards()
 
     def can_trade(self, src: Resource, amount):
         if src in self.ports:
