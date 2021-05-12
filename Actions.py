@@ -291,8 +291,9 @@ class UseVictoryPoint(UseDevCard):
 
     def use_victory_point(self):
         hand = self.hand
-        hand.points += len(hand.cards['victory points'])
-        hand.heuristic -= 1000
+        hand.points += 1
+        hand.cards['victory points'].pop()
+        hand.heuristic -= 1.05
         if hand.points >= 10:
             hand.heuristic += math.inf
 
