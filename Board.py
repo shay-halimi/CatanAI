@@ -218,7 +218,7 @@ class Road:
             for cross_road in self.neighbors: #type: Crossroad
                 for neighbor in cross_road.neighbors:
                     cur_road = neighbor.get_road()
-                    if cur_road.owner == player:
+                    if cur_road.owner == player and not cur_road.traveled:
                         road_length += 1
                         cur_value = cur_road.update_longest_road(player, road_length)
                         if cur_value > cur_max:
@@ -252,6 +252,8 @@ class Road:
             cur_value = end.update_longest_road(player,0)
             if cur_value > updated_road_size:
                 updated_road_size = cur_value
+        if updated_road_size > 2:
+            print(updated_road_size)
         if self.board.hands[player].longest_road < updated_road_size:
             self.board.hands[player].longest_road = updated_road_size
         if self.board.longest_road_size < updated_road_size:
