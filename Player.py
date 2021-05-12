@@ -261,7 +261,12 @@ def print_choices(actions: list[Action]):
         print(type + ' : ' + str(action.heuristic))
         show_score_analysis(action.hand)
         print('####################################\n')
-
+#
+# Class Fudge(Player)
+#     def __init__(self, index, board: Board):
+#         super().__init__(index, board, "Dork")
+#         self.statistics = StatisticsHeuristic(board.statistics_logger)
+#         self.heuristic = create_general_heuristic(hand_heuristic)
 
 class Dork(Player):
     def __init__(self, index, board: Board):

@@ -61,7 +61,7 @@ class API:
             self.start = Image.open('images/source/start.jpg')
             self.headline_y = 480
             self.font_size = 48
-            self.font = ImageFont.truetype('Library/Fonts/Arial Bold.ttf', self.font_size)
+            self.font = ImageFont.truetype('Library/Fonts/arial', self.font_size)
             self.draw = ImageDraw.Draw(self.start)
             self.action_img = Image.open('images/source/action.JPG')
             self.action_location = (int((3160 - self.action_img.size[0]) / 2), 30)
