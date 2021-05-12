@@ -226,8 +226,8 @@ class UseYearOfPlenty(UseDevCard):
     def undo(self, info):
         r1, r2, index = info
         hand = self.hands[index]
-        hand.add_resources(r1, 1)
-        hand.add_resources(r2, 1)
+        hand.subtract_resources(r1, 1)
+        hand.subtract_resources(r2, 1)
         card = YearOfProsper()
         card.ok_to_use = True
         self.hand.add_card(card)
