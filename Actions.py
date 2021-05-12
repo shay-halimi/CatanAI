@@ -51,6 +51,7 @@ class Action(ABC):
     # do action return necessary information for undo
     def do_action(self):
         if not self.evaluation_state:
+            print('resources before : ' + str(self.hand.get_resources_number()))
             Printer.printer('index : ' + str(self.index) + ' | action : ' + self.name)
         return None
 
@@ -291,8 +292,9 @@ class UseVictoryPoint(UseDevCard):
 
     def use_victory_point(self):
         hand = self.hand
-        hand.points += len(hand.cards['victory points'])
-        hand.heuristic -= 1000
+        hand.points += 1
+        hand.cards['victory points'].pop()
+        hand.heuristic -= 0.05
         if hand.points >= 10:
             hand.heuristic += math.inf
 

@@ -139,9 +139,13 @@ def hand_stat(hand: Hand):
 
 def hand_heuristic(action: Action):
     action.evaluation_on()
+    r = action.hand.get_resources_number()
     undo_info = action.do_action()
     value = hand_stat(action.hand)
     action.undo(undo_info)
+    if r != action.hand.get_resources_number():
+        print('\n\n\n&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&\n\n\n')
+        print('broken undo : ' + str(action))
     action.evaluation_off()
     return value
 
