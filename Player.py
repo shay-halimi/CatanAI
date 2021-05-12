@@ -4,6 +4,7 @@ from Heuristics import best_action
 from Heuristics import greatest_crossroad
 from Heuristics import hand_heuristic
 from Heuristics import show_score_analysis
+from Heuristics import compute_heuristic_use_victory_point
 from Actions import Trade
 from Actions import BuildFreeRoad
 from Actions import BuildRoad
@@ -17,14 +18,16 @@ from Actions import UseKnight
 from Actions import UseMonopole
 from Actions import UseBuildRoads
 from Actions import UseYearOfPlenty
+from Actions import UseVictoryPoint
 from Actions import BuyDevCard
 from Actions import ThrowCards
 from Actions import Action
-from Board import Board,Terrain,Crossroad
+from Board import Board, Terrain
 from Hand import Hand
 from Resources import Resource
 from Auxilary import s2r
 from random import randint
+from Printer import Printer
 
 
 class LogToAction:
@@ -74,16 +77,17 @@ class LogToAction:
 
 def take_best_action(actions):
     if actions:
-        baction = actions.pop() # type: Action
+        b_action = actions.pop()  # type: Action
         for a in actions:
-            if a.heuristic > baction.heuristic:
-                baction = a
-        baction.do_action()
-        print('taken action : ' + baction.name)
-        print('user : ' + str(baction.index))
-        print('score : ' + str(baction.heuristic))
-        print('\n\n')
-        return baction
+            if a.heuristic > b_action.heuristic:
+                b_action = a
+        b_action.do_action()
+        b_action.hand.heuristic = b_action.heuristic
+        Printer.printer('taken action : ' + b_action.name)
+        Printer.printer('user : ' + str(b_action.index))
+        Printer.printer('score : ' + str(b_action.heuristic))
+        Printer.printer('\n\n')
+        return b_action
     else:
         return None
 
@@ -115,31 +119,47 @@ class Player:
                 num_cards -= cards_to_throw
         ThrowCards(self.hand, None, cards)
 
-    def get_legal_moves(self, heuristic) -> list[Action]:
+    def legal_victory_point(self):
         legal_moves = []
-        h = None if heuristic is None else heuristic["do nothing"]
-        legal_moves += [DoNothing(self.hand, h)]
-        # finding legal moves from devCards
+        if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["victory points"]))) > 0:
+            h = compute_heuristic_use_victory_point
+            legal_moves += [UseVictoryPoint(self.hand, h)]
+        return legal_moves
+
+    def legal_knight(self, heuristic):
+        legal_moves = []
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["knight"]))) > 0:
             # need to check if the cards
             for line in self.board.map:
                 for terrain in line:
                     if terrain == self.board.bandit_location:
                         continue
-                    for cr in Terrain.get_crossroads((terrain)):
+                    for cr in Terrain.get_crossroads(terrain):
                         destination = cr.get_ownership()
                         if destination is not None and destination != self.index:
                             h = None if heuristic is None else heuristic["use knight"]
                             legal_moves += [UseKnight(self.hand, h, terrain, destination)]
+        return legal_moves
+
+    def legal_monopole(self, heuristic):
+        legal_moves = []
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["monopole"]))) > 0:
             for r in Resource:
                 if r != Resource.DESSERT:
                     h = None if heuristic is None else heuristic["use monopole"]
                     legal_moves += [UseMonopole(self.hand, h, r)]
+        return legal_moves
+
+    def legal_road_builder(self, heuristic):
+        legal_moves =[]
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["road builder"]))) > 0:
-            for [road1, road2] in self.board.get_two_legal_roads(self.index):
+            for [road1, road2] in self.board.get_two_legal_roads(self.hand):
                 h = None if heuristic is None else heuristic["use build roads"]
                 legal_moves += [UseBuildRoads(self.hand, h, road1, road2)]
+        return legal_moves
+
+    def legal_year_of_prosper(self, heuristic):
+        legal_moves = []
         if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["year of prosper"]))) > 0:
             for r1 in Resource:
                 if r1 != Resource.DESSERT:
@@ -147,21 +167,42 @@ class Player:
                         if r2 != Resource.DESSERT:
                             h = None if heuristic is None else heuristic["use year of plenty"]
                             legal_moves += [UseYearOfPlenty(self.hand, h, r1, r2)]
+        return legal_moves
+
+    def legal_build_road(self, heuristic):
+        legal_moves = []
         if self.board.hands[self.index].can_buy_road():
             for road in self.board.get_legal_roads(self.index):
                 h = None if heuristic is None else heuristic["build road"]
                 legal_moves += [BuildRoad(self.hand, h, road)]
-        if self.board.hands[self.index].can_buy_settlement():
-            for crossword in self.board.get_lands(self.index):
+        return legal_moves
+
+    def legal_build_settlement(self, heuristic) -> list[BuildSettlement]:
+        legal_moves = []
+        if self.hand.can_buy_settlement():
+            for crossword in self.hand.get_lands():
                 h = None if heuristic is None else heuristic["build settlement"]
                 legal_moves += [BuildSettlement(self.hand, h, crossword)]
-        if self.board.hands[self.index].can_buy_city():
+        return legal_moves
+
+    def legal_buy_city(self, heuristic) -> list[BuildCity]:
+        legal_moves = []
+        if self.hand.can_buy_city():
             for settlement in self.board.get_settlements(self.index):
                 h = None if heuristic is None else heuristic["build city"]
                 legal_moves += [BuildCity(self.hand, h, settlement)]
-        if self.board.hands[self.index].can_buy_development_card():
+        return legal_moves
+
+    def legal_buy_card(self, heuristic):
+        legal_moves = []
+        if self.hand.can_buy_development_card():
             h = None if heuristic is None else heuristic["buy dev card"]
             legal_moves += [BuyDevCard(self.hand, h)]
+            return legal_moves
+        return legal_moves
+
+    def legal_trade(self, heuristic):
+        legal_moves = []
         for resource in Resource:
             if resource is not Resource.DESSERT:
                 can_trade, exchange_rate = self.hand.can_trade(resource, 1)
@@ -170,6 +211,23 @@ class Player:
                         if dst is not Resource.DESSERT:
                             h = None if heuristic is None else heuristic["trade"]
                             legal_moves += [Trade(self.hand, h, resource, exchange_rate, dst, 1)]
+        return legal_moves
+
+    def get_legal_moves(self, heuristic) -> list[Action]:
+        legal_moves = []
+        h = None if heuristic is None else heuristic["do nothing"]
+        legal_moves += [DoNothing(self.hand, h)]
+        # finding legal moves from devCards
+        legal_moves += self.legal_victory_point()
+        legal_moves += self.legal_knight(heuristic)
+        legal_moves += self.legal_monopole(heuristic)
+        legal_moves += self.legal_road_builder(heuristic)
+        legal_moves += self.legal_year_of_prosper(heuristic)
+        legal_moves += self.legal_build_road(heuristic)
+        legal_moves += self.legal_build_settlement(heuristic)
+        legal_moves += self.legal_buy_city(heuristic)
+        legal_moves += self.legal_buy_card(heuristic)
+        legal_moves += self.legal_trade(heuristic)
         # ToDo : Add trade between players
         return legal_moves
 
@@ -231,7 +289,10 @@ class Player:
         return a
 
     def compute_turn(self):
-        return self.simple_choice()
+        action = self.simple_choice()
+        if action is None or action.name == 'do nothing':
+            return False
+        return True
 
 
 def create_general_heuristic(heuristic):
@@ -251,22 +312,16 @@ def create_general_heuristic(heuristic):
 def print_choices(actions: list[Action]):
     types = {}
     if actions:
-        print('total points : ' + str(actions[0].points))
+        Printer.printer('total points : ' + str(actions[0].points))
     for action in actions:
         if action.name not in types:
             types[action.name] = action
         elif action.heuristic > types[action.name].heuristic:
             types[action.name] = action
-    for type, action in types.items():
-        print(type + ' : ' + str(action.heuristic))
+    for t, action in types.items():
+        Printer.printer(t + ' : ' + str(action.heuristic))
         show_score_analysis(action.hand)
-        print('####################################\n')
-#
-# Class Fudge(Player)
-#     def __init__(self, index, board: Board):
-#         super().__init__(index, board, "Dork")
-#         self.statistics = StatisticsHeuristic(board.statistics_logger)
-#         self.heuristic = create_general_heuristic(hand_heuristic)
+
 
 class Dork(Player):
     def __init__(self, index, board: Board):
@@ -280,9 +335,10 @@ class Dork(Player):
         heuristic = hand_heuristic
         for cr in legal_crossroads:
             actions += [BuildFirstSettlement(self.hand, heuristic, cr)]
-        baction = take_best_action(actions) # type: BuildFirstSettlement
+        # noinspection PyTypeChecker
+        b_action = take_best_action(actions)  # type: BuildFirstSettlement
         actions = []
-        cr = baction.crossroad
+        cr = b_action.crossroad
         # add heuristic for road
         for n in cr.neighbors:
             actions += [BuildFreeRoad(self.hand, heuristic, n.road)]
@@ -294,27 +350,28 @@ class Dork(Player):
         heuristic = hand_heuristic
         for cr in legal_crossroads:
             actions += [BuildSecondSettlement(self.hand, heuristic, cr)]
-        best_action = take_best_action(actions) # type: BuildSecondSettlement
+        # noinspection PyTypeChecker
+        b_action = take_best_action(actions)  # type: BuildSecondSettlement
         actions = []
-        cr = best_action.crossroad
+        cr = b_action.crossroad
         for n in cr.neighbors:
             actions += [BuildFreeRoad(self.hand, heuristic, n.road)]
         take_best_action(actions)
 
     def simple_choice(self):
-        print('\nI am ' + str(self.index) + ' now in simple choice : ')
+        Printer.printer('\nI am ' + str(self.index) + ' now in simple choice : ')
         actions = self.get_legal_moves(self.heuristic)
-        best_action = None  # type: Action
+        # noinspection PyTypeChecker
+        b_action = None  # type: Action
         print_choices(actions)
         for a in actions:
-            if best_action is None:
-                best_action = a
-            elif a.heuristic > best_action.heuristic:
-                best_action = a
-        if best_action is not None:
-            print('   my best action : ')
-            print(best_action.name + ' : ' + str(best_action.heuristic))
-            best_action.do_action()
-
-    def compute_turn(self):
-        self.simple_choice()
+            if b_action is None:
+                b_action = a
+            elif a.heuristic > b_action.heuristic:
+                b_action = a
+        if b_action is not None:
+            Printer.printer('   my best action : ')
+            Printer.printer(b_action.name + ' : ' + str(b_action.heuristic))
+            b_action.do_action()
+            b_action.hand.heuristic = b_action.heuristic
+        return b_action

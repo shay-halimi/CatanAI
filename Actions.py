@@ -17,12 +17,12 @@ from DevStack import Monopole
 from DevStack import YearOfProsper
 from DevStack import VictoryPointCard
 from DevStack import RoadBuilding
-from DevStack import DevCard
 from DevStack import DevStack
 from abc import ABC
 import math
 from random import randrange
 from random import uniform
+from Printer import Printer
 
 api: API
 
@@ -51,7 +51,7 @@ class Action(ABC):
     # do action return necessary information for undo
     def do_action(self):
         if not self.evaluation_state:
-            print('index : ' + str(self.index) + ' | action : ' + self.name)
+            Printer.printer('index : ' + str(self.index) + ' | action : ' + self.name)
         return None
 
     def log_action(self):
@@ -124,11 +124,10 @@ class UseKnight(UseDevCard):
         terrain = self.terrain
         for knight in hand.cards["knight"]:
             if knight.is_valid():
-                if terrain.put_bandit():
-                    hand.cards["knight"].remove(knight)
-                    steal = self.steal()
-                    return steal
-        return None
+                terrain.put_bandit()
+                hand.cards["knight"].remove(knight)
+                steal = self.steal()
+                return steal
 
     # todo test it
     def undo(self, undo_info):
@@ -180,6 +179,7 @@ class UseMonopole(UseDevCard):
         amounts, resource = info
         for hand in self.hands:
             hand.add_resources(resource, amounts[hand.index])
+            self.hand.subtract_resources(resource, amounts[hand.index])
         card = Monopole()
         card.ok_to_use = True
         self.hand.add_card(card)
@@ -292,8 +292,9 @@ class UseVictoryPoint(UseDevCard):
 
     def use_victory_point(self):
         hand = self.hand
-        hand.points += len(hand.cards['victory points'])
-        hand.heuristic -= 1000
+        hand.points += 1
+        hand.cards['victory points'].pop()
+        hand.heuristic -= 1.05
         if hand.points >= 10:
             hand.heuristic += math.inf
 
@@ -356,10 +357,7 @@ class BuildSettlement(Action):
         self.crossroad.connected[hand.index] = True
         hand.settlement_pieces -= 1
         hand.add_point()
-        for resource in Resource:
-            if resource is not Resource.DESSERT:
-                hand.production_all += self.crossroad.val[resource] / 36
-        undo_info = self.crossroad.build(hand.index)
+        undo_info = self.crossroad.build(hand)
         hand.set_distances()
         if self.crossroad.port is not None:
             hand.ports.add(self.crossroad.port)
@@ -471,7 +469,7 @@ class BuildCity(Action):
         hand.settlement_pieces += 1
         hand.city_pieces -= 1
         hand.add_point()
-        build_info = self.crossroad.build(hand.index)
+        build_info = self.crossroad.build(hand)
         hand.set_distances()
         return build_info
 

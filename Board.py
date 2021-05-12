@@ -7,6 +7,7 @@ from Log import StatisticsLogger
 from Auxilary import r2s
 from Auxilary import s2r
 from Auxilary import cr_line_len
+from API import API
 
 # ---- global variables ---- #
 
@@ -45,14 +46,10 @@ class Terrain:
         return not self.has_bandit
 
     def put_bandit(self):
-        if self.can_put_bandit():
-            self.board.bandit_location.has_bandit = False
-            self.has_bandit = True
-            steal_stack = []
-            for cr in self.crossroads:
-                if cr.ownership is not None:
-                    steal_stack += [cr.ownership]
-            return steal_stack
+        self.board.bandit_location.has_bandit = False
+        self.has_bandit = True
+        self.board.bandit_location = self
+
 
     def get_log(self):
         log = {
@@ -97,16 +94,23 @@ class Crossroad:
     def get_ownership(self):
         return self.ownership
 
-    def build(self, player):
+    def add_production(self, hand: Hand):
+        for resource in Resource:
+            if resource is not Resource.DESSERT:
+                hand.production_all += self.val[resource] / 36
+                hand.production[resource] += self.val[resource] / 36
+
+    def build(self, hand: Hand):
         legals = []
         if self.ownership is None:
-            self.ownership = player
+            self.ownership = hand.index
             for n in self.neighbors:
                 legals += [n.crossroad.legal]
                 n.crossroad.legal = False
-        if self.ownership == player and self.building < 2:
+        if self.ownership == hand.index and self.building < 2:
             self.building += 1
             self.fertility_dist = INFINITY
+            self.add_production(hand)
         return legals
 
     def undo_build(self, player, legals):
@@ -323,8 +327,8 @@ class Neighbor:
         return self.road
 
 class Board:
-    def __init__(self, players, log):
-        self.statistics_logger = StatisticsLogger()
+    def __init__(self, api: API, players, log, statistics_logger: StatisticsLogger):
+        self.statistics_logger = statistics_logger
         self.log = log
         self.players = players
         self.devStack = DevStack()
@@ -414,7 +418,7 @@ class Board:
         for n in range(players):
             self.hands += [Hand(n, self)]
 
-        self.api = None
+        self.api = api
 
         # longest road stats
         self.longest_road_size = 4
@@ -497,13 +501,6 @@ class Board:
                 log += [t_log]
         self.log.board(log)
 
-    # ---- game development ---- #
-
-    def next_turn(self, turn, rnd, dice=None):
-        # Todo: delete comment
-        # API.next_turn(self, turn, rnd, self.hands, dice)
-        pass
-
     # ---- get legal moves ---- #
 
     def get_settlements(self, player):
@@ -533,15 +530,15 @@ class Board:
                     legal += [road]
         return legal
 
-    def get_two_legal_roads(self, player):
+    def get_two_legal_roads(self, hand: Hand):
         legal = []
         for line1 in self.roads:
             for road1 in line1:
-                if road1.is_legal(player):
-                    info1 = road1.build(player)
+                if road1.is_legal(hand.index):
+                    info1 = road1.build(hand.index)
                     for line2 in self.roads:
                         for road2 in line2:
-                            if road2.is_legal(player):
+                            if road2.is_legal(hand.index):
                                 legal += [(road1, road2)]
                     road1.undo_build(info1)
         return legal
