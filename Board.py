@@ -245,15 +245,11 @@ class Road:
     def upgrade_longest_road(self, player):
         ends_list=[] #type: list[Road]
         self.find_end_of_road(player,ends_list)
-        updated_road_size = 0
-        print(ends_list)
-        print("end")
+        updated_road_size = 0re
         for end in ends_list:
             cur_value = end.update_longest_road(player,0)
             if cur_value > updated_road_size:
                 updated_road_size = cur_value
-        if updated_road_size > 2:
-            print(updated_road_size)
         if self.board.hands[player].longest_road < updated_road_size:
             self.board.hands[player].longest_road = updated_road_size
         if self.board.longest_road_size < updated_road_size:
