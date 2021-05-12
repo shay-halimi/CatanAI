@@ -180,6 +180,7 @@ class UseMonopole(UseDevCard):
         amounts, resource = info
         for hand in self.hands:
             hand.add_resources(resource, amounts[hand.index])
+            self.hand.subtract_resources(resource, amounts[hand.index])
         card = Monopole()
         card.ok_to_use = True
         self.hand.add_card(card)
