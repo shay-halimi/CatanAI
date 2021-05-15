@@ -51,7 +51,6 @@ class Action(ABC):
     # do action return necessary information for undo
     def do_action(self):
         if not self.evaluation_state:
-            print('resources before : ' + str(self.hand.get_resources_number()))
             Printer.printer('index : ' + str(self.index) + ' | action : ' + self.name)
         return None
 

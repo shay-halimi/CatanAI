@@ -292,7 +292,6 @@ class Player:
         action = self.simple_choice()
         if action is None or action.name == 'do nothing':
             return False
-        print(action.name, end='')
         return True
 
 

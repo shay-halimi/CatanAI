@@ -70,7 +70,6 @@ class Game:
                 return
 
     def play_round(self):
-        print('round : ' + str(self.time.get_round()))
         for player in self.players:
             self.play_turn(player)
             if max(list(map(lambda x: x.points, self.board.hands))) >= 10:
@@ -78,18 +77,13 @@ class Game:
         return True
 
     def play_turn(self, player: Player):
-        print('turn : ' + str(self.time.get_turn()))
-        print('resources : ' + str(player.hand.get_resources_number()))
+
         self.api.new_turn()
         self.log.turn_log['resources'] = resource_log(player.hand)
         self.throw_dice()
         hand = player.hand
         if self.players[player.index].is_computer:
-            a_num = 1
             while player.compute_turn():
-                print(' :(a) ' + str(a_num))
-                print('resources : ' + str(player.hand.get_resources_number()))
-                a_num += 1
                 Printer.printer(hand)
         self.next_turn()
 
