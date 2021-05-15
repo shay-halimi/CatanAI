@@ -321,7 +321,6 @@ def print_choices(actions: list[Action]):
     for t, action in types.items():
         Printer.printer(t + ' : ' + str(action.heuristic))
         show_score_analysis(action.hand)
-        Printer.printer('####################################\n')
 
 
 class Dork(Player):
