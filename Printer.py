@@ -1,6 +1,20 @@
 class Printer:
     printer_on = True
     outfile = None
+    machine_selected = 0
+    permitted_machines = []
+
+    @classmethod
+    def use_machine(cls, index):
+        cls.machine_selected = index
+
+    @classmethod
+    def ret_to_def_machine(cls):
+        cls.machine_selected = 0
+
+    @classmethod
+    def set_permitted_machines(cls, permitted_machines):
+        cls.permitted_machines = permitted_machines
 
     @classmethod
     def is_on(cls):
@@ -26,7 +40,7 @@ class Printer:
 
     @classmethod
     def printer(cls, *args, sep=' ', end='\n'):
-        if cls.printer_on:
+        if cls.printer_on and cls.permitted_machines[cls.machine_selected]:
             if cls.outfile is not None:
                 cls.outfile.write("".join(map(str, args)) + end)
             else:
