@@ -37,8 +37,8 @@ class Action(ABC):
         cls.computation_time = cls.sum / cls.iterations
 
     @classmethod
-    def add_computation_time(cls, time):
-        cls.iterations += 1
+    def add_computation_time(cls, time, iterations):
+        cls.iterations += iterations
         cls.sum += time
 
     def __init__(self, hand: Hand, heuristic_method):

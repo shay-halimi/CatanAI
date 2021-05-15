@@ -28,6 +28,7 @@ from Resources import Resource
 from Auxilary import s2r
 from random import randint
 from Printer import Printer
+from time import perf_counter
 
 
 class LogToAction:
@@ -229,6 +230,9 @@ class Player:
         legal_moves += self.legal_buy_city(heuristic)
         legal_moves += self.legal_buy_card(heuristic)
         legal_moves += self.legal_trade(heuristic)
+        for action in legal_moves:
+            if action.name not in map(lambda x: x.name, self.actions_taken):
+                self.actions_taken.add(action)
         # ToDo : Add trade between players
         return legal_moves
 
@@ -259,7 +263,17 @@ class Player:
         trades = []
         buy_development = None
         use_development = []
+        tic = perf_counter()
+        curr_action_type = actions[0].name
+        iterations = 0
         for a in actions:
+            if curr_action_type != a.name:
+                toc = perf_counter()
+                time = toc - tic
+                a.add_computation_time(time, iterations)
+                tic = perf_counter()
+                iterations = 0
+                curr_action_type = a.name
             if isinstance(a, BuildSettlement):
                 settlements += [a]
             elif isinstance(a, BuildCity):
@@ -272,6 +286,7 @@ class Player:
                 buy_development = a
             elif isinstance(a, UseDevCard):
                 use_development += [a]
+            iterations += 1
         a = None
         if settlements:
             a = best_action(settlements)
@@ -293,8 +308,6 @@ class Player:
         action = self.simple_choice()
         if action is None or action.name == 'do nothing':
             return False
-        if action.name not in map(lambda x: x.name, self.actions_taken):
-            self.actions_taken.add(action)
         return True
 
 
@@ -368,11 +381,22 @@ class Dork(Player):
         # noinspection PyTypeChecker
         b_action = None  # type: Action
         print_choices(actions)
+        tic = perf_counter()
+        curr_action_type = actions[0].name
+        iterations = 0
         for a in actions:
+            if curr_action_type != a.name:
+                toc = perf_counter()
+                time = toc - tic
+                a.add_computation_time(time, iterations)
+                tic = perf_counter()
+                iterations = 0
+                curr_action_type = a.name
             if b_action is None:
                 b_action = a
             elif a.heuristic > b_action.heuristic:
                 b_action = a
+            iterations += 1
         if b_action is not None:
             Printer.printer('   my best action : ')
             Printer.printer(b_action.name + ' : ' + str(b_action.heuristic))

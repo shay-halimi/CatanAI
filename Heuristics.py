@@ -139,16 +139,11 @@ def hand_stat(hand: Hand):
 
 
 def hand_heuristic(action: Action):
-    name = action.name
-    tic = perf_counter()
     action.evaluation_on()
     undo_info = action.do_action()
     value = hand_stat(action.hand)
     action.undo(undo_info)
     action.evaluation_off()
-    toc = perf_counter()
-    time = toc - tic
-    action.add_computation_time(time)
     return value
 
 
