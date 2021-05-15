@@ -312,7 +312,6 @@ def create_general_heuristic(heuristic):
 def print_choices(actions: list[Action]):
     types = {}
     if actions:
-
         Printer.printer('total points : ' + str(actions[0].points))
     for action in actions:
         if action.name not in types:

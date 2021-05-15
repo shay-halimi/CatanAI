@@ -16,7 +16,7 @@ PLAYERS = 4
 RUNS = 1000
 LOAD_GAME = False
 PATH = "saved_games/game182.json"
-PRINTER_ON = True
+PRINTER_ON = False
 PRINTER_STDOUT = True
 PRINTER_OUTFILE = 'outfile.txt'
 # the machines that can print
