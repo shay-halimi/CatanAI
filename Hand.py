@@ -141,6 +141,10 @@ class Hand:
         name = card.get_name()
         self.cards[name] += [card]
 
+    def sub_card(self, card: DevCard):
+        name = card.get_name()
+        self.cards[name].remove(card)
+
     def add_point(self):
         self.points += 1
 

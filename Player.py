@@ -121,7 +121,7 @@ class Player:
 
     def legal_victory_point(self):
         legal_moves = []
-        if len(list(filter((lambda x: x.ok_to_use), self.hand.cards["victory points"]))) > 0:
+        if len(self.hand.cards["victory points"]) > 0:
             h = compute_heuristic_use_victory_point
             legal_moves += [UseVictoryPoint(self.hand, h)]
         return legal_moves
