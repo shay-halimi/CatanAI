@@ -13,10 +13,11 @@ API_ON = False
 NAMES = ['shay', 'snow', 'shaked', 'odeya']
 AI = [Dork, Dork, Dork, Dork]
 PLAYERS = 4
-RUNS = 1
+RUNS = 1000
 LOAD_GAME = False
 PATH = "saved_games/game182.json"
 PRINTER_ON = False
+PRINTER_STDOUT = True
 PRINTER_OUTFILE = 'outfile.txt'
 
 
@@ -35,11 +36,12 @@ def load_game(path):
 def main():
     if not PRINTER_ON:
         Printer.turn_off()
-    else:
+    elif not PRINTER_STDOUT:
         Printer.set_outfile(PRINTER_OUTFILE)
     names = NAMES[0:PLAYERS]
     runs = 1 if LOAD_GAME else RUNS
     for i in range(runs):
+        print('game number : ' + str(i + 1))
         time = Time(PLAYERS)
         statistic_logger = StatisticsLogger()
         log = Log(PLAYERS, time)
@@ -63,7 +65,7 @@ def main():
             game.load_game(rounds_log)
         else:
             game.play_game()
-    if PRINTER_ON:
+    if PRINTER_ON and not PRINTER_STDOUT:
         Printer.close_outfile()
 
 
