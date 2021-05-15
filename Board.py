@@ -333,7 +333,6 @@ class Neighbor:
 
     def get_owner(self):
         return self.crossroad.ownership
-
     def get_road(self):
         return self.road
 
