@@ -24,6 +24,7 @@ PRINTER_OUTFILE = 'outfile.txt'
 # 0 - default machine
 # 1 - time tracking
 PERMITTED_MACHINES = [False, True]
+TRACK_TIME = True
 
 
 def load_board(board: Board, log):
@@ -39,6 +40,8 @@ def load_game(path):
 
 
 def main():
+    with open('time_tracking.json', 'w') as outfile:
+        json.dump({}, outfile)
     if not PRINTER_ON:
         Printer.turn_off()
     else:
@@ -70,17 +73,30 @@ def main():
             player = AI[i](i, board)
             players += [player]
         game = Game(api, players, board, time, PLAYERS)
+        rounds = 0
         if LOAD_GAME:
             # noinspection PyUnboundLocalVariable
-            game.load_game(rounds_log)
+            rounds = game.load_game(rounds_log)
         else:
-            game.play_game()
+            rounds = game.play_game()
+        toc = perf_counter()
+        seconds = toc - tic
+        if TRACK_TIME:
+            with open('time_tracking.json') as json_file:
+                tracker = json.load(json_file)
+                key = str(rounds)
+                if key not in tracker:
+                    tracker[key] = {'average': 0, 'events': 0, 'total time': 0}
+                tracker[key]['events'] += 1
+                tracker[key]['total time'] += seconds
+                tracker[key]['average'] = tracker[key]['total time'] / tracker[key]['events']
+                with open('time_tracking.json', 'w') as outfile:
+                    json.dump(tracker, outfile)
         if PERMITTED_MACHINES[1]:
             Printer.use_machine(1)
-            toc = perf_counter()
-            time = toc - tic
             Printer.printer('#########################')
-            Printer.printer('time to run the entire game : ' + str(time))
+            Printer.printer('time to run the entire game : ' + str(seconds))
+            Printer.printer('total rounds : ' + str(rounds))
             Printer.printer('#########################\n')
             Printer.ret_to_def_machine()
 

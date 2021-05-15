@@ -55,7 +55,6 @@ class Game:
             Printer.printer('      iterations : ' + str(action.iterations))
             Printer.printer('      sum of time : ' + str(action.sum))
             Printer.printer('      single computation time : ' + str(action.computation_time))
-            Printer.printer('total rounds : ' + str(self.time.get_round()))
         Printer.ret_to_def_machine()
 
     def play_game(self):
@@ -87,7 +86,7 @@ class Game:
                 self.log.end_game()
                 self.board.statistics_logger.end_game(hand.index)
         self.end_game()
-        return
+        return self.time.get_round()
 
     def play_round(self):
         for player in self.players:
@@ -145,6 +144,7 @@ class Game:
                     player = self.players[action['player']]
                     a = LogToAction(self.board, player, action).get_action()
                     a.do_action()
+        return self.time.get_round()
 
     def load_dice(self, num):
         for i, j in self.board.dice.load(num):
