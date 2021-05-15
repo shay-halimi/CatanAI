@@ -19,6 +19,9 @@ PATH = "saved_games/game182.json"
 PRINTER_ON = False
 PRINTER_STDOUT = True
 PRINTER_OUTFILE = 'outfile.txt'
+# the machines that can print
+# 0 - default machine
+PERMITTED_MACHINES = [True]
 
 
 def load_board(board: Board, log):
@@ -36,8 +39,10 @@ def load_game(path):
 def main():
     if not PRINTER_ON:
         Printer.turn_off()
-    elif not PRINTER_STDOUT:
-        Printer.set_outfile(PRINTER_OUTFILE)
+    else:
+        Printer.set_permitted_machines(PERMITTED_MACHINES)
+        if not PRINTER_STDOUT:
+            Printer.set_outfile(PRINTER_OUTFILE)
     names = NAMES[0:PLAYERS]
     runs = 1 if LOAD_GAME else RUNS
     for i in range(runs):
