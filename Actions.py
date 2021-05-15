@@ -28,6 +28,19 @@ api: API
 
 
 class Action(ABC):
+    computation_time = 0
+    iterations = 0
+    sum = 0
+
+    @classmethod
+    def set_computation_time(cls):
+        cls.computation_time = cls.sum / cls.iterations
+
+    @classmethod
+    def add_computation_time(cls, time):
+        cls.iterations += 1
+        cls.sum += time
+
     def __init__(self, hand: Hand, heuristic_method):
         self.evaluation_state = False
         self.hand = hand

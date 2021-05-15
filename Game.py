@@ -40,6 +40,21 @@ class Game:
                 pass
             self.next_turn()
 
+    def end_game(self):
+        actions = set()
+        names = set()
+        for p in self.players:
+            for action in p.actions_taken:
+                if action.name not in names:
+                    actions.add(action)
+                    names.add(action.name)
+        print('end of the game action\'s computation time analysis :')
+        for action in actions:
+            print('   ' + action.name + ' : ')
+            print('      iterations : ' + str(action.iterations))
+            print('      sum of time : ' + str(action.sum))
+            print('      single computation time : ' + str(action.computation_time))
+
     def play_game(self):
         self.start_game()
         while self.play_round():
@@ -53,6 +68,7 @@ class Game:
                 for hand in self.board.hands:
                     if hand.points == max_points:
                         self.board.statistics_logger.end_game(hand.index)
+                        self.end_game()
                 return
             print("\n")
             print(self.time.get_round())
@@ -67,7 +83,8 @@ class Game:
                 print("player number " + str(hand.index) + " is the winner")
                 self.log.end_game()
                 self.board.statistics_logger.end_game(hand.index)
-                return
+        self.end_game()
+        return
 
     def play_round(self):
         for player in self.players:

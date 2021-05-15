@@ -8,6 +8,7 @@ from typing import List
 from Hand import Hand, ROAD_PRICE, SETTLEMENT_PRICE, CITY_PRICE, DEV_PRICE
 from Actions import ThrowCards, BuildRoad
 from Printer import Printer
+from time import perf_counter
 
 import math
 
@@ -138,12 +139,20 @@ def hand_stat(hand: Hand):
 
 
 def hand_heuristic(action: Action):
+    name = action.name
+    tic = perf_counter()
     action.evaluation_on()
     undo_info = action.do_action()
     value = hand_stat(action.hand)
     action.undo(undo_info)
     action.evaluation_off()
+    toc = perf_counter()
+    time = toc - tic
+    action.add_computation_time(time)
     return value
+
+
+# ---- snow's heuristic ---- #
 
 
 # this function given an action sends the action to its appropriate function that compute it function incrementally

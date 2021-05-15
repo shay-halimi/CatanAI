@@ -105,6 +105,7 @@ class Player:
         self.hand.name = self.name
         self.simple_heuristic = SimpleHeuristic(self.index, self.board)
         self.log = self.board.log
+        self.actions_taken = set()
 
     def throw_my_cards(self, num_cards):
         cards = {}
@@ -292,6 +293,8 @@ class Player:
         action = self.simple_choice()
         if action is None or action.name == 'do nothing':
             return False
+        if action.name not in map(lambda x: x.name, self.actions_taken):
+            self.actions_taken.add(action)
         return True
 
 
