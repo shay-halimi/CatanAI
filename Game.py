@@ -41,6 +41,7 @@ class Game:
             self.next_turn()
 
     def end_game(self):
+        Printer.use_machine(1)
         actions = set()
         names = set()
         for p in self.players:
@@ -48,12 +49,14 @@ class Game:
                 if action.name not in names:
                     actions.add(action)
                     names.add(action.name)
-        print('end of the game action\'s computation time analysis :')
+        Printer.printer('end of the game action\'s computation time analysis :')
         for action in actions:
-            print('   ' + action.name + ' : ')
-            print('      iterations : ' + str(action.iterations))
-            print('      sum of time : ' + str(action.sum))
-            print('      single computation time : ' + str(action.computation_time))
+            Printer.printer('   ' + action.name + ' : ')
+            Printer.printer('      iterations : ' + str(action.iterations))
+            Printer.printer('      sum of time : ' + str(action.sum))
+            Printer.printer('      single computation time : ' + str(action.computation_time))
+            Printer.printer('total rounds : ' + str(self.time.get_round()))
+        Printer.ret_to_def_machine()
 
     def play_game(self):
         self.start_game()

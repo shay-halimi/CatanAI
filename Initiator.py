@@ -8,6 +8,7 @@ from Log import StatisticsLogger
 from Log import Log
 from Printer import Printer
 import json
+from time import perf_counter
 
 API_ON = False
 NAMES = ['shay', 'snow', 'shaked', 'odeya']
@@ -16,12 +17,13 @@ PLAYERS = 4
 RUNS = 1000
 LOAD_GAME = False
 PATH = "saved_games/game182.json"
-PRINTER_ON = False
+PRINTER_ON = True
 PRINTER_STDOUT = True
 PRINTER_OUTFILE = 'outfile.txt'
 # the machines that can print
 # 0 - default machine
-PERMITTED_MACHINES = [True]
+# 1 - time tracking
+PERMITTED_MACHINES = [False, True]
 
 
 def load_board(board: Board, log):
@@ -46,7 +48,10 @@ def main():
     names = NAMES[0:PLAYERS]
     runs = 1 if LOAD_GAME else RUNS
     for i in range(runs):
+        tic = perf_counter()
+        Printer.use_machine(1)
         print('game number : ' + str(i + 1))
+        Printer.ret_to_def_machine()
         time = Time(PLAYERS)
         statistic_logger = StatisticsLogger()
         log = Log(PLAYERS, time)
@@ -70,6 +75,15 @@ def main():
             game.load_game(rounds_log)
         else:
             game.play_game()
+        if PERMITTED_MACHINES[1]:
+            Printer.use_machine(1)
+            toc = perf_counter()
+            time = toc - tic
+            Printer.printer('#########################')
+            Printer.printer('time to run the entire game : ' + str(time))
+            Printer.printer('#########################\n')
+            Printer.ret_to_def_machine()
+
     if PRINTER_ON and not PRINTER_STDOUT:
         Printer.close_outfile()
 
