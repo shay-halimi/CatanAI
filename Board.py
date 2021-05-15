@@ -8,6 +8,8 @@ from Auxilary import r2s
 from Auxilary import s2r
 from Auxilary import cr_line_len
 from API import API
+from Printer import Printer
+from Printer import GAME_RUN_MACHINE
 
 # ---- global variables ---- #
 
@@ -49,7 +51,6 @@ class Terrain:
         self.board.bandit_location.has_bandit = False
         self.has_bandit = True
         self.board.bandit_location = self
-
 
     def get_log(self):
         log = {
@@ -210,7 +211,7 @@ class Road:
         self.traveled = False
 
     def __repr__(self):
-        return "road at"+str(self.get_location())+"belongs to "+str(self.owner)
+        return "road at" + str(self.get_location()) + "belongs to " + str(self.owner)
 
     def update_longest_road(self, player, road_length):
         assert self.owner == player
@@ -219,7 +220,7 @@ class Road:
         else:
             cur_max = road_length + 1
             self.traveled = True
-            for cross_road in self.neighbors: #type: Crossroad
+            for cross_road in self.neighbors:  # type: Crossroad
                 for neighbor in cross_road.neighbors:
                     cur_road = neighbor.get_road()
                     if cur_road.owner == player and not cur_road.traveled:
@@ -230,28 +231,35 @@ class Road:
             self.traveled = False
             return cur_max
 
-    def find_end_of_road(self,player,ends_list):
+    def find_end_of_road(self, player, ends_list):
         is_end = True
         self.traveled = True
+        n_roads = []
         for cross_road in self.neighbors:  # type: Crossroad
+            has_neighbors = False
             for neighbor in cross_road.neighbors:
-                cur_road = neighbor.get_road()
-                if cur_road.owner == player and not cur_road.traveled:
-                    is_end = False
-                    cur_road.find_end_of_road(player,ends_list)
+                road = neighbor.get_road()
+                if road.owner == player:
+                    has_neighbors = True
+                n_roads += [road]
+            if not has_neighbors:
+                ends_list.append(self)
+                return
+        for cur_road in n_roads:
+            if cur_road.owner == player and not cur_road.traveled:
+                is_end = False
+                cur_road.find_end_of_road(player, ends_list)
         self.traveled = False
         if is_end:
             ends_list.append(self)
 
-
-
     # need to test with working players
     def upgrade_longest_road(self, player):
-        ends_list=[] #type: list[Road]
-        self.find_end_of_road(player,ends_list)
-        updated_road_size = 0re
+        ends_list = []  # type: list[Road]
+        self.find_end_of_road(player, ends_list)
+        updated_road_size = 0
         for end in ends_list:
-            cur_value = end.update_longest_road(player,0)
+            cur_value = end.update_longest_road(player, 0)
             if cur_value > updated_road_size:
                 updated_road_size = cur_value
         if self.board.hands[player].longest_road < updated_road_size:
@@ -266,7 +274,9 @@ class Road:
             hand = self.board.hands[player]  # type: Hand
             hand.add_point()
             hand.add_point()
-            print("current longest road owner is ",player,"\n")
+            Printer.use_machine(GAME_RUN_MACHINE)
+            Printer.printer("current longest road owner is ", player, "\n")
+            Printer.ret_to_def_machine()
 
     def is_connected(self, player):
         if self.neighbors[0].connected[player] or self.neighbors[1].connected[player]:
@@ -323,8 +333,10 @@ class Neighbor:
 
     def get_owner(self):
         return self.crossroad.ownership
+
     def get_road(self):
         return self.road
+
 
 class Board:
     def __init__(self, api: API, players, log, statistics_logger: StatisticsLogger):

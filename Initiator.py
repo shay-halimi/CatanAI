@@ -20,8 +20,9 @@ PRINTER_ON = False
 PRINTER_STDOUT = True
 PRINTER_OUTFILE = 'outfile.txt'
 # the machines that can print
-# 0 - default machine
-PERMITTED_MACHINES = [True]
+# 0 - default machine   DEFAULT_MACHINE
+# 2 - what happened in the game (actions, dice, a player won the longest road)  GAME_RUN_MACHINE
+PERMITTED_MACHINES = [False, False, False]
 
 
 def load_board(board: Board, log):

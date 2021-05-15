@@ -1,3 +1,10 @@
+DEFAULT_MACHINE = 0
+GAME_RUN_MACHINE = 2
+# the machines that can print
+# 0 - default machine
+# 2 - what happened in the game (actions, dice, a player won the longest road)
+
+
 class Printer:
     printer_on = True
     outfile = None
