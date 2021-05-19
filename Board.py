@@ -212,6 +212,48 @@ class Road:
         self.board = board
         self.temp_build_info = {}
         self.traveled = False
+        # this parameter
+        self.road_potential = [0 for i in range(board.players)]
+
+    def update_road_potential(self, player_id):
+        """"
+        this function checks if a specific road can update the longest road value
+        it does it by first checking if it's legal and connected
+        than it is calculating the longest road on one side and the other
+          """
+        longest_road = self.board.hands[player_id].longest_road
+        lengths = []
+        i = 0
+        flags = [False, False, False, False]  # checks which road_neighbors of the road is owned by the player
+        # turning all the road.traveled attributes True so that when we check longest road
+        # from neighbor it will not travel through other neighbor
+        if self.is_connected_and_legal(player_id) and self.owner == None:
+            for CR_neighbor in self.neighbors:
+                for road_neighbor in CR_neighbor.neighbors[player_id]:
+                    if road_neighbor.get_road().owner == player_id:
+                        road_neighbor.get_road().traveled = True
+            for CR_neighbor in self.neighbors:
+                for road_neighbor in CR_neighbor.neighbors[player_id]:
+                    if road_neighbor.get_road().owner == player_id:
+                        road_neighbor.get_road().traveled = False
+                        lengths.append(road_neighbor.get_road().update_longest_road())
+                        flags[i] = True
+                        i += 1
+                        road_neighbor.get_road().traveled = True
+            # checking if the roads had road neighbors belonging to player on both of its sides
+            if (flags[0] or flags[1]) and (flags[2] or flags[3]):
+                longest_road = max(max(lengths[0], lengths[1]) + max(lengths[2], lengths[3]) + 1,
+                                   self.board.hands[player_id].longest_road)
+            else:
+                # here we have a road owned by player only one side of the road
+                longest_road = max(max(lengths) + 1, self.board.hands[player_id].longest_road)
+        # resetting traveled attributes
+        if self.is_connected_and_legal(player_id) and self.owner == None:
+            for CR_neighbor in self.neighbors:
+                for road_neighbor in CR_neighbor.neighbors[player_id]:
+                    if road_neighbor.get_road().owner == player_id:
+                        road_neighbor.get_road().traveled = False
+        return longest_road
 
     def __repr__(self):
         return "road at" + str(self.get_location()) + "belongs to " + str(self.owner)
