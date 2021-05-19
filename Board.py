@@ -92,6 +92,9 @@ class Crossroad:
         self.building = 0
         self.port = None
 
+    def not_owned_by_enemy(self, player_id):
+        return self.ownership == None or self.ownership == player_id
+
     def get_ownership(self):
         return self.ownership
 
@@ -283,8 +286,14 @@ class Road:
             return True
         return False
 
+    def is_connected_and_legal(self, player):
+        for i in range(2):
+            if self.neighbors[i].connected[player] and self.neighbors[i].not_owned_by_enemy(self, player):
+                return True
+        return False
+
     def is_legal(self, player):
-        if self.owner is None and (self.is_connected(player)):
+        if self.owner is None and (self.is_connected_and_legal(player)):
             return True
         return False
 
@@ -333,6 +342,7 @@ class Neighbor:
 
     def get_owner(self):
         return self.crossroad.ownership
+
     def get_road(self):
         return self.road
 
