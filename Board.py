@@ -288,7 +288,7 @@ class Road:
 
     def is_connected_and_legal(self, player):
         for i in range(2):
-            if self.neighbors[i].connected[player] and self.neighbors[i].not_owned_by_enemy(self, player):
+            if self.neighbors[i].connected[player] and self.neighbors[i].not_owned_by_enemy(player):
                 return True
         return False
 
