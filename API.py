@@ -278,7 +278,7 @@ class API:
         # 443 -25 =~ 420
         w, h = copy.size
         draw = ImageDraw.Draw(copy)
-        font = ImageFont.truetype('Library/Fonts/Arial Bold.ttf', 60)
+        font = ImageFont.truetype('arial', 60)
         w_t, h_t = self.draw.textsize(action_name, font=font)
         draw.multiline_text(((w - w_t) / 2, 70), action_name, fill=(0, 0, 0), font=font)
         return copy, 70 + h_t
@@ -360,7 +360,7 @@ class API:
         w, h = self.resource_img.size
         copy = self.resource_img.copy()
         draw = ImageDraw.Draw(copy)
-        font = ImageFont.truetype('Library/Fonts/Arial Bold.ttf', 60)
+        font = ImageFont.truetype('arial', 60)
         w_t, h_t = self.draw.textsize(str(number), font=font)
         draw.multiline_text(((w - w_t) / 2, (h - h_t) / 2), str(number), fill=(0, 0, 0), font=font)
         return copy

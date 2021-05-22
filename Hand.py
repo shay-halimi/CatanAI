@@ -84,6 +84,18 @@ class Hand:
 
     # check if an action can be taken ---- #
 
+    def can_buy(self):
+        can_buy_actions = []
+        if self.can_buy_road():
+            can_buy_actions.append(["road"])
+        if self.can_buy_city():
+            can_buy_actions.append(["city"])
+        if self.can_buy_development_card():
+            can_buy_actions.append(["devCard"])
+        if self.can_buy_settlement():
+            can_buy_actions.append(["settlement"])
+        return  can_buy_actions
+
     def can_buy_road(self):
         return self.can_pay(ROAD_PRICE) and self.road_pieces
 

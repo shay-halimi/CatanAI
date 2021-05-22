@@ -666,6 +666,9 @@ class ThrowCards(Action):
         super().__init__(hand, heuristic)
         self.name = "throw cards"
 
+    def get_cards(self):
+        return self.cards
+
     def do_action(self):
         for resource in self.cards:
             self.hand.resources[resource] -= self.cards[resource]

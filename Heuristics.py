@@ -175,7 +175,7 @@ def compute_heuristic_basic(action):
     if type(action).__name__ == "Trade":
         return compute_heuristic_trade(action)
     if type(action).__name__ == "BuyDevCard":
-        return compute_heuristic_buy_dev_card()
+        return compute_heuristic_buy_dev_card(action)
     if type(action).__name__ == "ThrowCards":
         return compute_heuristic_throw_cards(action)
     assert False  # we don't want to reach this point
@@ -185,12 +185,13 @@ def compute_heuristic_throw_cards(action):
     heuristic_increment = 0
     for card in ThrowCards.get_cards(action.cards):
         heuristic_increment -= action.hand.parameters.get_resource_value[card]
+    return action.hand.heuristic +heuristic_increment
 
 
 def compute_heuristic_buy_dev_card(action):
     return action.hand.heuristic + action.hand.parameters.dev_card_value
 
-
+# todo
 def compute_heuristic_trade(action):
     return action.hand.heuristic
 
@@ -203,22 +204,14 @@ def compute_heuristic_build_free_road(action):
 
 def compute_heuristic_build_road(action):
     hand = action.hand
-    hand.pay(ROAD_PRICE)
-    action.create_road()
-    return
+    heuristic_increment = 0
+    heuristic_increment -= (hand.parameters.resource_value[Resource.WOOD] + hand.parameters.resource_value[Resource.CLAY])
+    
+    return heuristic_increment
 
 
 def compute_heuristic_build_city(action):
-    hand = action.hand
-    old_production_variety = len(list(filter(lambda x: x.value != 0, hand.production)))
-    old_production = hand.production
-    legals = action.crossroad.tmp_build(action.hand.index)
-    heuristic_increment = len(list(filter(lambda x: x.value != 0, hand.production))) - old_production_variety
-    for resource in hand.production:
-        heuristic_increment += (hand.production[resource] - old_production[resource]) * \
-                               hand.parameters.resource_value[resource]
-    action.crossroad.unbuild(action.hand.index, legals)
-    return heuristic_increment
+    return compute_heuristic_build_settlement_or_city(action)
 
 
 # todo
@@ -229,8 +222,7 @@ def compute_heuristic_build_first_settlement(action):
 def compute_heuristic_build_second_settlement(action):
     pass
 
-
-def compute_heuristic_build_settlement(action):
+def compute_heuristic_build_settlement_or_city(action):
     hand = action.hand
     old_production_variety = len(list(filter(lambda x: x.value != 0, hand.production)))
     old_production = hand.production
@@ -242,13 +234,16 @@ def compute_heuristic_build_settlement(action):
     action.crossroad.unbuild(action.hand.index, legals)
     return heuristic_increment
 
+def compute_heuristic_build_settlement(action):
+    return compute_heuristic_build_settlement_or_city(action)
+
 
 def compute_heuristic_do_nothing(action):
     return action.hand.heuristic
 
 
 def compute_heuristic_use_knight(action):
-    action.hand
+    pass
     # resource = action.use_knight()
     # #TODO wrong, heuristic does not update on itself
     # new_heuristic = action.hand.heuristic
@@ -273,14 +268,11 @@ def compute_heuristic_use_build_roads(action):
     old_road_length = action.hand.parameters.longest_road_value
     build_road1 = BuildRoad(action.hand, action.heuristic_method, action.road1)
     build_road2 = BuildRoad(action.hand, action.heuristic_method, action.road2)
-    build_road1.tmp_do()
-    build_road2.tmp_do()
     if action.hand.board.longest_road_owner != action.hand.index:
         heuristic_increment += (action.hand.board.longest_road_owner == action.hand.index) * 5
     heuristic_increment += action.hand.parameters.longest_road_value - old_road_length
-    hand_heuristic = action.hand.heuristic
-    build_road1.undo()
-    build_road2.undo()
+    build_road1.undo(build_road1.do_action())
+    build_road2.undo(build_road2.do_action())
     return heuristic_increment
 
 

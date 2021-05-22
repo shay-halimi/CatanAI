@@ -9,14 +9,14 @@ from Log import Log
 from Printer import Printer
 import json
 
-API_ON = False
+API_ON = True
 NAMES = ['shay', 'snow', 'shaked', 'odeya']
 AI = [Dork, Dork, Dork, Dork]
 PLAYERS = 4
 RUNS = 1000
 LOAD_GAME = False
 PATH = "saved_games/game182.json"
-PRINTER_ON = False
+PRINTER_ON = True
 PRINTER_STDOUT = True
 PRINTER_OUTFILE = 'outfile.txt'
 # the machines that can print
